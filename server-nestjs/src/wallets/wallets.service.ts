@@ -1,12 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { vendorWallets, walletTransactions, vendors } from '../database/schema';
+import { vendorWallets, walletTransactions, vendors, customerWallets } from '../database/schema';
 import { eq, and, desc } from 'drizzle-orm';
 
 @Injectable()
 export class WalletsService {
     constructor(private readonly databaseService: DatabaseService) { }
 
+    // --- Vendor Wallets ---
     async getOrCreateWallet(vendorId: number) {
         let [wallet] = await this.databaseService.db
             .select()
@@ -42,15 +43,13 @@ export class WalletsService {
         const wallet = await this.getOrCreateWallet(vendorId);
 
         return await this.databaseService.db.transaction(async (tx) => {
-            // Update pending balance
             await tx.update(vendorWallets)
                 .set({
-                    pendingBalance: wallet.pendingBalance + amount,
+                    pendingBalance: Number(wallet.pendingBalance) + amount,
                     updatedAt: new Date(),
                 })
                 .where(eq(vendorWallets.id, wallet.id));
 
-            // Record transaction
             await tx.insert(walletTransactions).values({
                 walletId: wallet.id,
                 amount,
@@ -66,16 +65,14 @@ export class WalletsService {
         const wallet = await this.getOrCreateWallet(vendorId);
 
         return await this.databaseService.db.transaction(async (tx) => {
-            // Move from pending to available
             await tx.update(vendorWallets)
                 .set({
-                    pendingBalance: Math.max(0, wallet.pendingBalance - amount),
-                    availableBalance: wallet.availableBalance + amount,
+                    pendingBalance: Math.max(0, Number(wallet.pendingBalance) - amount),
+                    availableBalance: Number(wallet.availableBalance) + amount,
                     updatedAt: new Date(),
                 })
                 .where(eq(vendorWallets.id, wallet.id));
 
-            // Mark transaction as completed
             await tx.update(walletTransactions)
                 .set({ status: 'completed' })
                 .where(and(
@@ -84,5 +81,83 @@ export class WalletsService {
                     eq(walletTransactions.type, 'credit')
                 ));
         });
+    }
+
+    // --- Customer Wallets ---
+    async getOrCreateCustomerWallet(userId: number) {
+        let [wallet] = await this.databaseService.db
+            .select()
+            .from(customerWallets)
+            .where(eq(customerWallets.userId, userId))
+            .limit(1);
+
+        if (!wallet) {
+            [wallet] = await this.databaseService.db
+                .insert(customerWallets)
+                .values({
+                    userId,
+                    balance: 0,
+                })
+                .returning();
+        }
+        return wallet;
+    }
+
+    async deductBalance(userId: number, amount: number, description: string) {
+        const wallet = await this.getOrCreateCustomerWallet(userId);
+
+        if (Number(wallet.balance) < amount) {
+            throw new BadRequestException('رصيد المحفظة غير كافٍ');
+        }
+
+        return await this.databaseService.db.transaction(async (tx) => {
+            await tx.update(customerWallets)
+                .set({
+                    balance: Number(wallet.balance) - amount,
+                    updatedAt: new Date(),
+                })
+                .where(eq(customerWallets.id, wallet.id));
+
+            await tx.insert(walletTransactions).values({
+                walletId: wallet.id,
+                amount: -amount,
+                type: 'payment',
+                status: 'completed',
+                description,
+            });
+        });
+    }
+
+    async topUpBalance(userId: number, amount: number, referenceId: string) {
+        const wallet = await this.getOrCreateCustomerWallet(userId);
+
+        return await this.databaseService.db.transaction(async (tx) => {
+            await tx.update(customerWallets)
+                .set({
+                    balance: Number(wallet.balance) + amount,
+                    updatedAt: new Date(),
+                })
+                .where(eq(customerWallets.id, wallet.id));
+
+            await tx.insert(walletTransactions).values({
+                walletId: wallet.id,
+                amount,
+                type: 'funding',
+                status: 'completed',
+                referenceId,
+                description: 'شحن رصيد المحفظة',
+            });
+        });
+    }
+
+    async getCustomerWallet(userId: number) {
+        const wallet = await this.getOrCreateCustomerWallet(userId);
+        const transactions = await this.databaseService.db
+            .select()
+            .from(walletTransactions)
+            .where(eq(walletTransactions.walletId, wallet.id))
+            .orderBy(desc(walletTransactions.createdAt));
+
+        return { ...wallet, transactions };
     }
 }

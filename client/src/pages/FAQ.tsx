@@ -9,28 +9,28 @@ export default function FAQ() {
 
     const faqs = [
         {
-            q: isAr ? "كيف يمكنني استخدام ميزة القياس الافتراضي؟" : "How do I use the Virtual Try-On feature?",
+            q: isAr ? "ما هي مدة الضمان على الأجهزة؟" : "What is the warranty period for devices?",
             a: isAr
-                ? "ببساطة، ادخلي لصفحة أي فستان يدعم الميزة، واضغطي على زر 'تجربة قياس ذكية'. ستحتاجين لرفع صورة شخصية واضحة (full-body) وسيقوم الذكاء الاصطناعي بتركيب الفستان عليها."
-                : "Simply go to any dress page that supports the feature and click 'Smart Try-On'. You'll need to upload a clear full-body photo, and the AI will overlay the dress onto it."
+                ? "جميع أجهزتنا تأتي بضمان محلي ودولي لمدة ١٢ شهر على الأقل ضد عيوب الصناعة."
+                : "All our devices come with a local and international warranty of at least 12 months against manufacturing defects."
         },
         {
-            q: isAr ? "هل يمكنني إلغاء الطلب بعد الدفع؟" : "Can I cancel my order after payment?",
+            q: isAr ? "هل تتوفر خدمة الدفع بالتقسيط؟" : "Is installment payment available?",
             a: isAr
-                ? "نعم، يمكنك إلغاء الطلب خلال ساعتين من تنفيذه ما لم يتم البدء في عملية الشحن. يمكنك القيام بذلك عبر لوحة تحكم ملفك الشخصي."
-                : "Yes, you can cancel your order within 2 hours of placement unless it has entered the shipping process. You can do this through your profile dashboard."
+                ? "نعم، نوفر خيارات دفع مرنة بالتعاون مع شركاء التقسيط، يمكنك اختيار 'تقسيط WOLF' عند إتمام الدفع."
+                : "Yes, we provide flexible payment options in cooperation with installment partners. You can choose 'WOLF TECHNO Installments' at checkout."
         },
         {
-            q: isAr ? "كيف أتأكد من المقاس الصحيح لي؟" : "How do I know the right size for me?",
+            q: isAr ? "كيف يمكنني تتبع طلبي؟" : "How can I track my order?",
             a: isAr
-                ? "نوفر جدول مقاسات دقيق لكل مصمم في صفحة المنتج. ننصحك باستخدام شريط قياس ومقارنة نتائجكِ بالجدول المعروض لضمان أفضل ملاءمة."
-                : "We provide an accurate size chart for each designer on the product page. We recommend using a measuring tape and comparing your results with the chart to ensure the best fit."
+                ? "بمجرد شحن طلبك، ستصلك رسالة نصية وبريد إلكتروني يحتوي على رابط التتبع الخاص بكلم."
+                : "Once your order is shipped, you will receive a text message and an email containing your tracking link."
         },
         {
             q: isAr ? "كم يستغرق التوصيل؟" : "How long does delivery take?",
             a: isAr
-                ? "يستغرق التوصيل عادةً من ٣ إلى ٧ أيام عمل داخل المملكة، وقد تختلف المدة حسب موقع البائع وشركة الشحن المختارة."
-                : "Delivery usually takes 3 to 7 business days within the Kingdom. Duration may vary depending on the vendor's location and the chosen shipping company."
+                ? "يستغرق التوصيل عادةً من ٣ إلى ٧ أيام عمل داخل الدولة، حسب موقعك وشركة الشحن."
+                : "Delivery usually takes 3 to 7 business days within the country, depending on your location and the shipping company."
         }
     ];
 
@@ -38,14 +38,14 @@ export default function FAQ() {
         <div className="min-h-screen bg-white pt-32 pb-20" dir={isAr ? 'rtl' : 'ltr'}>
             <div className="container mx-auto px-4 max-w-3xl">
                 <header className="text-center mb-16">
-                    <div className="w-20 h-20 bg-rose-50 rounded-3xl flex items-center justify-center text-rose-600 mx-auto mb-6">
+                    <div className="w-20 h-20 -white/5 rounded-3xl flex items-center justify-center -primary mx-auto mb-6">
                         <HelpCircle size={40} />
                     </div>
                     <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-4">
                         {isAr ? 'الأسئلة الشائعة' : 'Frequently Asked Questions'}
                     </h1>
                     <p className="text-gray-500 text-lg font-bold">
-                        {isAr ? 'كل ما تودين معرفته عن رحلة تسوقكِ في فستان' : 'Everything you need to know about your shopping journey at Fustan'}
+                        {isAr ? 'كل ما تود معرفته عن رحلة تسوقك في WOLF TECHNO' : 'Everything you need to know about your shopping journey at WOLF TECHNO'}
                     </p>
                 </header>
 
@@ -63,13 +63,13 @@ function FAQItem({ question, answer }: { question: string, answer: string }) {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <div className={`border rounded-[2rem] transition-all duration-300 ${isOpen ? 'border-rose-200 bg-rose-50/20 shadow-lg shadow-rose-100' : 'border-gray-100 bg-white hover:border-gray-200'}`}>
+        <div className={`border rounded-[2rem] transition-all duration-300 ${isOpen ? '-primary/20 -white/5/20 shadow-lg -white/10' : 'border-gray-100 bg-white hover:border-gray-200'}`}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full px-8 py-6 flex items-center justify-between text-right"
             >
                 <span className="text-lg font-black text-gray-900">{question}</span>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isOpen ? 'bg-rose-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isOpen ? '-primary text-white' : 'bg-gray-100 text-gray-400'}`}>
                     {isOpen ? <Minus size={18} /> : <Plus size={18} />}
                 </div>
             </button>

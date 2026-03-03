@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Star, Eye } from "lucide-react";
+import { ShoppingCart, Star, Eye, CreditCard } from "lucide-react";
 import { motion } from "framer-motion";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { endpoints } from "@/lib/api";
@@ -45,6 +45,23 @@ export function ProductCard({ product, index = 0, loading = false, onQuickView }
 
     const addToCartMutation = useAddToCart();
 
+    const { data: installmentPlans } = useQuery({
+        queryKey: ['installments', 'active'],
+        queryFn: () => endpoints.installments.active(),
+        staleTime: 1000 * 60 * 10, // cache 10 min
+    });
+
+    // Calculate lowest monthly payment across all active plans
+    const lowestMonthly = (() => {
+        if (!installmentPlans || !product.price) return null;
+        const activePlans = (installmentPlans as any[]).filter(p => p.isActive && product.price >= (p.minOrderAmount || 0));
+        if (!activePlans.length) return null;
+        // Pick plan with most months for the lowest monthly payment
+        const best = activePlans.reduce((a: any, b: any) => b.months > a.months ? b : a);
+        const total = product.price * (1 + (best.interestRate || 0) / 100);
+        return { amount: total / best.months, months: best.months };
+    })();
+
     const name = language === 'ar' ? product.nameAr : product.nameEn;
 
     return (
@@ -57,20 +74,23 @@ export function ProductCard({ product, index = 0, loading = false, onQuickView }
         >
             <div className="cursor-pointer relative">
                 <Link href={`/products/${product.id}`}>
-                    <div className="relative aspect-[3/4] rounded-3xl overflow-hidden mb-4 shadow-xl group-hover:shadow-rose-100 transition-all">
+                    <div className="relative aspect-[3/4] rounded-[2rem] overflow-hidden mb-4 shadow-xl group-hover:shadow-primary/20 transition-all bg-secondary/50 border border-white/5">
                         <img
                             src={product.images?.[0] || "https://images.unsplash.com/photo-1594465919760-441fe5908ab0?w=600&h=800&fit=crop"}
                             alt={name}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                            onError={(e: any) => {
+                                e.target.src = "https://images.unsplash.com/photo-1594465919760-441fe5908ab0?w=600&h=800&fit=crop";
+                            }}
                         />
                         {product.discount > 0 && (
-                            <Badge className={`absolute top-4 ${language === 'ar' ? 'right-4' : 'left-4'} bg-white/90 backdrop-blur-md text-rose-600 border-none px-3 py-1 rounded-full font-black text-sm shadow-sm`}>
+                            <Badge className={`absolute top-4 ${language === 'ar' ? 'right-4' : 'left-4'} bg-primary text-background border-none px-3 py-1 rounded-full font-black text-sm shadow-lg shadow-primary/20`}>
                                 -{product.discount}%
                             </Badge>
                         )}
 
                         {/* Overlay Actions */}
-                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                        <div className="absolute inset-0 bg-background/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                             {user?.role !== 'admin' && user?.role !== 'vendor' && (
                                 <Button
                                     onClick={(e) => {
@@ -91,13 +111,13 @@ export function ProductCard({ product, index = 0, loading = false, onQuickView }
                                         });
                                     }}
                                     size="icon"
-                                    className="rounded-full h-12 w-12 bg-white hover:bg-rose-50 text-rose-600 shadow-2xl scale-0 group-hover:scale-100 transition-all duration-300 delay-100"
+                                    className="rounded-full h-12 w-12 bg-white/10 border border-white/20 hover:bg-primary hover:border-primary text-white hover:text-background shadow-2xl scale-0 group-hover:scale-100 transition-all duration-300 delay-100"
                                 >
                                     <ShoppingCart size={20} />
                                 </Button>
                             )}
 
-                            <div className="rounded-full h-12 w-12 bg-white hover:bg-rose-50 text-rose-600 shadow-2xl scale-0 group-hover:scale-100 transition-all duration-300 delay-75 flex items-center justify-center pointer-events-none">
+                            <div className="rounded-full h-12 w-12 bg-white/10 border border-white/20 hover:bg-primary hover:border-primary text-white hover:text-background shadow-2xl scale-0 group-hover:scale-100 transition-all duration-300 delay-75 flex items-center justify-center pointer-events-none">
                                 <Eye size={20} />
                             </div>
 
@@ -110,7 +130,7 @@ export function ProductCard({ product, index = 0, loading = false, onQuickView }
                                         toggleWishlistMutation.mutate();
                                     }}
                                     size="icon"
-                                    className={`rounded-full h-12 w-12 shadow-2xl scale-0 group-hover:scale-100 transition-all duration-300 delay-150 ${isFavorite ? 'bg-rose-500 text-white' : 'bg-white hover:bg-rose-50 text-rose-600'}`}
+                                    className={`rounded-full h-12 w-12 shadow-2xl scale-0 group-hover:scale-100 transition-all duration-300 delay-150 border ${isFavorite ? 'bg-primary border-primary text-background' : 'bg-white/10 border-white/20 hover:bg-primary hover:border-primary text-white hover:text-background'}`}
                                 >
                                     <Heart size={20} className={isFavorite ? "fill-current" : ""} />
                                 </Button>
@@ -121,26 +141,36 @@ export function ProductCard({ product, index = 0, loading = false, onQuickView }
 
                 <div className={`px-2 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
                     <Link href={`/products/${product.id}`}>
-                        <h3 className="text-lg font-black text-gray-900 mb-1 truncate hover:text-rose-600 transition-colors">{name}</h3>
+                        <h3 className="text-lg font-bold text-white mb-1 truncate hover:text-primary transition-colors">{name}</h3>
                     </Link>
-                    <div className={`flex items-center ${language === 'ar' ? 'justify-end' : 'justify-start'} gap-2 mb-2`}>
+                    <div className={`flex items-center ${language === 'ar' ? 'justify-end' : 'justify-start'} gap-2 mb-1`}>
                         <div className={`flex items-center gap-1 ${language === 'ar' ? 'ml-auto' : 'mr-auto'}`}>
-                            <Star size={14} className="fill-yellow-400 text-yellow-400" />
-                            <span className="font-bold text-gray-600 text-sm">{Number(product.rating || 0).toFixed(1)}</span>
+                            <Star size={14} className="fill-primary text-primary" />
+                            <span className="font-bold text-white/70 text-sm">{Number(product.rating || 0).toFixed(1)}</span>
                         </div>
                         {product.originalPrice && (
-                            <span className="text-gray-400 font-medium line-through text-xs">{formatPrice(product.originalPrice)}</span>
+                            <span className="text-white/40 font-medium line-through text-xs">{formatPrice(product.originalPrice)}</span>
                         )}
-                        <span className="text-lg font-black text-rose-600">{formatPrice(product.price)}</span>
+                        <span className="text-lg font-black text-primary">{formatPrice(product.price)}</span>
                     </div>
-
+                    {lowestMonthly && (
+                        <div className={`flex items-center gap-1.5 mb-2 ${language === 'ar' ? 'justify-end' : 'justify-start'}`}>
+                            <CreditCard size={12} className="text-green-400 shrink-0" />
+                            <span className="text-xs font-bold text-green-400">
+                                {language === 'ar'
+                                    ? `من ${formatPrice(lowestMonthly.amount)} / ${lowestMonthly.months} شهر`
+                                    : `From ${formatPrice(lowestMonthly.amount)} / ${lowestMonthly.months} mo`
+                                }
+                            </span>
+                        </div>
+                    )}
                     {/* Color Swatches */}
                     {product.colors && product.colors.length > 0 && (
                         <div className={`flex ${language === 'ar' ? 'justify-end' : 'justify-start'} gap-1.5 h-6`}>
                             {product.colors.map((color: any) => (
                                 <div
                                     key={color.id}
-                                    className="w-4 h-4 rounded-full border border-gray-200 shadow-sm"
+                                    className="w-4 h-4 rounded-full border border-white/20 shadow-sm"
                                     style={{ backgroundColor: color.colorCode }}
                                     title={color.colorName}
                                 />

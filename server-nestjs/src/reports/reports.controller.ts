@@ -12,7 +12,10 @@ export class ReportsController {
     ) { }
 
     private async isAdmin(req: Request): Promise<boolean> {
-        const token = req.cookies?.[COOKIE_NAME];
+        const token = req.headers.authorization?.startsWith('Bearer ')
+            ? req.headers.authorization.split(' ')[1]
+            : req.cookies?.[COOKIE_NAME];
+
         if (!token) return false;
 
         const payload = await this.authService.verifySession(token);

@@ -80,7 +80,7 @@ export default function AdminRegister() {
                                 onChange={(e) => setEmail(e.target.value.toLowerCase())}
                                 required
                                 className="h-12 bg-slate-50 border-slate-100 focus:ring-2 focus:ring-slate-900 focus:bg-white transition-all rounded-xl"
-                                placeholder="admin@fustan.com"
+                                placeholder="admin@wolftechno.com"
                             />
                         </div>
                         <div className="space-y-2">

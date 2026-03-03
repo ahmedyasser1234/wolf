@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Save, Truck, PackageCheck, Zap } from "lucide-react";
+import { Loader2, Save, Truck, PackageCheck, Zap, Download, Upload } from "lucide-react";
+import { endpoints } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +22,8 @@ export default function ShippingTab({ vendorId }: ShippingTabProps) {
     const [shippingCost, setShippingCost] = useState<string>("");
     const [hasFreeShipping, setHasFreeShipping] = useState<boolean>(false);
     const [freeShippingThreshold, setFreeShippingThreshold] = useState<string>("");
+    const [exporting, setExporting] = useState(false);
+    const [importing, setImporting] = useState(false);
 
     // Fetch Vendor Profile to get current shipping cost
     const { data: vendor, isLoading } = useQuery({
@@ -72,6 +75,44 @@ export default function ShippingTab({ vendorId }: ShippingTabProps) {
         });
     };
 
+    const handleExport = async () => {
+        setExporting(true);
+        try {
+            const blob = await endpoints.shipping.export();
+            const url = window.URL.createObjectURL(new Blob([blob]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'shipping.xlsx');
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            toast.success(language === 'ar' ? 'تم تصدير البيانات بنجاح' : 'Data exported successfully');
+        } catch (error) {
+            console.error(error);
+            toast.error(language === 'ar' ? 'فشل تصدير البيانات' : 'Failed to export data');
+        } finally {
+            setExporting(false);
+        }
+    };
+
+    const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setImporting(true);
+        try {
+            await endpoints.shipping.import(file);
+            toast.success(language === 'ar' ? 'تم استيراد البيانات بنجاح' : 'Data imported successfully');
+            queryClient.invalidateQueries({ queryKey: ['vendor', 'profile', vendorId] });
+        } catch (error) {
+            console.error(error);
+            toast.error(language === 'ar' ? 'فشل استيراد البيانات' : 'Failed to import data');
+        } finally {
+            setImporting(false);
+            e.target.value = '';
+        }
+    };
+
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center p-20 gap-4">
@@ -79,7 +120,7 @@ export default function ShippingTab({ vendorId }: ShippingTabProps) {
                     <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
                     <Truck className="w-6 h-6 text-blue-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                 </div>
-                <p className="text-gray-500 font-bold animate-pulse">{language === 'ar' ? "جاري تحميل إعدادات الشحن..." : "Loading shipping settings..."}</p>
+                <p className="text-white font-bold animate-pulse">{language === 'ar' ? "جاري تحميل إعدادات الشحن..." : "Loading shipping settings..."}</p>
             </div>
         );
     }
@@ -88,22 +129,22 @@ export default function ShippingTab({ vendorId }: ShippingTabProps) {
         <div className="max-w-4xl mx-auto space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
                 {/* Standard Shipping Card */}
-                <Card className="border-0 shadow-sm overflow-hidden group">
+                <Card className="border-0 shadow-sm overflow-hidden group bg-background border border-gray-800">
                     <div className="h-1 bg-blue-500 w-full group-hover:h-2 transition-all" />
                     <CardHeader>
                         <div className="flex items-center gap-3">
-                            <div className="bg-blue-50 p-2 rounded-xl">
-                                <Truck className="w-6 h-6 text-blue-600" />
+                            <div className="bg-blue-900/30 p-2 rounded-xl">
+                                <Truck className="w-6 h-6 text-blue-400" />
                             </div>
                             <div>
-                                <CardTitle className="text-xl font-black">{t('standardShipping')}</CardTitle>
-                                <CardDescription>{t('standardShippingDesc')}</CardDescription>
+                                <CardTitle className="text-xl font-black text-white">{t('standardShipping')}</CardTitle>
+                                <CardDescription className="text-white">{t('standardShippingDesc')}</CardDescription>
                             </div>
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="shipping-cost" className="font-bold text-slate-700">{t('shippingCostSR')}</Label>
+                            <Label htmlFor="shipping-cost" className="font-bold text-white">{t('shippingCostSR')}</Label>
                             <div className="relative">
                                 <Input
                                     id="shipping-cost"
@@ -112,15 +153,15 @@ export default function ShippingTab({ vendorId }: ShippingTabProps) {
                                     step="0.01"
                                     value={shippingCost}
                                     onChange={(e) => setShippingCost(e.target.value)}
-                                    className="pl-16 h-12 text-lg font-bold rounded-xl border-slate-200 focus:ring-blue-500"
+                                    className="pl-16 h-12 text-lg font-bold rounded-xl border-gray-800 bg-gray-900 text-white focus:ring-blue-500"
                                 />
-                                <div className="absolute top-0 left-0 h-full flex items-center px-4 text-slate-400 font-bold border-r border-slate-100">
+                                <div className="absolute top-0 left-0 h-full flex items-center px-4 text-white font-bold border-r border-gray-800">
                                     {t('sar')}
                                 </div>
                             </div>
                         </div>
-                        <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100/50">
-                            <ul className="text-xs space-y-2 text-blue-700 font-medium">
+                        <div className="p-4 bg-blue-900/20 rounded-xl border border-blue-800/50">
+                            <ul className="text-xs space-y-2 text-blue-300 font-medium">
                                 <li className="flex items-center gap-2">• {t('shippingNote1')}</li>
                                 <li className="flex items-center gap-2">• {t('shippingNote2')}</li>
                             </ul>
@@ -130,19 +171,19 @@ export default function ShippingTab({ vendorId }: ShippingTabProps) {
 
                 {/* Free Shipping Card */}
                 <Card className={cn(
-                    "border-0 shadow-sm overflow-hidden transition-all duration-300 group",
-                    hasFreeShipping ? "ring-2 ring-emerald-500" : "opacity-80"
+                    "border-0 shadow-sm overflow-hidden transition-all duration-300 group bg-background border border-gray-800",
+                    hasFreeShipping ? "ring-2 ring-emerald-500/50" : "opacity-50"
                 )}>
-                    <div className={cn("h-1 w-full transition-all", hasFreeShipping ? "bg-emerald-500" : "bg-slate-200")} />
+                    <div className={cn("h-1 w-full transition-all", hasFreeShipping ? "bg-emerald-500" : "bg-gray-800")} />
                     <CardHeader>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className={cn("p-2 rounded-xl transition-colors", hasFreeShipping ? "bg-emerald-50" : "bg-slate-50")}>
-                                    <Zap className={cn("w-6 h-6", hasFreeShipping ? "text-emerald-600" : "text-slate-400")} />
+                                <div className={cn("p-2 rounded-xl transition-colors", hasFreeShipping ? "bg-emerald-900/30" : "bg-gray-800")}>
+                                    <Zap className={cn("w-6 h-6", hasFreeShipping ? "text-emerald-400" : "text-white")} />
                                 </div>
                                 <div>
-                                    <CardTitle className="text-xl font-black">{t('freeShipping')}</CardTitle>
-                                    <CardDescription>{t('freeShippingDesc')}</CardDescription>
+                                    <CardTitle className="text-xl font-black text-white">{t('freeShipping')}</CardTitle>
+                                    <CardDescription className="text-white">{t('freeShippingDesc')}</CardDescription>
                                 </div>
                             </div>
                             <Switch
@@ -155,7 +196,7 @@ export default function ShippingTab({ vendorId }: ShippingTabProps) {
                     <CardContent className="space-y-4">
                         <div className={cn("space-y-4 transition-all duration-300", hasFreeShipping ? "opacity-100 translate-y-0" : "opacity-40 pointer-events-none -translate-y-2")}>
                             <div className="space-y-2">
-                                <Label htmlFor="free-threshold" className="font-bold text-slate-700">{t('freeThreshold')}</Label>
+                                <Label htmlFor="free-threshold" className="font-bold text-white">{t('freeThreshold')}</Label>
                                 <div className="relative">
                                     <Input
                                         id="free-threshold"
@@ -164,23 +205,23 @@ export default function ShippingTab({ vendorId }: ShippingTabProps) {
                                         step="1"
                                         value={freeShippingThreshold}
                                         onChange={(e) => setFreeShippingThreshold(e.target.value)}
-                                        className="pl-16 h-12 text-lg font-bold rounded-xl border-slate-200"
+                                        className="pl-16 h-12 text-lg font-bold rounded-xl border-gray-800 bg-gray-900 text-white"
                                         placeholder="1000"
                                     />
-                                    <div className="absolute top-0 left-0 h-full flex items-center px-4 text-slate-400 font-bold border-r border-slate-100">
+                                    <div className="absolute top-0 left-0 h-full flex items-center px-4 text-white font-bold border-r border-gray-800">
                                         {t('sar')}
                                     </div>
                                 </div>
                             </div>
-                            <div className="p-4 bg-emerald-50/50 rounded-xl border border-emerald-100/50 flex items-start gap-3">
-                                <PackageCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                                <p className="text-xs text-emerald-800 font-medium">
+                            <div className="p-4 bg-emerald-900/20 rounded-xl border border-emerald-800/50 flex items-start gap-3">
+                                <PackageCheck className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                                <p className="text-xs text-emerald-200 font-medium">
                                     {t('freeThresholdDesc')}
                                 </p>
                             </div>
                         </div>
                         {!hasFreeShipping && (
-                            <div className="p-8 text-center text-slate-400 text-sm italic">
+                            <div className="p-8 text-center text-white text-sm italic">
                                 {t('enableFreeShipping')}
                             </div>
                         )}
@@ -188,36 +229,64 @@ export default function ShippingTab({ vendorId }: ShippingTabProps) {
                 </Card>
             </div>
 
-            {/* Bottom Actions */}
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100">
-                <div className="text-slate-500 text-sm font-medium w-full md:w-auto text-center md:text-start">
-                    {hasFreeShipping ? (
-                        <span className="flex flex-col md:flex-row items-center gap-2">
-                            <span className="flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                                {t('freeShippingActive')}
-                            </span>
-                            <span className="text-slate-900 font-black">{freeShippingThreshold} {t('sar')}</span>
-                        </span>
-                    ) : (
-                        <span className="flex items-center justify-center md:justify-start gap-2">
-                            <span className="w-2 h-2 rounded-full bg-slate-300" />
-                            {t('freeShippingInactive')}
-                        </span>
-                    )}
+            {/* Bottom Actions and Excel Integration */}
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-background border border-gray-800 p-6 rounded-[2rem] shadow-xl uppercase tracking-tight">
+                <div className="flex flex-wrap items-center gap-3">
+                    <Button
+                        variant="outline"
+                        onClick={handleExport}
+                        disabled={exporting}
+                        className="h-11 px-6 rounded-xl border-gray-800 bg-gray-900 text-white hover:bg-gray-800 hover:text-white font-bold shadow-lg transition-all active:scale-95"
+                    >
+                        {exporting ? <Loader2 className="w-5 h-5 ml-2 animate-spin" /> : <Download className="w-5 h-5 ml-2" />}
+                        {language === 'ar' ? 'تصدير Excel' : 'Export Excel'}
+                    </Button>
+                    <div className="relative">
+                        <input
+                            type="file"
+                            accept=".xlsx, .xls"
+                            id="import-shipping"
+                            className="hidden"
+                            onChange={handleImport}
+                        />
+                        <Button
+                            variant="outline"
+                            asChild
+                            disabled={importing}
+                            className="h-11 px-6 rounded-xl border-gray-800 bg-gray-900 text-white hover:bg-gray-800 hover:text-white cursor-pointer font-bold shadow-lg transition-all active:scale-95"
+                        >
+                            <label htmlFor="import-shipping" className="flex items-center gap-3">
+                                {importing ? <Loader2 className="w-5 h-5 ml-2 animate-spin" /> : <Upload className="w-5 h-5 ml-2" />}
+                                {language === 'ar' ? 'استيراد Excel' : 'Import Excel'}
+                            </label>
+                        </Button>
+                    </div>
                 </div>
-                <Button
-                    onClick={handleSave}
-                    disabled={updateShipping.isPending}
-                    className="w-full md:w-auto min-w-[200px] bg-slate-900 hover:bg-slate-800 h-12 rounded-xl text-lg font-bold gap-2 shadow-lg shadow-slate-200 transition-all active:scale-95"
-                >
-                    {updateShipping.isPending ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                        <Save className="w-5 h-5" />
-                    )}
-                    {t('saveSettings')}
-                </Button>
+
+                <div className="flex items-center gap-6 w-full md:w-auto">
+                    <div className="hidden lg:flex flex-col items-end">
+                        <p className="text-[10px] font-black text-white uppercase tracking-widest leading-none mb-1">{language === 'ar' ? 'حالة الشحن' : 'Shipping Status'}</p>
+                        <div className="text-white text-xs font-bold flex items-center gap-2">
+                            {hasFreeShipping ? (
+                                <><span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" /> {t('freeShippingActive')}</>
+                            ) : (
+                                <><span className="w-2 h-2 rounded-full bg-slate-600" /> {t('freeShippingInactive')}</>
+                            )}
+                        </div>
+                    </div>
+                    <Button
+                        onClick={handleSave}
+                        disabled={updateShipping.isPending}
+                        className="flex-1 md:flex-initial min-w-[180px] bg-blue-600 hover:bg-blue-700 h-12 rounded-xl text-lg font-black gap-2 shadow-xl shadow-blue-900/20 transition-all active:scale-95 text-white"
+                    >
+                        {updateShipping.isPending ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                            <Save className="w-5 h-5" />
+                        )}
+                        {t('saveSettings')}
+                    </Button>
+                </div>
             </div>
         </div>
     );

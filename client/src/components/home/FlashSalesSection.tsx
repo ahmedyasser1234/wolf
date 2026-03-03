@@ -48,17 +48,17 @@ export function FlashSalesSection({ onQuickView }: FlashSalesSectionProps) {
             <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-black z-0" />
 
             {/* Decorative Elements */}
-            <div className={`absolute top-0 ${language === 'ar' ? 'right-0' : 'left-0'} w-96 h-96 bg-rose-600/20 blur-[100px] rounded-full`} />
+            <div className={`absolute top-0 ${language === 'ar' ? 'right-0' : 'left-0'} w-96 h-96 -primary/20 blur-[100px] rounded-full`} />
             <div className={`absolute bottom-0 ${language === 'ar' ? 'left-0' : 'right-0'} w-96 h-96 bg-purple-600/20 blur-[100px] rounded-full`} />
 
             <div className="container mx-auto px-4 relative z-10 w-full">
                 <div className={`flex flex-col lg:flex-row ${language === 'ar' ? 'items-end' : 'items-start'} justify-between mb-16 gap-8`}>
                     <div className="text-white">
                         <div className={`flex items-center gap-3 mb-4 ${language === 'ar' ? 'justify-start' : 'justify-start'}`}>
-                            <span className="bg-rose-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider animate-pulse">
+                            <span className="-primary text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider animate-pulse">
                                 {t('endingSoon')}
                             </span>
-                            <span className="text-rose-400 text-xl font-bold">{language === 'ar' ? 'عرض مخصص لفترة محدودة' : 'Limited Time Offer'}</span>
+                            <span className="-primary/80 text-xl font-bold">{language === 'ar' ? 'عرض مخصص لفترة محدودة' : 'Limited Time Offer'}</span>
                         </div>
                         <h2 className="text-4xl md:text-5xl font-black mb-6 leading-tight">
                             {t('flashSaleTitle')}

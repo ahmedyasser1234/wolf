@@ -16,7 +16,10 @@ export class ReviewsController {
     ) { }
 
     private async getUserId(req: Request): Promise<number> {
-        const token = req.cookies?.[COOKIE_NAME];
+        const token = req.headers.authorization?.startsWith('Bearer ')
+            ? req.headers.authorization.split(' ')[1]
+            : req.cookies?.[COOKIE_NAME];
+
         if (!token) throw new UnauthorizedException('Not logged in');
 
         const payload = await this.authService.verifySession(token);

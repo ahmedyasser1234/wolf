@@ -19,7 +19,7 @@ export default function SharedWishlist() {
     if (isLoading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <Loader2 className="w-10 h-10 text-rose-500 animate-spin" />
+                <Loader2 className="w-10 h-10 -primary animate-spin" />
             </div>
         );
     }

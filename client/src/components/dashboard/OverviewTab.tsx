@@ -19,16 +19,16 @@ export default function OverviewTab({ dashboard, onCategoryClick, onProductClick
     const { t, language } = useLanguage();
 
     const stats = [
-        { label: language === 'ar' ? "إجمالي المبيعات" : "Total Revenue", value: `${dashboard?.stats?.totalRevenue || 0} ${t('currency')}`, icon: TrendingUp, color: "text-[#e91e63]", bg: "bg-pink-50" },
-        { label: language === 'ar' ? "الطلبات النشطة" : "Active Orders", value: dashboard?.stats?.totalOrders || 0, icon: ShoppingCart, color: "text-blue-600", bg: "bg-blue-50" },
-        { label: language === 'ar' ? "إجمالي المنتجات" : "Total Products", value: dashboard?.stats?.totalProducts || 0, icon: Package, color: "text-purple-600", bg: "bg-purple-50" },
-        { label: language === 'ar' ? "تقييم المتجر" : "Store Rating", value: dashboard?.stats?.rating || "0.0", icon: Zap, color: "text-amber-600", bg: "bg-amber-50" },
+        { label: language === 'ar' ? "إجمالي المبيعات" : "Total Revenue", value: `${dashboard?.stats?.totalRevenue || 0} ${t('currency')}`, icon: TrendingUp, color: "text-[#e91e63]", bg: "bg-pink-900/30" },
+        { label: language === 'ar' ? "الطلبات النشطة" : "Active Orders", value: dashboard?.stats?.totalOrders || 0, icon: ShoppingCart, color: "text-blue-400", bg: "bg-blue-900/30" },
+        { label: language === 'ar' ? "إجمالي المنتجات" : "Total Products", value: dashboard?.stats?.totalProducts || 0, icon: Package, color: "text-purple-400", bg: "bg-purple-900/30" },
+        { label: language === 'ar' ? "تقييم المتجر" : "Store Rating", value: dashboard?.stats?.rating || "0.0", icon: Zap, color: "text-amber-400", bg: "bg-amber-900/30" },
     ];
 
     // Fetch real analytics data
     const { data: analyticsData } = useQuery({
         queryKey: ['vendor', 'analytics'],
-        queryFn: async () => await endpoints.vendors.analytics(),
+        queryFn: () => endpoints.admin.reports.getAnalytics(),
         staleTime: 1000 * 60 * 5, // 5 minutes
         enabled: !!dashboard,
     });
@@ -37,7 +37,7 @@ export default function OverviewTab({ dashboard, onCategoryClick, onProductClick
         <div className="space-y-12" dir={language === 'ar' ? 'rtl' : 'ltr'}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 {Array.from({ length: 4 }).map((_, i) => (
-                    <Card key={i} className="border-0 shadow-xl shadow-slate-100/50 rounded-[40px] bg-white p-8">
+                    <Card key={i} className="border-0 shadow-xl shadow-purple-900/5 rounded-[40px] bg-background border border-gray-800 p-8">
                         <div className="flex items-center justify-between mb-6">
                             <Skeleton className="w-14 h-14 rounded-3xl" />
                             <Skeleton className="h-2 w-8" />
@@ -48,11 +48,11 @@ export default function OverviewTab({ dashboard, onCategoryClick, onProductClick
                 ))}
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                <Card className="lg:col-span-8 border-0 shadow-xl shadow-slate-100/50 rounded-[40px] bg-white h-[400px]">
+                <Card className="lg:col-span-8 border-0 shadow-xl shadow-purple-900/5 rounded-[40px] bg-background border border-gray-800 h-[400px]">
                     <Skeleton className="w-full h-full rounded-[40px]" />
                 </Card>
                 <div className="lg:col-span-4 space-y-8">
-                    <Card className="border-0 shadow-xl shadow-slate-100/50 rounded-[40px] bg-slate-900 h-[300px]">
+                    <Card className="border-0 shadow-xl shadow-purple-900/5 rounded-[40px] bg-slate-900 h-[300px]">
                         <Skeleton className="w-full h-full rounded-[40px] opacity-20" />
                     </Card>
                 </div>
@@ -68,16 +68,16 @@ export default function OverviewTab({ dashboard, onCategoryClick, onProductClick
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 {stats.map((stat, idx) => (
-                    <Card key={idx} className="border-0 shadow-xl shadow-slate-100/50 rounded-[40px] overflow-hidden group hover:scale-105 transition-all duration-500 bg-white">
+                    <Card key={idx} className="border-0 shadow-xl shadow-purple-900/5 rounded-[40px] overflow-hidden group hover:scale-105 transition-all duration-500 bg-background border border-gray-800">
                         <CardContent className={`p-8 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
                             <div className={`flex items-center justify-between mb-6 ${language === 'ar' ? 'flex-row' : 'flex-row'}`}>
                                 <div className={cn("w-14 h-14 rounded-3xl flex items-center justify-center transition-transform group-hover:rotate-12", stat.bg)}>
                                     <stat.icon className={cn("w-7 h-7", stat.color)} />
                                 </div>
-                                <div className="h-2 w-8 bg-slate-100 rounded-full" />
+                                <div className="h-2 w-8 bg-gray-800 rounded-full" />
                             </div>
-                            <p className="text-slate-400 font-bold text-sm mb-1 uppercase tracking-widest">{stat.label}</p>
-                            <h3 className="text-3xl font-black text-slate-900">{stat.value}</h3>
+                            <p className="text-gray-500 font-bold text-sm mb-1 uppercase tracking-widest">{stat.label}</p>
+                            <h3 className="text-3xl font-black text-white">{stat.value}</h3>
                         </CardContent>
                     </Card>
                 ))}
@@ -85,15 +85,15 @@ export default function OverviewTab({ dashboard, onCategoryClick, onProductClick
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 {/* Revenue Chart */}
-                <Card className="lg:col-span-8 border-0 shadow-xl shadow-slate-100/50 rounded-[40px] bg-white overflow-hidden">
-                    <div className={`p-10 border-b border-slate-50 flex items-center justify-between ${language === 'ar' ? 'flex-row' : 'flex-row'}`}>
+                <Card className="lg:col-span-8 border-0 shadow-xl shadow-purple-900/5 rounded-[40px] bg-background border border-gray-800 overflow-hidden">
+                    <div className={`p-10 border-b border-gray-800 flex items-center justify-between ${language === 'ar' ? 'flex-row' : 'flex-row'}`}>
                         <div className={language === 'ar' ? 'text-right' : 'text-left'}>
-                            <h3 className="text-2xl font-black text-slate-800 mb-1">{language === 'ar' ? "تحليل نمو المبيعات" : "Revenue Analytics"}</h3>
-                            <p className="text-sm font-bold text-slate-400">{language === 'ar' ? "أداء متجرك خلال الـ 6 أشهر الماضية" : "Store performance over the last 6 months"}</p>
+                            <h3 className="text-2xl font-black text-white mb-1">{language === 'ar' ? "تحليل نمو المبيعات" : "Revenue Analytics"}</h3>
+                            <p className="text-sm font-bold text-gray-400">{language === 'ar' ? "أداء متجرك خلال الـ 6 أشهر الماضية" : "Store performance over the last 6 months"}</p>
                         </div>
-                        <div className="flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-2xl">
-                            <TrendingUp className="w-4 h-4 text-emerald-600" />
-                            <span className="text-xs font-black text-emerald-600">+12.5%</span>
+                        <div className="flex items-center gap-2 bg-emerald-900/30 px-4 py-2 rounded-2xl">
+                            <TrendingUp className="w-4 h-4 text-emerald-400" />
+                            <span className="text-xs font-black text-emerald-400">+12.5%</span>
                         </div>
                     </div>
                     <div className="p-10 h-[400px]">
@@ -105,24 +105,26 @@ export default function OverviewTab({ dashboard, onCategoryClick, onProductClick
                                         <stop offset="95%" stopColor="#e91e63" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1f2937" />
                                 <XAxis
                                     dataKey="name"
                                     axisLine={false}
                                     tickLine={false}
-                                    tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 700 }}
+                                    tick={{ fill: '#6b7280', fontSize: 12, fontWeight: 700 }}
                                     dy={10}
                                 />
                                 <YAxis hide />
                                 <Tooltip
                                     contentStyle={{
-                                        backgroundColor: '#fff',
+                                        backgroundColor: '#0A0A0A',
                                         borderRadius: '16px',
-                                        border: 'none',
-                                        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                                        border: '1px solid #1f2937',
+                                        boxShadow: 'none',
                                         fontFamily: 'inherit',
-                                        fontWeight: 900
+                                        fontWeight: 900,
+                                        color: '#fff'
                                     }}
+                                    itemStyle={{ color: '#fff' }}
                                 />
                                 <Area
                                     type="monotone"
@@ -156,15 +158,15 @@ export default function OverviewTab({ dashboard, onCategoryClick, onProductClick
                         </div>
                     </Card>
 
-                    <Card className="border-0 shadow-xl shadow-slate-100/50 rounded-[40px] bg-white p-8">
+                    <Card className="border-0 shadow-xl shadow-purple-900/5 rounded-[40px] bg-background border border-gray-800 p-8">
                         <div className="flex items-center justify-between mb-6">
-                            <h4 className="font-black text-slate-800">{language === 'ar' ? "تنبيهات هامة" : "Alerts"}</h4>
+                            <h4 className="font-black text-white">{language === 'ar' ? "تنبيهات هامة" : "Alerts"}</h4>
                             <AlertCircle className="w-5 h-5 text-amber-500" />
                         </div>
                         <div className="space-y-4">
-                            <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex gap-4">
-                                <Clock className="w-5 h-5 text-amber-600 flex-shrink-0" />
-                                <p className="text-xs font-bold text-amber-800 leading-relaxed">
+                            <div className="p-4 bg-amber-900/30 rounded-2xl border border-amber-800 flex gap-4">
+                                <Clock className="w-5 h-5 text-amber-400 flex-shrink-0" />
+                                <p className="text-xs font-bold text-amber-200 leading-relaxed">
                                     {language === 'ar' ? "لديك 3 طلبات لم يتم تأكيدها بعد. يرجى مراجعتها فوراً." : "You have 3 unconfirmed orders. Please review them."}
                                 </p>
                             </div>
@@ -176,57 +178,57 @@ export default function OverviewTab({ dashboard, onCategoryClick, onProductClick
             {/* Recent Orders Section */}
             <div className="space-y-6">
                 <div className="flex items-center justify-between px-4">
-                    <h3 className="text-2xl font-black text-slate-900">{language === 'ar' ? "آخر الطلبات" : "Recent Activity"}</h3>
+                    <h3 className="text-2xl font-black text-white">{language === 'ar' ? "آخر الطلبات" : "Recent Activity"}</h3>
                     <Button variant="link" onClick={() => (window.location.search = "?tab=orders")} className="text-[#e91e63] font-black underline underline-offset-8">
                         {language === 'ar' ? "عرض الكل" : "View Full Journal"}
                     </Button>
                 </div>
 
-                <Card className="border-0 shadow-xl shadow-slate-100/50 rounded-[40px] bg-white overflow-hidden">
+                <Card className="border-0 shadow-xl shadow-purple-900/5 rounded-[40px] bg-background border border-gray-800 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className={`w-full ${language === 'ar' ? 'text-right' : 'text-left'}`}>
-                            <thead className="bg-slate-50 border-b border-slate-100">
+                            <thead className="bg-gray-800 border-b border-gray-700">
                                 <tr>
-                                    <th className={`py-6 px-10 text-[10px] font-black text-slate-400 uppercase tracking-widest ${language === 'ar' ? 'text-right' : 'text-left'}`}>{language === 'ar' ? "العميل" : "Customer"}</th>
-                                    <th className="py-6 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">{language === 'ar' ? "المنتجات" : "Items"}</th>
-                                    <th className="py-6 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">{language === 'ar' ? "الحالة" : "Status"}</th>
-                                    <th className={`py-6 px-10 text-[10px] font-black text-slate-400 uppercase tracking-widest ${language === 'ar' ? 'text-left' : 'text-right'}`}>{language === 'ar' ? "المبلغ" : "Total"}</th>
+                                    <th className={`py-6 px-10 text-[10px] font-black text-gray-400 uppercase tracking-widest ${language === 'ar' ? 'text-right' : 'text-left'}`}>{language === 'ar' ? "العميل" : "Customer"}</th>
+                                    <th className="py-6 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">{language === 'ar' ? "المنتجات" : "Items"}</th>
+                                    <th className="py-6 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">{language === 'ar' ? "الحالة" : "Status"}</th>
+                                    <th className={`py-6 px-10 text-[10px] font-black text-gray-400 uppercase tracking-widest ${language === 'ar' ? 'text-left' : 'text-right'}`}>{language === 'ar' ? "المبلغ" : "Total"}</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-50">
+                            <tbody className="divide-y divide-gray-800">
                                 {recentOrders.length === 0 ? (
                                     <tr>
-                                        <td colSpan={4} className="py-16 text-center text-slate-400 font-bold italic">
+                                        <td colSpan={4} className="py-16 text-center text-gray-500 font-bold italic">
                                             {language === 'ar' ? "لا توجد طلبات حديثة حالياً" : "No recent activity recorded"}
                                         </td>
                                     </tr>
                                 ) : (
                                     recentOrders.map((order: any) => (
-                                        <tr key={order.id} className="hover:bg-slate-50/50 transition-colors group cursor-pointer" onClick={() => onOrderClick(order)}>
+                                        <tr key={order.id} className="hover:bg-gray-800/50 transition-colors group cursor-pointer" onClick={() => onOrderClick(order)}>
                                             <td className="py-6 px-10">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-black text-slate-500 text-xs">
+                                                    <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center font-black text-gray-400 text-xs">
                                                         {order.customer?.name?.[0] || 'G'}
                                                     </div>
                                                     <div>
-                                                        <p className="font-black text-slate-900 text-sm">{order.customer?.name || (language === 'ar' ? "ضيف" : "Guest")}</p>
-                                                        <p className="text-[10px] font-bold text-slate-400">#{order.orderNumber}</p>
+                                                        <p className="font-black text-white text-sm">{order.customer?.name || (language === 'ar' ? "ضيف" : "Guest")}</p>
+                                                        <p className="text-[10px] font-bold text-gray-500">#{order.orderNumber}</p>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="py-6 px-8 text-center font-bold text-slate-600 text-sm">
+                                            <td className="py-6 px-8 text-center font-bold text-white text-sm">
                                                 {order.items?.length || 0} {language === 'ar' ? "قطع" : "Items"}
                                             </td>
                                             <td className="py-6 px-8 text-center">
                                                 <span className={cn(
                                                     "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest",
-                                                    order.status === 'delivered' ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+                                                    order.status === 'delivered' ? "bg-emerald-900/30 text-emerald-400" : "bg-amber-900/30 text-amber-400"
                                                 )}>
                                                     {order.status === 'delivered' ? (language === 'ar' ? 'مسلم' : 'Delivered') : (language === 'ar' ? 'قيد التنفيذ' : 'Processing')}
                                                 </span>
                                             </td>
                                             <td className={`py-6 px-10 ${language === 'ar' ? 'text-left' : 'text-right'}`}>
-                                                <span className="font-black text-slate-900">{order.total} <span className="text-[10px]">{t('currency')}</span></span>
+                                                <span className="font-black text-white">{order.total} <span className="text-[10px]">{t('currency')}</span></span>
                                             </td>
                                         </tr>
                                     ))

@@ -9,26 +9,26 @@ export function HomeFAQ() {
         {
             qAr: "كم يستغرق الشحن والتوصيل؟",
             qEn: "How long does shipping take?",
-            aAr: "يتم التوصيل داخل الرياض خلال 24 ساعة، ولباقي مدن المملكة خلال 3-5 أيام عمل.",
-            aEn: "Delivery within Riyadh takes 24 hours, and 3-5 business days for other cities in the Kingdom."
+            aAr: "يتم التوصيل داخل دبي خلال 24-48 ساعة، ولباقي مدن الإمارات خلال 3-5 أيام عمل. جميع الأجهزة مؤمّنة ومعبأة بعناية.",
+            aEn: "Delivery within Dubai takes 24-48 hours, and 3-5 business days for other Emirates. All devices are insured and carefully packaged."
         },
         {
-            qAr: "هل يمكنني استبدال أو استرجاع الفستان؟",
-            qEn: "Can I exchange or return the dress?",
-            aAr: "نعم، يمكنك الاستبدال أو الاسترجاع مجاناً خلال 7 أيام من استلام الطلب، بشرط أن يكون المنتج بحالته الأصلية.",
-            aEn: "Yes, you can exchange or return for free within 7 days of receiving the order, provided the product is in its original condition."
+            qAr: "ما هو نظام التقسيط المتاح؟",
+            qEn: "What installment options are available?",
+            aAr: "نوفر تقسيطاً بدون فوائد لمدة 3 أو 6 أو 10 أشهر على جميع المنتجات. يمكنك اختيار الخطة الأنسب لك عند الدفع.",
+            aEn: "We offer 0% interest installments for 3, 6, or 10 months on all products. Choose the plan that suits you best at checkout."
         },
         {
-            qAr: "كيف أتأكد من المقاس المناسب؟",
-            qEn: "How do I ensure the right size?",
-            aAr: "نفر لك جدول مقاسات مفصل لكل منتج، كما يمكنك استخدام خدمة 'جربي الفستان' بالذكاء الاصطناعي لرؤية الشكل التقريبي.",
-            aEn: "We provide a detailed size chart for each product, and you can use our AI 'Virtual Try-On' feature to see how it looks."
+            qAr: "ما هو الضمان على الأجهزة؟",
+            qEn: "What warranty is provided on devices?",
+            aAr: "جميع الأجهزة تأتي بضمان رسمي من الشركة المصنعة لمدة سنة كاملة، مع إمكانية الصيانة والاستبدال في حالة الأعطال المصنعية.",
+            aEn: "All devices come with an official manufacturer's warranty for one full year, with maintenance and replacement options for manufacturing defects."
         },
         {
             qAr: "ما هي طرق الدفع المتاحة؟",
             qEn: "What payment methods are available?",
-            aAr: "نقبل الدفع عبر مدى، فيزا، ماستركارد، Apple Pay، بالإضافة لخدمات التقسيط عبر تابي وتمارا.",
-            aEn: "We accept Mada, Visa, Mastercard, Apple Pay, as well as installment services via Tabby and Tamara."
+            aAr: "نقبل الدفع عبر مدى، فيزا، ماستركارد، Apple Pay، بالإضافة لخيارات التقسيط بدون فوائد على 3 أو 6 أو 10 أشهر.",
+            aEn: "We accept Mada, Visa, Mastercard, Apple Pay, plus 0% interest installments over 3, 6, or 10 months."
         }
     ];
 
@@ -36,7 +36,7 @@ export function HomeFAQ() {
         <section className="py-24 bg-white">
             <div className="container mx-auto px-4 max-w-4xl">
                 <div className="text-center mb-16">
-                    <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-rose-50 text-rose-600 mb-6">
+                    <span className="inline-flex items-center justify-center w-12 h-12 rounded-full -white/5 -primary mb-6">
                         <HelpCircle size={24} />
                     </span>
                     <h2 className="text-4xl font-black text-gray-900 mb-4">

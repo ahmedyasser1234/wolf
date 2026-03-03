@@ -8,7 +8,9 @@ export class JwtAuthGuard implements CanActivate {
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest();
-        const token = request.cookies?.[COOKIE_NAME];
+        const token = request.headers.authorization?.startsWith('Bearer ')
+            ? request.headers.authorization.split(' ')[1]
+            : request.cookies?.[COOKIE_NAME];
 
         if (!token) {
             throw new UnauthorizedException('Authentication required');

@@ -41,10 +41,7 @@ export class ReportsService {
                 commission: sql<number>`coalesce(sum(${orders.commission}), 0)`,
             })
             .from(orders)
-            .where(and(
-                eq(orders.paymentStatus, 'paid'),
-                gte(orders.createdAt, sixMonthsAgo)
-            ))
+            .where(gte(orders.createdAt, sixMonthsAgo))
             .groupBy(sql`to_char(${orders.createdAt}, 'Mon')`, sql`date_trunc('month', ${orders.createdAt})`)
             .orderBy(sql`date_trunc('month', ${orders.createdAt})`);
 
@@ -60,7 +57,7 @@ export class ReportsService {
             .orderBy(desc(sql`count(${products.id})`))
             .limit(10);
 
-        // 3. Top Vendors
+        // 3. Top Vendors (all orders, not just paid ones)
         const topVendors = await this.databaseService.db
             .select({
                 name: vendors.storeNameAr,
@@ -68,9 +65,8 @@ export class ReportsService {
             })
             .from(vendors)
             .leftJoin(orders, eq(vendors.id, orders.vendorId))
-            .where(eq(orders.paymentStatus, 'paid'))
             .groupBy(vendors.id, vendors.storeNameAr)
-            .orderBy(desc(sql`sum(${orders.total})`))
+            .orderBy(desc(sql`coalesce(sum(${orders.total}), 0)`))
             .limit(5);
 
         return {

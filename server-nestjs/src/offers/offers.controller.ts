@@ -14,7 +14,10 @@ export class OffersController {
     ) { }
 
     private async getVendorId(req: Request): Promise<number> {
-        const token = req.cookies?.[COOKIE_NAME];
+        const token = req.headers.authorization?.startsWith('Bearer ')
+            ? req.headers.authorization.split(' ')[1]
+            : req.cookies?.[COOKIE_NAME];
+
         if (!token) throw new UnauthorizedException();
 
         const payload = await this.authService.verifySession(token);
@@ -56,10 +59,24 @@ export class OffersController {
             return this.offersService.findAll(Number(vendorId));
         }
 
-        // 3. Fallback: Vendor Dashboard (Auth required)
+        // 3. Fallback: Dashboard (Auth required)
         console.log('🔒 [OffersController] No vendorId param, checking Auth...');
-        const authVendorId = await this.getVendorId(req);
-        return this.offersService.findAll(authVendorId);
+        const authHeader = req.headers.authorization || req.cookies?.[COOKIE_NAME];
+        if (!authHeader) throw new UnauthorizedException();
+
+        const token = req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.split(' ')[1] : req.cookies?.[COOKIE_NAME];
+        const payload = await this.authService.verifySession(token);
+        if (!payload) throw new UnauthorizedException();
+
+        if (payload.role === 'admin') {
+            return this.offersService.findAll(); // Admins see all
+        }
+
+        const user = await this.authService.findUserByOpenId(payload.openId);
+        const vendor = await this.vendorsService.findByUserId(user.id);
+        if (!vendor) throw new UnauthorizedException('Vendor not found');
+
+        return this.offersService.findAll(vendor.id);
     }
 
     @Get(':id')

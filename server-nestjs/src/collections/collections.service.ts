@@ -2,7 +2,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CloudinaryService } from '../media/cloudinary.provider';
 import { DatabaseService } from '../database/database.service';
-import { collections, products, categories } from '../database/schema';
+import { collections, products, categories, installmentPlans } from '../database/schema';
 import { eq, desc, and, sql } from 'drizzle-orm';
 
 @Injectable()
@@ -12,7 +12,7 @@ export class CollectionsService {
         private readonly cloudinary: CloudinaryService
     ) { }
 
-    async create(data: { nameAr: string; nameEn: string; vendorId: number; description?: string; image?: Express.Multer.File; categoryId: number }) {
+    async create(data: { nameAr: string; nameEn: string; vendorId: number; description?: string; image?: Express.Multer.File; categoryId: number; downPaymentPercentage?: number }) {
         let coverImage = "";
 
         if (data.image) {
@@ -57,6 +57,7 @@ export class CollectionsService {
                     slug: `${slug}-${Date.now()}`,
                     coverImage,
                     categoryId: data.categoryId, // Add categoryId
+                    downPaymentPercentage: Number(data.downPaymentPercentage || 0),
                 })
                 .returning();
 
@@ -78,6 +79,7 @@ export class CollectionsService {
                 slug: collections.slug,
                 vendorId: collections.vendorId,
                 categoryId: collections.categoryId, // Return categoryId
+                downPaymentPercentage: collections.downPaymentPercentage,
                 createdAt: collections.createdAt,
                 productsCount: sql<number>`count(${products.id})`.as('productsCount')
             })
@@ -102,6 +104,11 @@ export class CollectionsService {
 
     async update(id: number, data: any) {
         const updateData: any = { ...data };
+
+        if (updateData.downPaymentPercentage !== undefined) {
+            updateData.downPaymentPercentage = Number(updateData.downPaymentPercentage || 0);
+        }
+
         const imageFile = updateData.image;
         delete updateData.image;
 
@@ -130,6 +137,15 @@ export class CollectionsService {
             .set({ ...updateData, updatedAt: new Date() })
             .where(eq(collections.id, id))
             .returning();
+
+        // SYNC: Update all installment plans linked to this collection
+        if (updateData.downPaymentPercentage !== undefined && updated) {
+            await this.db.db
+                .update(installmentPlans)
+                .set({ downPaymentPercentage: updated.downPaymentPercentage })
+                .where(eq(installmentPlans.collectionId, id));
+        }
+
         return updated;
     }
 

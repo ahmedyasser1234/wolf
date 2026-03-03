@@ -17,10 +17,9 @@ export function ChatContainer() {
             {openChats.map((chat) => (
                 <div key={chat.sessionId} className="pointer-events-auto">
                     <ChatWidget
-                        vendorId={chat.vendorId}
                         recipientId={chat.recipientId}
-                        vendorName={chat.vendorName}
-                        vendorLogo={chat.vendorLogo}
+                        name={chat.name}
+                        logo={chat.logo}
                         isMinimized={chat.isMinimized}
                         onClose={() => closeChat(chat.sessionId)}
                         onMinimize={() => minimizeChat(chat.sessionId)}

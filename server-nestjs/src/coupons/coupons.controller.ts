@@ -12,11 +12,8 @@ export class CouponsController {
     }
 
     @Get()
-    findAll(@Query('vendorId') vendorId: string) {
-        if (!vendorId) {
-            throw new BadRequestException('Vendor ID is required');
-        }
-        return this.couponsService.findAll(Number(vendorId));
+    findAll(@Query('vendorId') vendorId?: string) {
+        return this.couponsService.findAll(vendorId ? Number(vendorId) : undefined);
     }
 
     @Post('validate')

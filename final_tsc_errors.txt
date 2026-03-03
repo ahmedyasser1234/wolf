@@ -1,0 +1,3 @@
+﻿client/src/components/chat/ChatContainer.tsx(20,25): error TS2322: Type '{ vendorId: number; recipientId: number; vendorName: string; vendorLogo: string | undefined; isMinimized: boolean | undefined; onClose: () => void; onMinimize: () => void; }' is not assignable to type 'IntrinsicAttributes & ChatWidgetProps'.
+  Property 'vendorId' does not exist on type 'IntrinsicAttributes & ChatWidgetProps'.
+client/src/pages/AdminDashboard.tsx(1007,35): error TS2353: Object literal may only specify known properties, and 'vendorId' does not exist in type '{ recipientId: number; name: string; logo?: string | undefined; }'.

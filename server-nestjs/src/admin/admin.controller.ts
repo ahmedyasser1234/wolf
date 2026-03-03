@@ -14,20 +14,41 @@ export class AdminController {
 
 
     private async checkAdmin(req: Request) {
-        const token = req.cookies?.[COOKIE_NAME];
-        if (!token) throw new UnauthorizedException('No token');
+        const authHeader = req.headers.authorization;
+        const cookieToken = req.cookies?.[COOKIE_NAME];
 
-        const payload = await this.authService.verifySession(token);
-        if (!payload || payload.role !== 'admin') {
-            throw new UnauthorizedException('Not an admin');
+        const token = authHeader?.startsWith('Bearer ')
+            ? authHeader.split(' ')[1]
+            : cookieToken;
+
+        if (!token) {
+            console.error('[AdminAuth] Manual check failed: No token found in headers or cookies');
+            throw new UnauthorizedException('Authentication required (No token)');
         }
-        return payload;
+
+        try {
+            const payload = await this.authService.verifySession(token);
+            if (!payload || payload.role !== 'admin') {
+                console.error(`[AdminAuth] Manual check failed: Invalid role or session. Payload: ${JSON.stringify(payload)}`);
+                throw new UnauthorizedException('Not an admin or invalid session');
+            }
+            return payload;
+        } catch (err) {
+            console.error('[AdminAuth] Verification error:', err);
+            throw new UnauthorizedException('Invalid token session');
+        }
     }
 
     @Get('vendors')
     async getVendors(@Req() req: Request) {
         await this.checkAdmin(req);
         return this.adminService.getAllVendors();
+    }
+
+    @Get('vendors/pending')
+    async getPendingVendors(@Req() req: Request) {
+        await this.checkAdmin(req);
+        return this.adminService.getPendingVendors();
     }
 
     @Post('vendors')
@@ -85,6 +106,19 @@ export class AdminController {
         return this.adminService.updateVendorCommission(+id, commissionRate);
     }
 
+    @Patch('vendors/:id/status')
+    async updateVendorStatus(
+        @Req() req: Request,
+        @Param('id') id: string,
+        @Body('status') status: 'approved' | 'rejected'
+    ) {
+        await this.checkAdmin(req);
+        if (!['approved', 'rejected'].includes(status)) {
+            throw new UnauthorizedException('Invalid status');
+        }
+        return this.adminService.updateVendorStatus(+id, status);
+    }
+
     @Get('customers/:id')
     async getCustomer(@Req() req: Request, @Param('id') id: string) {
         await this.checkAdmin(req);
@@ -101,5 +135,61 @@ export class AdminController {
     async search(@Req() req: Request, @Query('q') q: string) {
         await this.checkAdmin(req);
         return this.adminService.globalSearch(q);
+    }
+
+    // --- Payment Gateways Routes ---
+    @Get('payment-gateways')
+    async getPaymentGateways(@Req() req: Request) {
+        await this.checkAdmin(req);
+        return this.adminService.getPaymentGateways();
+    }
+
+    @Patch('payment-gateways/:id/toggle')
+    async toggleGateway(@Req() req: Request, @Param('id') id: string, @Body('isEnabled') isEnabled: boolean) {
+        await this.checkAdmin(req);
+        return this.adminService.updatePaymentGatewayToggle(+id, isEnabled);
+    }
+
+    @Patch('payment-gateways/:id/credentials')
+    async updateCredentials(@Req() req: Request, @Param('id') id: string, @Body() body: any) {
+        await this.checkAdmin(req);
+        return this.adminService.updatePaymentGatewayCredentials(
+            +id,
+            body.apiKey,
+            body.publishableKey,
+            body.merchantId,
+            body.config
+        );
+    }
+
+    @Get('payment-gateways/seed')
+    async seedGateways(@Req() req: Request) {
+        await this.checkAdmin(req);
+        return this.adminService.getPaymentGateways(); // Service auto-seeds if empty
+    }
+
+    // --- Excel Export/Import Routes ---
+    @Get('export/customers')
+    async exportCustomers(@Req() req: Request) {
+        await this.checkAdmin(req);
+        return this.adminService.exportCustomers();
+    }
+
+    @Post('import/customers')
+    async importCustomers(@Req() req: Request, @Body() body: any[]) {
+        await this.checkAdmin(req);
+        return this.adminService.importCustomers(body);
+    }
+
+    @Get('export/shipping')
+    async exportShipping(@Req() req: Request) {
+        await this.checkAdmin(req);
+        return this.adminService.exportShipping();
+    }
+
+    @Get('catalog/seed-tech')
+    async seedTechCatalog(@Req() req: Request) {
+        await this.checkAdmin(req);
+        return this.adminService.seedTechCatalog();
     }
 }

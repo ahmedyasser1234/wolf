@@ -15,33 +15,37 @@ import Orders from "@/pages/Orders";
 import OrderDetails from "@/pages/OrderDetails";
 import OrderSuccess from "@/pages/OrderSuccess";
 import Notifications from "@/pages/Notifications";
-import VendorProfile from "@/pages/VendorProfile";
-import VendorDashboard from "@/pages/VendorDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminLogin from "@/pages/AdminLogin";
 import PrivacyPolicy from "@/pages/legal/PrivacyPolicy";
 import TermsOfService from "@/pages/legal/TermsOfService";
+import ReturnPolicy from "@/pages/legal/ReturnPolicy";
+import ShippingPolicy from "@/pages/legal/ShippingPolicy";
 import AboutUs from "@/pages/AboutUs";
 import ContactUs from "@/pages/ContactUs";
-import VendorLogin from "@/pages/VendorLogin.tsx";
-import VendorRegister from "@/pages/VendorRegister.tsx";
 import AdminRegister from "@/pages/AdminRegister.tsx";
 import Wishlist from "@/pages/Wishlist";
 import Profile from "@/pages/Profile";
 import SharedWishlist from "@/pages/SharedWishlist";
 import FAQ from "@/pages/FAQ";
 import SearchResults from "@/pages/SearchResults";
+import CategoriesPage from "@/pages/CategoriesPage";
+import CategoryGroupsPage from "@/pages/CategoryGroupsPage";
+import GroupProductsPage from "@/pages/GroupProductsPage";
+import GiftCards from "@/pages/GiftCards";
+import WalletPage from "@/pages/Wallet";
 import { useAuth } from "@/_core/hooks/useAuth";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import { endpoints } from "@/lib/api";
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
-import { io } from "socket.io-client";
+
 import { Button } from "@/components/ui/button";
-import { Heart, ShoppingCart, User, Menu, X, ChevronLeft, Search, ShoppingBag, LayoutDashboard, MessageSquare, Facebook, Instagram, Twitter, MessageCircle } from "lucide-react";
+import { Heart, ShoppingCart, User, Menu, X, ChevronLeft, Search, ShoppingBag, LayoutDashboard, MessageSquare, Facebook, Instagram, Twitter, MessageCircle, Wallet, RefreshCw, CreditCard, Mail, Phone, Clock } from "lucide-react";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { getLoginUrl } from "@/const";
 import { motion, AnimatePresence } from "framer-motion";
 
-import { Switch as UISwitch } from "@/components/ui/switch"; // Renamed to avoid conflict with wouter's Switch
+
 import { useLanguage } from "@/lib/i18n";
 
 import { ChatHistory } from "./components/chat/ChatHistory";
@@ -93,19 +97,17 @@ function Navigation({ isChatHistoryOpen, setIsChatHistoryOpen, unreadCount, syst
     const handleCartUpdate = () => {
       setGuestCartTrigger(prev => prev + 1);
     };
-    window.addEventListener('fustan-cart-updated', handleCartUpdate);
-    return () => window.removeEventListener('fustan-cart-updated', handleCartUpdate);
+    window.addEventListener('wolf-techno-cart-updated', handleCartUpdate);
+    return () => window.removeEventListener('wolf-techno-cart-updated', handleCartUpdate);
   }, []);
 
   const cartCount = useMemo(() => {
     let count = 0;
-    // Server items
     if (cartData && Array.isArray(cartData)) {
       count = cartData.reduce((acc, item) => acc + (item.quantity || 0), 0);
     }
-    // Guest items from localStorage
     if (typeof window !== "undefined") {
-      const guestItemsRaw = localStorage.getItem('fustan-guest-items');
+      const guestItemsRaw = localStorage.getItem('wolf-techno-guest-items');
       if (guestItemsRaw) {
         try {
           const guestItems = JSON.parse(guestItemsRaw);
@@ -126,7 +128,6 @@ function Navigation({ isChatHistoryOpen, setIsChatHistoryOpen, unreadCount, syst
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearch = (e: React.FormEvent) => {
@@ -140,39 +141,35 @@ function Navigation({ isChatHistoryOpen, setIsChatHistoryOpen, unreadCount, syst
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 border-b ${isScrolled || !isHeroPage
-      ? 'bg-white/80 backdrop-blur-xl border-white/20 py-3 shadow-[0_8px_30px_rgb(0,0,0,0.04)]'
-      : 'bg-transparent border-transparent py-6'
+      ? 'bg-background/90 backdrop-blur-xl border-white/5 py-4 shadow-[0_8px_30px_rgb(0,0,0,0.4)]'
+      : 'bg-transparent border-transparent py-4'
       }`}>
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 md:px-8 max-w-[1600px]">
         <div className="flex items-center justify-between font-sans">
           {/* Logo */}
           <Link href="/">
-            <div className="flex items-center cursor-pointer group">
-              <img
-                src={(!isScrolled && isHeroPage) ? "/logo-white.png" : "/12345.png"}
-                alt="Fustan Logo"
-                className={`w-auto object-contain transition-all duration-500 ${isScrolled || !isHeroPage ? 'h-12' : 'h-16 drop-shadow-lg'}`}
-              />
+            <div className="flex items-center cursor-pointer group gap-4">
+              <img src="/logo (2).png" alt="WOLF TECHNO" className="h-16 md:h-20 w-auto object-contain" />
+              <h1 className="text-xl md:text-2xl font-black tracking-widest whitespace-nowrap hidden sm:block bg-gradient-to-r from-primary via-white to-primary bg-clip-text text-transparent animate-gradient-x">WOLF TECHNO</h1>
             </div>
           </Link>
 
-          {/* Center: Navigation Links (Luxury Pill) */}
-          <div className={`hidden lg:flex items-center gap-1 px-2 py-2 rounded-full transition-all duration-300 ${isScrolled || !isHeroPage
-            ? 'bg-gray-100/50 backdrop-blur-md border border-gray-100'
-            : 'bg-transparent border border-transparent'
-            }`}>
+          {/* Center: Navigation Links */}
+          <div className="hidden lg:flex items-center gap-6">
             {[
-              { label: t('home'), href: "/" },
-              { label: t('products'), href: "/products" },
-              { label: t('about'), href: "/about-us" },
-              { label: t('contact'), href: "/contact-us" }
+              { label: language === 'ar' ? "الرئيسية" : "Home", href: "/" },
+              { label: language === 'ar' ? "المتجر" : "Shop", href: "/products" },
+              { label: language === 'ar' ? "الأقسام" : "Categories", href: "/categories" },
+              { label: language === 'ar' ? "كارت الهدية" : "Gift Cards", href: "/gift-cards" },
+              { label: language === 'ar' ? "تتبع طلبي" : "Track Order", href: "/orders" },
+              { label: language === 'ar' ? "الدعم" : "Support", href: "/contact-us" }
             ].map(link => {
               const isActive = location === link.href;
               return (
                 <Link key={link.href} href={link.href}>
-                  <span className={`block px-6 py-2.5 rounded-full text-sm font-black cursor-pointer transition-all duration-300 ${isActive
-                    ? (isScrolled || location !== '/' ? 'bg-white text-gray-900 shadow-sm' : 'bg-white text-gray-900 shadow-lg')
-                    : (isScrolled || location !== '/' ? 'text-gray-500 hover:text-gray-900' : 'text-white/80 hover:text-white')
+                  <span className={`block text-sm font-bold cursor-pointer transition-colors duration-300 ${isActive
+                    ? 'text-primary'
+                    : 'text-white/80 hover:text-primary'
                     }`}>
                     {link.label}
                   </span>
@@ -181,45 +178,42 @@ function Navigation({ isChatHistoryOpen, setIsChatHistoryOpen, unreadCount, syst
             })}
           </div>
 
-          {/* Right Side: Tools & Search */}
-          <div className="flex items-center gap-1.5 md:gap-3">
-            {/* Search Input (Hidden on extra small) */}
-            {/* Search Input (Hidden on mobile) */}
-            <form onSubmit={handleSearch} className="hidden lg:flex relative items-center group">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={language === 'ar' ? "ابحثي عن فستان أحلامك..." : "Find your dream dress..."}
-                className={`h-11 rounded-full px-6 pe-12 transition-all duration-300 ${isScrolled || !isHeroPage
-                  ? 'bg-gray-100/50 focus:bg-white border-gray-100 focus:border-rose-200 w-48 md:w-64 focus:w-72'
-                  : 'bg-transparent hover:bg-white/5 text-white placeholder:text-white/60 border-transparent focus:border-white/20 w-48 md:w-60 focus:w-64'
-                  } border outline-none font-medium text-sm`}
-              />
-              <button type="submit" className={`absolute end-2 w-8 h-8 rounded-full flex items-center justify-center transition-all ${isScrolled || !isHeroPage ? 'bg-rose-600 text-white shadow-rose-200 shadow-lg' : 'bg-white text-gray-900 shadow-white/20 shadow-md'}`}>
-                <Search size={14} />
+          {/* Right Side: Tools & Actions */}
+          <div className="flex items-center gap-3 md:gap-4">
+            {/* Language Switcher - Pill Style */}
+            <div className="hidden md:flex items-center bg-white/5 border border-white/10 rounded-full px-1 py-1">
+              <button
+                onClick={() => setLanguage('en')}
+                className={`px-3 py-1 text-xs font-bold rounded-full transition-colors ${language !== 'ar' ? 'bg-primary text-background' : 'text-white/70 hover:text-white'}`}
+              >
+                EN
               </button>
-            </form>
+              <button
+                onClick={() => setLanguage('ar')}
+                className={`px-3 py-1 text-xs font-bold rounded-full transition-colors ${language === 'ar' ? 'bg-primary text-background' : 'text-white/70 hover:text-white'}`}
+              >
+                AR
+              </button>
+            </div>
 
-            <button
-              onClick={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
-              className={`flex items-center justify-center w-9 h-9 md:w-11 md:h-11 rounded-full font-bold shadow-sm transition-all border ${isScrolled || !isHeroPage
-                ? 'bg-gray-50 text-gray-900 border-gray-100 hover:bg-gray-100'
-                : 'bg-transparent text-white border-transparent hover:bg-white/5'
-                }`}
-            >
-              <span className="text-xs md:text-sm">{language === 'ar' ? 'En' : 'ع'}</span>
-            </button>
+            {/* Login / Actions Button */}
+            {!user ? (
+              <Link href="/login">
+                <button className="hidden sm:block border-[1.5px] border-primary text-primary hover:bg-primary hover:text-background font-bold text-sm px-6 py-2 rounded-full transition-all duration-300">
+                  {language === 'ar' ? "تسجيل الدخول" : "Login"}
+                </button>
+              </Link>
+            ) : null}
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 ml-2">
               <Link href="/cart">
-                <button className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-gray-900 text-white flex items-center justify-center hover:bg-gray-800 transition-all relative shadow-lg">
-                  <ShoppingCart className="w-4 h-4 md:w-[18px] md:h-[18px]" />
+                <button className="relative w-10 h-10 rounded-full bg-white/5 border border-white/10 text-white flex items-center justify-center hover:bg-white/10 hover:border-primary/50 transition-all group">
+                  <ShoppingCart className="w-5 h-5 group-hover:text-primary transition-colors" />
                   {cartCount > 0 && (
                     <motion.span
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="absolute -top-1 -right-1 flex h-5 w-5 md:h-6 md:w-6 items-center justify-center rounded-full bg-rose-500 text-[10px] md:text-xs font-black text-white ring-2 ring-white shadow-lg"
+                      className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-black text-background ring-2 ring-background shadow-lg"
                     >
                       {cartCount}
                     </motion.span>
@@ -228,120 +222,95 @@ function Navigation({ isChatHistoryOpen, setIsChatHistoryOpen, unreadCount, syst
               </Link>
 
               {user ? (
-                <>
-                  {user.role !== 'admin' && user.role !== 'vendor' && (
-                    <>
-                      <Link href="/wishlist">
-                        <button className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center shadow-inner hover:bg-rose-100 transition-all">
-                          <Heart className="w-4.5 h-4.5 md:w-5 md:h-5" />
-                        </button>
-                      </Link>
+                <div className="relative user-menu-container" ref={userMenuRef}>
+                  <button
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className="w-10 h-10 rounded-full bg-white/5 border border-white/10 text-white flex items-center justify-center hover:bg-white/10 hover:border-primary/50 transition-all group"
+                  >
+                    <User className="w-5 h-5 group-hover:text-primary transition-colors" />
+                  </button>
 
-                      <NotificationDropdown unreadCount={systemUnreadCount} />
-                    </>
-                  )}
-
-                  <div className="relative user-menu-container" ref={userMenuRef}>
-                    <button
-                      onClick={() => setUserMenuOpen(!userMenuOpen)}
-                      className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shadow-inner hover:bg-rose-200 transition-all"
-                    >
-                      <User className="w-4.5 h-4.5 md:w-5 md:h-5" />
-                    </button>
-
-                    <AnimatePresence>
-                      {userMenuOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 15, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                          transition={{ duration: 0.2 }}
-                          className="absolute end-0 mt-4 w-72 bg-white rounded-[2rem] shadow-2xl border border-gray-100 p-5 z-50 overflow-hidden text-start"
-                        >
-                          <div className="flex items-center gap-4 p-2 mb-4">
-                            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-xl font-bold text-gray-500">
-                              {user.name.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                              <p className="font-bold text-gray-900 text-lg">{user.name}</p>
-                              <p className="text-xs text-gray-400 font-medium">{user.email}</p>
-                            </div>
+                  <AnimatePresence>
+                    {userMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute end-0 mt-4 w-64 bg-secondary border border-white/10 rounded-2xl shadow-2xl p-4 z-50 text-start"
+                      >
+                        <div className="flex items-center gap-3 p-2 mb-3 border-b border-white/10 pb-4">
+                          <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-lg font-bold text-primary">
+                            {user.name.charAt(0).toUpperCase()}
                           </div>
+                          <div className="overflow-hidden">
+                            <p className="font-bold text-white text-sm truncate">{user.name}</p>
+                            <p className="text-[11px] text-white/50 truncate">{user.email}</p>
+                          </div>
+                        </div>
 
-                          <div className="space-y-1">
-                            {user?.role === "vendor" && (
-                              <Link href="/vendor-dashboard">
-                                <button
-                                  onClick={() => setUserMenuOpen(false)}
-                                  className="w-full text-start px-4 py-3.5 rounded-2xl hover:bg-rose-50 hover:text-rose-600 transition-colors font-bold text-gray-600 flex items-center gap-3">
-                                  <LayoutDashboard size={18} />
-                                  {t('vendorDashboard')}
-                                </button>
-                              </Link>
-                            )}
-                            {user?.role === "admin" && (
-                              <Link href="/admin-dashboard">
-                                <button
-                                  onClick={() => setUserMenuOpen(false)}
-                                  className="w-full text-start px-4 py-3.5 rounded-2xl hover:bg-rose-50 hover:text-rose-600 transition-colors font-bold text-gray-600 flex items-center gap-3">
-                                  <LayoutDashboard size={18} />
-                                  {t('adminDashboard')}
-                                </button>
-                              </Link>
-                            )}
-                            {user?.role !== 'vendor' && user?.role !== 'admin' && (
-                              <Link href="/orders">
-                                <button
-                                  onClick={() => setUserMenuOpen(false)}
-                                  className="w-full text-start px-4 py-3.5 rounded-2xl hover:bg-rose-50 hover:text-rose-600 transition-colors font-bold text-gray-600 flex items-center gap-3">
-                                  <ShoppingBag size={18} />
-                                  {t('myOrders')}
-                                </button>
-                              </Link>
-                            )}
-                            <Link href="/profile">
+                        <div className="space-y-1">
+                          {user?.role === "admin" && (
+                            <Link href="/admin-dashboard">
                               <button
                                 onClick={() => setUserMenuOpen(false)}
-                                className="w-full text-start px-4 py-3.5 rounded-2xl hover:bg-rose-50 hover:text-rose-600 transition-colors font-bold text-gray-600 flex items-center gap-3">
-                                <User size={18} />
-                                {language === 'ar' ? "الملف الشخصي" : "My Profile"}
+                                className="w-full text-start px-3 py-2.5 rounded-xl hover:bg-white/5 hover:text-primary transition-colors font-medium text-white/80 flex items-center gap-3 text-sm">
+                                <LayoutDashboard size={16} />
+                                {t('adminDashboard')}
                               </button>
                             </Link>
-
-                            <div className="h-px bg-gray-50 my-2" />
-
+                          )}
+                          {user?.role !== 'admin' && (
+                            <Link href="/orders">
+                              <button
+                                onClick={() => setUserMenuOpen(false)}
+                                className="w-full text-start px-3 py-2.5 rounded-xl hover:bg-white/5 hover:text-primary transition-colors font-medium text-white/80 flex items-center gap-3 text-sm">
+                                <ShoppingBag size={16} />
+                                {language === 'ar' ? 'طلباتي' : 'My Orders'}
+                              </button>
+                            </Link>
+                          )}
+                          {user?.role !== 'admin' && (
+                            <Link href="/wallet">
+                              <button
+                                onClick={() => setUserMenuOpen(false)}
+                                className="w-full text-start px-3 py-2.5 rounded-xl hover:bg-white/5 hover:text-primary transition-colors font-medium text-white/80 flex items-center gap-3 text-sm">
+                                <Wallet size={16} />
+                                {language === 'ar' ? 'محفظتي' : 'My Wallet'}
+                              </button>
+                            </Link>
+                          )}
+                          <Link href="/profile">
                             <button
-                              onClick={() => {
-                                setUserMenuOpen(false);
-                                logout();
-                              }}
-                              className="w-full text-start px-4 py-3.5 rounded-2xl hover:bg-red-50 text-red-500 transition-colors font-bold flex items-center gap-3"
-                            >
-                              <div className="w-5" />
-                              {t('logout')}
+                              onClick={() => setUserMenuOpen(false)}
+                              className="w-full text-start px-3 py-2.5 rounded-xl hover:bg-white/5 hover:text-primary transition-colors font-medium text-white/80 flex items-center gap-3 text-sm">
+                              <User size={16} />
+                              {language === 'ar' ? "حسابي" : "My Account"}
                             </button>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </>
-              ) : (
-                <a href={getLoginUrl()}>
-                  <Button className={`h-11 px-8 rounded-full text-base font-bold shadow-xl transition-all ${isScrolled || !isHeroPage
-                    ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-200'
-                    : 'bg-white text-gray-900 hover:bg-gray-50'
-                    }`}>
-                    {t('startNow')}
-                  </Button>
-                </a>
-              )}
+                          </Link>
+
+                          <button
+                            onClick={() => {
+                              setUserMenuOpen(false);
+                              logout();
+                            }}
+                            className="w-full text-start px-3 py-2.5 mt-2 rounded-xl bg-destructive/10 hover:bg-destructive/20 text-destructive hover:text-destructive transition-colors font-medium flex items-center gap-3 text-sm"
+                          >
+                            <div className="w-4" />
+                            {t('logout')}
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : null}
 
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden w-9 h-9 md:w-11 md:h-11 rounded-full bg-white border border-gray-100 flex items-center justify-center text-gray-900 shadow-sm"
+                className="lg:hidden w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white hover:bg-white/10 transition-colors"
               >
-                {mobileMenuOpen ? <X className="w-4.5 h-4.5 md:w-5 md:h-5" /> : <Menu className="w-4.5 h-4.5 md:w-5 md:h-5" />}
+                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
             </div>
           </div>
@@ -354,40 +323,51 @@ function Navigation({ isChatHistoryOpen, setIsChatHistoryOpen, unreadCount, syst
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden mt-4 bg-white rounded-[2.5rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] border border-gray-100 overflow-hidden"
+              className="lg:hidden mt-4 bg-secondary border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
             >
-              <div className="p-8 space-y-4 text-center">
-                <form onSubmit={handleSearch} className="mb-4">
+              <div className="p-6 space-y-2">
+                <form onSubmit={handleSearch} className="mb-6">
                   <div className="relative">
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder={language === 'ar' ? "ابحثي عن فستان..." : "Search for dress..."}
-                      className="w-full h-14 bg-gray-50 border-none rounded-2xl px-6 text-right font-medium focus:ring-2 focus:ring-rose-200"
+                      placeholder={language === 'ar' ? "البحث في المتجر..." : "Search store..."}
+                      className="w-full h-12 bg-white/5 border border-white/10 rounded-full px-5 text-start font-medium text-white placeholder:text-white/40 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                     />
-                    <button type="submit" className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 bg-rose-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-rose-100">
-                      <Search size={16} />
+                    <button type="submit" className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-primary text-background flex items-center justify-center">
+                      <Search size={14} />
                     </button>
                   </div>
                 </form>
-                <div className="space-y-2">
-                  {[
-                    { label: t('home'), href: "/" },
-                    { label: t('products'), href: "/products" },
-                    { label: t('about'), href: "/about-us" },
-                    { label: t('contact'), href: "/contact-us" }
-                  ].map((item) => (
-                    <Link key={item.label} href={item.href}>
-                      <span
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="block text-lg font-black text-gray-600 hover:text-gray-900 hover:bg-gray-50 py-3 rounded-2xl cursor-pointer transition-colors"
-                      >
-                        {item.label}
-                      </span>
+
+                {[
+                  { label: language === 'ar' ? "الرئيسية" : "Home", href: "/" },
+                  { label: language === 'ar' ? "المتجر" : "Shop", href: "/products" },
+                  { label: language === 'ar' ? "الأقسام" : "Categories", href: "/categories" },
+                  { label: language === 'ar' ? "كارت الهدية 🎁" : "Gift Cards 🎁", href: "/gift-cards" },
+                  { label: language === 'ar' ? "تتبع طلبي" : "Track Order", href: "/orders" },
+                  { label: language === 'ar' ? "الدعم" : "Support", href: "/contact-us" }
+                ].map((item) => (
+                  <Link key={item.label} href={item.href}>
+                    <span
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block text-base font-bold text-white/80 hover:text-primary hover:bg-white/5 px-4 py-3 rounded-xl cursor-pointer transition-colors"
+                    >
+                      {item.label}
+                    </span>
+                  </Link>
+                ))}
+
+                {!user && (
+                  <div className="pt-4 mt-4 border-t border-white/10 space-y-3">
+                    <Link href="/login">
+                      <button onClick={() => setMobileMenuOpen(false)} className="w-full border border-primary text-primary hover:bg-primary hover:text-background font-bold py-3 rounded-full transition-colors">
+                        {language === 'ar' ? "تسجيل الدخول" : "Login"}
+                      </button>
                     </Link>
-                  ))}
-                </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
@@ -398,102 +378,175 @@ function Navigation({ isChatHistoryOpen, setIsChatHistoryOpen, unreadCount, syst
 }
 
 function Footer() {
-  const { language, t } = useLanguage();
+  const { language } = useLanguage();
   const isAr = language === 'ar';
 
   return (
-    <footer className="bg-slate-950 pt-24 pb-12 text-slate-400">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
-          <div className="md:col-span-5 text-start">
-            <div className="flex items-center justify-start mb-6">
-              <img
-                src="/logo-white.png"
-                alt="Fustan Logo"
-                className="h-20 w-auto object-contain"
-              />
+    <footer className={`bg-[#0A0A0A] text-gray-400 border-t border-white/5 font-sans ${isAr ? 'text-right' : 'text-left'}`} dir={isAr ? 'rtl' : 'ltr'}>
+      {/* Top Features Bar */}
+      <div className="bg-white py-3.5 border-b border-gray-200">
+        <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-5 text-[14px] font-black text-gray-900">
+          <div className="flex items-center gap-8 md:gap-12">
+            <div className={`flex items-center gap-2.5 ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
+              <ShoppingBag size={21} className="text-gray-900" />
+              <span>{isAr ? "توصيل مجاني" : "Free Delivery"}</span>
             </div>
-            <p className="text-lg text-slate-400 leading-relaxed mb-8">
+            <div className={`flex items-center gap-2.5 ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
+              <RefreshCw size={21} className="text-gray-900" />
+              <span>{isAr ? "10 أيام للاسترجاع" : "10 Days To Return"}</span>
+            </div>
+            <div className={`flex items-center gap-2.5 ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
+              <Heart size={21} className="text-gray-900" />
+              <span>{isAr ? "12 شهر ضمان" : "12 Months Warranty"}</span>
+            </div>
+          </div>
+          <div className={`flex items-center gap-4 ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full border border-primary/20 shadow-sm">
+              <CreditCard size={14} className="text-primary animate-pulse" />
+              <span className="text-primary font-black tracking-tight">{isAr ? "اشتري الآن وادفع لاحقاً" : "Buy Now, Pay Later"}</span>
+            </div>
+            <div className="flex gap-2">
+              <div className="bg-black text-[12px] px-3.5 py-1.5 rounded-lg text-white font-black uppercase tracking-tighter flex items-center gap-1 shadow-sm">G Pay</div>
+              <div className="bg-black text-[12px] px-3.5 py-1.5 rounded-lg text-white font-black uppercase tracking-tighter flex items-center gap-1 shadow-sm"> Pay</div>
+              <div className="bg-[#0070d1] text-[12px] px-3.5 py-1.5 rounded-lg text-white font-black uppercase tracking-tighter flex items-center gap-1 shadow-sm">AMEX</div>
+              <div className="bg-red-600 text-[12px] px-3.5 py-1.5 rounded-lg text-white font-black uppercase tracking-tighter flex items-center gap-1 shadow-sm whitespace-nowrap">UnionPay</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 pt-16 pb-12">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
+          {/* Brand Column */}
+          <div className="md:col-span-4">
+            <div className="flex items-center gap-4 mb-8">
+              <img src="/logo (2).png" alt="WOLF TECHNO" className="h-20 md:h-28 w-auto object-contain" />
+              <h2 className="text-3xl font-black tracking-widest bg-gradient-to-r from-primary via-white to-primary bg-clip-text text-transparent animate-gradient-x">WOLF TECHNO</h2>
+            </div>
+            <p className="text-sm text-gray-400 leading-relaxed mb-6 max-w-sm font-medium">
               {isAr
-                ? "نحن هنا لنصنع لكِ لحظة لا تُنسى. أكثر من مجرد متجر، نحن رفيقكِ في رحلة اختيار فستان العمر بتصاميم تجمع بين الرقي والابتكار."
-                : "We are here to create an unforgettable moment for you. More than just a store, we are your companion in the journey of choosing your dream dress with designs that blend elegance and innovation."
-              }
+                ? "WOLF TECHNO تابعة للأنشطة التجارية المصرح بها وتحت ترخيص شركة Wolf SMM F.Z.E وهي شركة مسجلة من قبل سلطة منطقة عجمان الحرة."
+                : "WOLF TECHNO is a commercial activity operating under the license of Wolf SMM F.Z.E, a company registered by the Ajman Free Zone Authority."}
             </p>
-            <div className="flex justify-start gap-4">
-              {[
-                { icon: Facebook, href: "https://facebook.com", label: "Facebook" },
-                { icon: Instagram, href: "https://instagram.com/ahmedyasser1456/", label: "Instagram" },
-                { icon: Twitter, href: "https://twitter.com", label: "X (Twitter)" },
-                { icon: MessageCircle, href: "https://wa.me/201021464303", label: "WhatsApp" }
-              ].map((social, i) => (
+
+
+
+            <div className="text-[11px] leading-5 text-gray-500 font-bold">
+              {isAr ? (
+                <>
+                  <p>منطقة عجمان الحرة</p>
+                  <p>برج بوليفارد A</p>
+                </>
+              ) : (
+                <>
+                  <p>Ajman Free Zone</p>
+                  <p>Boulevard Tower A</p>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* About Us Column */}
+          <div className="md:col-span-2">
+            <h3 className="text-sm font-black text-white mb-6 uppercase tracking-wider">
+              {isAr ? 'من نحن' : 'About Us'}
+            </h3>
+            <ul className="space-y-4 text-gray-400 font-bold text-xs">
+              <li><Link href="/about-us" className="hover:text-white transition-colors">{isAr ? 'عن ولف تكنو' : 'About Wolf Techno'}</Link></li>
+              <li><Link href="/products" className="hover:text-white transition-colors">{isAr ? 'المتجر' : 'Shop'}</Link></li>
+              <li><Link href="/blog" className="hover:text-white transition-colors">{isAr ? 'المدونة' : 'Our Blog'}</Link></li>
+            </ul>
+          </div>
+
+          {/* Information Column */}
+          <div className="md:col-span-3">
+            <h3 className="text-sm font-black text-white mb-6 uppercase tracking-wider">
+              {isAr ? 'معلومات' : 'Informations'}
+            </h3>
+            <ul className="space-y-4 text-gray-400 font-bold text-xs mb-10">
+              <li><Link href="/faq" className="hover:text-white transition-colors">{isAr ? 'مركز المساعدة والأسئلة الشائعة' : 'Help Center & FAQ'}</Link></li>
+              <li><Link href="/contact-us" className="hover:text-white transition-colors">{isAr ? 'اتصل بنا' : 'Contact Us'}</Link></li>
+              <li><Link href="/terms" className="hover:text-white transition-colors">{isAr ? 'الشروط والأحكام' : 'Terms & Conditions'}</Link></li>
+              <li><Link href="/privacy" className="hover:text-white transition-colors">{isAr ? 'سياسة الخصوصية' : 'Privacy Policy'}</Link></li>
+            </ul>
+
+            {/* Payment Grid */}
+            <div className="flex flex-wrap gap-3 p-5 bg-white/[0.03] rounded-[2rem] border border-white/5 w-fit">
+              <div className="bg-white p-1 rounded-lg h-10 w-20 flex items-center justify-center text-sm font-black text-blue-800 italic uppercase border border-gray-100 shadow-md">VISA</div>
+              <div className="bg-white p-1 rounded-lg h-10 w-20 flex items-center justify-center text-2xl font-black text-orange-500 border border-gray-100 shadow-md">M</div>
+              <div className="bg-white p-1 rounded-lg h-10 w-20 flex items-center justify-center text-xs font-black text-black border border-gray-100 shadow-md"> Pay</div>
+              <div className="bg-white p-1 rounded-lg h-10 w-20 flex items-center justify-center text-[11px] font-black text-blue-900 uppercase border border-blue-100 bg-blue-50/10 shadow-md">AMEX</div>
+              <div className="bg-white p-1 rounded-lg h-10 w-20 flex items-center justify-center text-[9px] font-black text-blue-700 uppercase leading-[1.1] text-center border border-gray-100 shadow-md">Union<br />Pay</div>
+              <div className="bg-white p-1 rounded-lg h-10 w-20 flex items-center justify-center text-[12px] font-black text-blue-500 uppercase border border-gray-100 shadow-md">G Pay</div>
+              <div className="bg-white p-1 rounded-lg h-10 w-20 flex items-center justify-center text-[10px] font-black text-blue-600 italic uppercase border border-gray-100 shadow-md leading-tight text-center">Samsung<br /><span className="text-[7px] not-italic uppercase block -mt-0.5">Pay</span></div>
+            </div>
+          </div>
+
+          {/* My Account Column */}
+          <div className="md:col-span-3">
+            <h3 className="text-sm font-black text-white mb-6 uppercase tracking-wider">
+              {isAr ? 'حسابي' : 'My Account'}
+            </h3>
+            <ul className="space-y-4 text-gray-400 font-bold text-xs mb-10">
+              <li><Link href="/profile" className="hover:text-white transition-colors">{isAr ? 'حسابي' : 'My Account'}</Link></li>
+              <li><Link href="/orders" className="hover:text-white transition-colors">{isAr ? 'تتبع طلبي' : 'Track Your Order'}</Link></li>
+              <li><Link href="/claims" className="hover:text-white transition-colors">{isAr ? 'تقديم مطالبة' : 'Raise A Claim'}</Link></li>
+            </ul>
+
+            {/* Contact Details */}
+            <div className={`space-y-3 flex flex-col ${isAr ? 'items-start' : 'items-start'}`}>
+              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">Contact Us</p>
+
+              <a href="mailto:contact@wolftechno.me" className="text-xs text-white font-black hover:text-primary transition-colors flex items-center gap-3 group">
+                <Mail size={14} className="text-primary group-hover:scale-110 transition-transform flex-shrink-0" />
+                <span>contact@wolftechno.me</span>
+              </a>
+
+              <a href="tel:+971588808744" className="text-xs text-white font-black hover:text-primary transition-colors flex items-center gap-3 group">
+                <Phone size={14} className="text-primary group-hover:scale-110 transition-transform flex-shrink-0" />
+                <span>+971 58 880 8744</span>
+              </a>
+
+              <div className="pt-2">
                 <a
-                  key={i}
-                  href={social.href}
+                  href="https://wa.me/971588808744"
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={social.label}
-                  className="w-11 h-11 rounded-full bg-white/5 border border-white/10 hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all duration-300 flex items-center justify-center text-slate-400 group"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#25D366]/10 text-[#25D366] rounded-xl text-xs font-black hover:bg-[#25D366]/20 transition-all border border-[#25D366]/20 shadow-sm"
                 >
-                  <social.icon size={20} className="group-hover:scale-110 transition-transform" />
+                  <MessageCircle size={14} fill="currentColor" />
+                  {isAr ? "تحدث معنا عبر واتساب" : "Chat with Us on WhatsApp"}
                 </a>
-              ))}
-            </div>
-          </div>
-
-          <div className="md:col-span-2 text-start">
-            <h3 className="text-base font-black text-white mb-6 uppercase tracking-wider">
-              {isAr ? 'روابط تهمك' : 'Quick Links'}
-            </h3>
-            <ul className="space-y-3 text-slate-400 font-medium text-sm">
-              <li><Link href="/products" className="hover:text-rose-600 transition-colors">{isAr ? 'مجموعتنا الجديدة' : 'New Collection'}</Link></li>
-              <li><Link href="/about-us" className="hover:text-rose-600 transition-colors">{isAr ? 'حكاية فستان' : 'Our Story'}</Link></li>
-              <li><Link href="/contact-us" className="hover:text-rose-600 transition-colors">{isAr ? 'تواصل معنا' : 'Contact Us'}</Link></li>
-              <li><Link href="/faq" className="hover:text-rose-600 transition-colors">{isAr ? 'الأسئلة الشائعة' : 'FAQs'}</Link></li>
-            </ul>
-          </div>
-
-          <div className="md:col-span-2 text-start">
-            <h3 className="text-base font-black text-white mb-6 uppercase tracking-wider">
-              {isAr ? 'سياساتنا' : 'Our Policies'}
-            </h3>
-            <ul className="space-y-3 text-slate-400 font-medium text-sm">
-              <li><Link href="/shipping" className="hover:text-rose-600 transition-colors">{isAr ? 'الشحن والتوصيل' : 'Shipping & Delivery'}</Link></li>
-              <li><Link href="/returns" className="hover:text-rose-600 transition-colors">{isAr ? 'الاستبدال والاسترجاع' : 'Returns & Exchange'}</Link></li>
-              <li><Link href="/terms" className="hover:text-rose-600 transition-colors">{isAr ? 'الشروط والأحكام' : 'Terms & Conditions'}</Link></li>
-              <li><Link href="/privacy" className="hover:text-rose-600 transition-colors">{isAr ? 'الخصوصية' : 'Privacy Policy'}</Link></li>
-            </ul>
-          </div>
-
-          <div className="md:col-span-3 text-start">
-            <div className="bg-white/5 p-6 rounded-[2rem] border border-white/10">
-              <h3 className="text-base font-black text-white mb-3">
-                {isAr ? 'انضمي لنشرتنا' : 'Join Our Newsletter'}
-              </h3>
-              <p className="text-xs text-slate-400 font-medium mb-4">
-                {isAr ? 'كوني أول من يعرف عن المجموعات الجديدة والعروض الحصرية' : 'Be the first to know about new collections and exclusive offers'}
-              </p>
-              <div className="flex gap-2">
-                <button className={`bg-rose-600 hover:bg-rose-700 text-white w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-rose-900/20 transition-all ${isAr ? '' : 'rotate-180'}`}>
-                  <ChevronLeft size={18} />
-                </button>
-                <input
-                  className="w-full bg-white/10 rounded-xl border-none px-4 text-start text-white placeholder:text-slate-500 font-medium text-sm focus:ring-2 focus:ring-rose-200 outline-none"
-                  placeholder={isAr ? "بريدك الإلكتروني" : "Your Email"}
-                />
               </div>
+            </div>
+
+            {/* Working Hours Box */}
+            <div className="mt-8 p-4 border border-white/5 bg-white/[0.03] rounded-2xl max-w-[240px]">
+              <p className="text-[10px] text-gray-500 font-bold mb-1.5 flex items-center gap-1.5">
+                <Clock size={11} className="text-primary" />
+                {isAr ? "رد خلال 1 يوم عمل" : "(Reply within 1 business day)"}
+              </p>
+              <p className="text-[10px] text-gray-300 font-bold">
+                {isAr ? "الاثنين إلى الجمعة من 9 صباحاً إلى 5 مساءً" : "Monday to Friday 9 am to 5 pm"}
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row items-center justify-between border-t border-white/5 pt-8 text-slate-500 font-medium text-xs">
-          <div className={`flex gap-4 mb-4 md:mb-0 ${isAr ? 'flex-row' : 'flex-row-reverse'}`}>
-            <span dir="ltr">&copy; {new Date().getFullYear()} Elegance Bridal Co.</span>
-            <span>{isAr ? 'جميع الحقوق محفوظة' : 'All Rights Reserved'}</span>
+        {/* Bottom Bar */}
+        <div className="flex flex-col md:flex-row items-center justify-between border-t border-white/5 pt-10 text-gray-600 font-medium text-[11px]">
+          <div className="flex gap-4 mb-6 md:mb-0">
+            <span dir="ltr">&copy; {new Date().getFullYear()} Wolf Techno. All Rights Reserved</span>
           </div>
-          <div className="flex items-center gap-1 opacity-80 hover:opacity-100 transition-opacity">
-            <span className="text-slate-600">{isAr ? 'صنع بكل' : 'Built with'}</span>
-            <Heart size={12} className="text-rose-500 fill-rose-500" />
-            <span className="text-slate-600">{isAr ? 'في مصر' : 'in Egypt'}</span>
+          <div className="flex items-center gap-4">
+            <div className="flex gap-3">
+              <a href="#" className="w-9 h-9 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center text-white hover:bg-primary transition-all duration-300">
+                <Instagram size={17} />
+              </a>
+              <a href="#" className="w-9 h-9 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center text-white hover:bg-primary transition-all duration-300">
+                <Facebook size={17} />
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -512,31 +565,61 @@ function Router() {
       {/* Product Routes */}
       <Route path={"/products"} component={Products} />
       <Route path={"/products/:id"} component={ProductDetail} />
-      <Route path={"/cart"} component={Cart} />
-      <Route path={"/checkout"} component={Checkout} />
-      <Route path={"/orders"} component={Orders} />
-      <Route path={"/orders/:id"} component={OrderDetails} />
-      <Route path={"/wishlist"} component={Wishlist} />
-      <Route path={"/wishlist/shared/:token"} component={SharedWishlist} />
-      <Route path={"/notifications"} component={Notifications} />
-      {/* Vendor Auth */}
-      <Route path="/vendor/login" component={VendorLogin} />
-      <Route path="/vendor/register" component={VendorRegister} />
+
+      {/* Category Browse Flow */}
+      <Route path="/categories" component={CategoriesPage} />
+      <Route path="/categories/:categorySlug" component={CategoryGroupsPage} />
+      <Route path="/groups/:groupSlug" component={GroupProductsPage} />
+      <Route path={"/gift-cards"}>
+        <ProtectedRoute component={GiftCards} />
+      </Route>
+
+      <Route path={"/notifications"}>
+        <ProtectedRoute component={Notifications} />
+      </Route>
+
+      <Route path={"/wallet"}>
+        <ProtectedRoute component={WalletPage} />
+      </Route>
+
+      <Route path={"/orders"}>
+        <ProtectedRoute component={Orders} />
+      </Route>
+
+      <Route path={"/orders/:id"}>
+        <ProtectedRoute component={OrderDetails} />
+      </Route>
+
+      <Route path={"/wishlist"}>
+        <ProtectedRoute component={Wishlist} />
+      </Route>
+
+      <Route path={"/cart"}>
+        <ProtectedRoute component={Cart} />
+      </Route>
+
+      <Route path={"/checkout"}>
+        <ProtectedRoute component={Checkout} />
+      </Route>
 
       {/* Admin Auth */}
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin/register" component={AdminRegister} />
-      <Route path="/fustan-super-admin-auth" component={AdminLogin} />
+      <Route path="/wolf-techno-super-admin-auth" component={AdminLogin} />
 
       {/* Profile & Dashboard Routes */}
-      <Route path={"/vendor/:slug"} component={VendorProfile} />
-      <Route path="/vendor-dashboard" component={VendorDashboard} />
-      <Route path="/admin-dashboard" component={AdminDashboard} />
-      <Route path={"/profile"} component={Profile} />
+      <Route path="/admin-dashboard">
+        <ProtectedRoute component={AdminDashboard} adminOnly />
+      </Route>
+      <Route path={"/profile"}>
+        <ProtectedRoute component={Profile} />
+      </Route>
 
       {/* Legal & Static Routes */}
       <Route path={"/privacy"} component={PrivacyPolicy} />
       <Route path={"/terms"} component={TermsOfService} />
+      <Route path={"/returns"} component={ReturnPolicy} />
+      <Route path={"/shipping"} component={ShippingPolicy} />
       <Route path={"/about-us"} component={AboutUs} />
       <Route path={"/contact-us"} component={ContactUs} />
       <Route path={"/faq"} component={FAQ} />
@@ -615,12 +698,12 @@ function AppContent() {
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={() => setIsChatHistoryOpen(true)}
-          className="fixed bottom-5 left-5 md:bottom-8 md:left-8 z-[100] w-14 h-14 md:w-16 md:h-16 rounded-full bg-rose-600 text-white shadow-2xl shadow-rose-200 flex items-center justify-center group transition-all hover:bg-rose-700"
+          className="fixed bottom-5 left-5 md:bottom-8 md:left-8 z-[100] w-14 h-14 md:w-16 md:h-16 rounded-full bg-primary text-primary-foreground shadow-2xl shadow-primary/20 flex items-center justify-center group transition-all hover:bg-primary/90"
         >
-          <div className="absolute inset-0 bg-gradient-to-tr from-rose-600 to-rose-400 opacity-0 group-hover:opacity-100 transition-opacity rounded-full"></div>
+          <div className="absolute inset-0 bg-gradient-to-tr from-primary to-primary/80 opacity-0 group-hover:opacity-100 transition-opacity rounded-full"></div>
           <MessageSquare className="w-6 h-6 md:w-8 md:h-8 relative z-10" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-5 w-5 md:h-6 md:w-6 items-center justify-center rounded-full bg-white text-rose-600 text-[10px] md:text-[12px] font-black shadow-lg animate-bounce border-2 border-rose-500">
+            <span className="absolute -top-1 -right-1 flex h-5 w-5 md:h-6 md:w-6 items-center justify-center rounded-full bg-white text-primary text-[10px] md:text-[12px] font-black shadow-lg animate-bounce border-2 border-primary">
               {unreadCount}
             </span>
           )}

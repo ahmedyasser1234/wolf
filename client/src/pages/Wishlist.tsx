@@ -75,7 +75,7 @@ export default function Wishlist() {
                 {/* Sharing Controls */}
                 <div className="mb-12 flex flex-col md:flex-row items-center justify-between gap-6 p-8 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm" dir={language === 'ar' ? 'rtl' : 'ltr'}>
                     <div className="flex items-center gap-6">
-                        <div className="w-16 h-16 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center">
+                        <div className="w-16 h-16 -white/5 -primary rounded-2xl flex items-center justify-center">
                             <Share2 size={28} />
                         </div>
                         <div className="text-start">
@@ -113,7 +113,7 @@ export default function Wishlist() {
                                     <Button
                                         onClick={handleCopy}
                                         variant="outline"
-                                        className="h-14 px-8 rounded-2xl font-black gap-3 border-rose-200 text-rose-600 hover:bg-rose-50 w-full"
+                                        className="h-14 px-8 rounded-2xl font-black gap-3 -primary/20 -primary hover:-white/5 w-full"
                                     >
                                         {copied ? <Check size={20} /> : <Copy size={20} />}
                                         {language === 'ar' ? "نسخ رابط المشاركة" : "Copy Share Link"}
@@ -126,7 +126,7 @@ export default function Wishlist() {
 
                 {!hasItems ? (
                     <div className="bg-white rounded-[3rem] p-12 md:p-20 text-center shadow-sm border border-gray-100">
-                        <div className="w-24 h-24 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-8 text-rose-500">
+                        <div className="w-24 h-24 -white/5 rounded-full flex items-center justify-center mx-auto mb-8 -primary">
                             <Heart size={40} className="fill-current" />
                         </div>
                         <h2 className="text-3xl font-black text-gray-900 mb-4">

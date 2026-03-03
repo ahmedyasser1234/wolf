@@ -33,11 +33,14 @@ export class CouponsService {
         return coupon;
     }
 
-    async findAll(vendorId: number) {
-        return await this.databaseService.db
-            .select()
-            .from(coupons)
-            .where(eq(coupons.vendorId, vendorId));
+    async findAll(vendorId?: number) {
+        if (vendorId) {
+            return await this.databaseService.db
+                .select()
+                .from(coupons)
+                .where(eq(coupons.vendorId, vendorId));
+        }
+        return await this.databaseService.db.select().from(coupons);
     }
 
     async findByCode(code: string) {

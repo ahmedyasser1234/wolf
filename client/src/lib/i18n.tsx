@@ -40,7 +40,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     const formatPrice = (amount: number | string) => {
         const num = typeof amount === 'string' ? parseFloat(amount) : amount;
         const formatted = (num || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        return language === 'ar' ? `${formatted} ر.س` : `${formatted} R.S`;
+        return language === 'ar' ? `${formatted} د.إ` : `${formatted} AED`;
     };
 
     const dir = language === 'ar' ? 'rtl' : 'ltr';

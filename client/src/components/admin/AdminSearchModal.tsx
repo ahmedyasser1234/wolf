@@ -90,7 +90,7 @@ export default function AdminSearchModal() {
                             >
                                 <Package className="h-4 w-4" />
                                 <span>{language === 'ar' ? product.nameAr : product.nameEn}</span>
-                                <span className="ml-auto text-xs font-bold text-rose-600">{product.price} ر.س</span>
+                                <span className="ml-auto text-xs font-bold text-primary">{product.price} د.إ</span>
                             </CommandItem>
                         ))}
                     </CommandGroup>

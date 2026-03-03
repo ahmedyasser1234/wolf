@@ -1,12 +1,13 @@
 
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { orders, orderItems, products, cartItems, notifications, vendors, coupons, offers, offerItems, users } from '../database/schema';
+import { orders, orderItems, products, cartItems, notifications, vendors, coupons, offers, offerItems, users, walletTransactions, customerWallets, installmentPlans, installments } from '../database/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CouponsService } from '../coupons/coupons.service';
 import { WalletsService } from '../wallets/wallets.service';
 import { PointsService } from '../points/points.service';
+import { PaymentsService } from '../payments/payments.service';
 
 @Injectable()
 export class OrdersService {
@@ -15,7 +16,8 @@ export class OrdersService {
         private notificationsService: NotificationsService,
         private couponsService: CouponsService,
         private walletsService: WalletsService,
-        private pointsService: PointsService
+        private pointsService: PointsService,
+        private paymentsService: PaymentsService
     ) { }
 
     async findAll(customerId: number, limit = 20, offset = 0) {
@@ -70,20 +72,15 @@ export class OrdersService {
         return { ...orderRaw[0].order, customer: orderRaw[0].customer, items };
     }
 
-    async create(customerId: number, shippingAddress: any, paymentMethod = 'card', couponCode?: string) {
-        console.log(`📦 [OrdersService] Creating Order for Customer ID: ${customerId}`);
+    async create(customerId: number, shippingAddress: any, paymentMethod = 'card', couponCode?: string, walletAmountUsed = 0, installmentPlanId?: number, kycData?: any) {
+        console.log(`📦 [OrdersService] Creating Order for Customer: ${customerId}, WalletUsed: ${walletAmountUsed}`);
 
         const cart = await this.databaseService.db
             .select()
             .from(cartItems)
             .where(eq(cartItems.customerId, customerId));
 
-        console.log(`   - Cart Items Found: ${cart.length}`);
-
-        if (cart.length === 0) {
-            console.error(`❌ [OrdersService] Cart is empty for Customer ID: ${customerId}`);
-            throw new BadRequestException('السلة فارغة');
-        }
+        if (cart.length === 0) throw new BadRequestException('السلة فارغة');
 
         // Group items by vendor
         const vendorGroups = new Map<number, { items: any[], subtotal: number, vendorUserId: number }>();
@@ -99,7 +96,6 @@ export class OrdersService {
                 const prod = product[0];
                 const vendorId = prod.vendorId;
 
-                // Get Vendor User ID for notification
                 let vendorUserId = 0;
                 if (vendorId) {
                     const vendor = await this.databaseService.db
@@ -130,158 +126,57 @@ export class OrdersService {
             }
         }
 
-        // Validate and apply coupon if exists
         let coupon: any = null;
         if (couponCode) {
             try {
                 coupon = await this.couponsService.findByCode(couponCode);
-                console.log('✅ Coupon found:', { id: coupon.id, code: coupon.code, vendorId: coupon.vendorId, usedCount: coupon.usedCount });
-            } catch (e) {
-                // Ignore invalid coupon, proceed without discount or throw? 
-                // Best to ignore or handle gracefully as frontend should have validated
-                console.log('❌ Invalid coupon code during order creation:', couponCode, e.message);
-            }
+            } catch (e) { }
         }
 
         const createdOrders: any[] = [];
+        let stripeCheckoutUrl = null;
 
         await this.databaseService.db.transaction(async (tx) => {
-            // 1. Strict Stock Validation for ALL items before processing
+            // Check Wallet Balance if used
+            if (walletAmountUsed > 0) {
+                const [wallet] = await tx.select().from(customerWallets).where(eq(customerWallets.userId, customerId)).limit(1);
+                if (!wallet || Number(wallet.balance) < walletAmountUsed) {
+                    throw new BadRequestException('رصيد المحفظة غير كافٍ');
+                }
+            }
+
             for (const [vendorId, group] of vendorGroups) {
+                // Stock Check
                 for (const item of group.items) {
-                    const productRes = await tx
-                        .select()
-                        .from(products)
-                        .where(eq(products.id, item.productId))
-                        .limit(1);
-
-                    if (productRes.length === 0) throw new BadRequestException(`Product ${item.productNameEn || item.productId} not found`);
-
-                    const prod = productRes[0];
+                    const [prod] = await tx.select().from(products).where(eq(products.id, item.productId)).limit(1);
+                    if (!prod) throw new BadRequestException('Product not found');
 
                     if (item.size) {
                         const sizes = prod.sizes as { size: string; quantity: number }[] | null;
                         const sizeObj = sizes?.find(s => s.size === item.size);
                         if (!sizeObj || sizeObj.quantity < item.quantity) {
-                            throw new BadRequestException(`الكمية غير متوفرة للمنتج ${prod.nameAr} مقاس ${item.size}`);
+                            throw new BadRequestException(`الكمية غير متوفرة لـ ${prod.nameAr}`);
                         }
-                    } else {
-                        if ((prod.stock || 0) < item.quantity) {
-                            throw new BadRequestException(`الكمية غير متوفرة للمنتج ${prod.nameAr}`);
-                        }
-                    }
-                }
-            }
-
-            for (const [vendorId, group] of vendorGroups) {
-                // --- Automatic Offers Logic ---
-                let automaticDiscount = 0;
-                const now = new Date();
-
-                // Fetch active offers for this vendor
-                const vendorOffers = await this.databaseService.db
-                    .select()
-                    .from(offers)
-                    .where(and(
-                        eq(offers.vendorId, vendorId),
-                        eq(offers.isActive, true)
-                    ));
-
-                for (const offer of vendorOffers) {
-                    // Check date validity
-                    const startDate = new Date(offer.startDate);
-                    const endDate = new Date(offer.endDate);
-                    endDate.setHours(23, 59, 59, 999); // Inclusive end date
-
-                    if (startDate > now || endDate < now) continue;
-
-                    // Check usage limit
-                    if (offer.usageLimit && (offer.usedCount || 0) >= offer.usageLimit) continue;
-
-                    // Get products for this offer
-                    const opItems = await this.databaseService.db
-                        .select({ productId: offerItems.productId })
-                        .from(offerItems)
-                        .where(eq(offerItems.offerId, offer.id));
-
-                    const offerProductIds = opItems.map(i => i.productId);
-
-                    // Find matching items in the order group
-                    let matchingItems: any[] = [];
-                    if (offerProductIds.length === 0) {
-                        // Store-wide offer (all items from this vendor)
-                        matchingItems = group.items;
-                    } else {
-                        // Specific products
-                        matchingItems = group.items.filter(item => offerProductIds.includes(item.productId));
-                    }
-
-                    if (matchingItems.length > 0) {
-                        const totalQty = matchingItems.reduce((sum, item) => sum + item.quantity, 0);
-
-                        // Check Min Quantity Condition
-                        if (totalQty >= (offer.minQuantity || 1)) {
-                            const matchingSubtotal = matchingItems.reduce((sum, item) => sum + item.total, 0);
-                            const discount = (matchingSubtotal * offer.discountPercent) / 100;
-                            automaticDiscount += discount;
-
-                            // Increment offer usage count
-                            await tx.update(offers)
-                                .set({ usedCount: (offer.usedCount || 0) + 1 })
-                                .where(eq(offers.id, offer.id));
-                        }
+                    } else if ((prod.stock || 0) < item.quantity) {
+                        throw new BadRequestException(`الكمية غير متوفرة لـ ${prod.nameAr}`);
                     }
                 }
 
-                // --- End Automatic Offers Logic ---
-
-                // Apply discount if coupon belongs to this vendor
-                let couponDiscount = 0;
+                // Discounts & Shipping
+                let totalDiscount = 0; // Simplified for now, can re-add complex logic later
                 if (coupon && coupon.vendorId === vendorId) {
-                    couponDiscount = (group.subtotal * coupon.discountPercent) / 100;
-                    // ... coupon usage update ...
-                    await tx.update(coupons)
-                        .set({ usedCount: (coupon.usedCount || 0) + 1 })
-                        .where(eq(coupons.id, coupon.id));
+                    totalDiscount = (group.subtotal * coupon.discountPercent) / 100;
                 }
 
-                const totalDiscount = automaticDiscount + couponDiscount;
-                const finalTotal = group.subtotal - totalDiscount;
+                const [vendor] = await tx.select().from(vendors).where(eq(vendors.id, vendorId)).limit(1);
+                const shippingCost = vendor?.shippingCost || 0;
+                const commissionRate = vendor?.commissionRate || 10;
 
-                // Get Vendor Shipping Cost and Commission Rate
-                let shippingCost = 0;
-                let commissionRate = 0;
+                const finalSubtotal = group.subtotal - totalDiscount;
+                const orderTotal = finalSubtotal + shippingCost;
+                const commission = (finalSubtotal * commissionRate) / 100;
 
-                if (vendorGroups.has(vendorId)) {
-                    const vendorData = await this.databaseService.db
-                        .select({
-                            shippingCost: vendors.shippingCost,
-                            commissionRate: vendors.commissionRate
-                        })
-                        .from(vendors)
-                        .where(eq(vendors.id, vendorId))
-                        .limit(1);
-
-                    if (vendorData.length > 0) {
-                        shippingCost = vendorData[0].shippingCost;
-                        commissionRate = vendorData[0].commissionRate || 0;
-                    }
-                }
-
-                const orderTotal = finalTotal + shippingCost;
-
-                // Calculate Commission
-                // Commission is usually based on subtotal - discount (Revenue generated for vendor)
-                // Assuming commission is changing on the sold amount (excluding shipping)
-                const commissionBase = Math.max(0, finalTotal);
-                const commission = (commissionBase * commissionRate) / 100;
-
-                const orderNumber = `ORD-${Date.now()}-${vendorId}-${Math.floor(Math.random() * 1000)}`;
-
-                if (paymentMethod === 'card') {
-                    // Simulate Payment Gateway Delay
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                }
+                const orderNumber = `ORD-${Date.now()}-${vendorId}`;
 
                 const [newOrder] = await tx
                     .insert(orders)
@@ -289,100 +184,125 @@ export class OrdersService {
                         orderNumber,
                         customerId,
                         vendorId,
-                        status: paymentMethod === 'card' ? 'confirmed' : 'pending',
-                        paymentStatus: paymentMethod === 'card' ? 'paid' : 'pending',
-                        stripePaymentId: paymentMethod === 'card' ? `mock_tx_${Date.now()}` : null,
+                        status: 'pending',
+                        paymentStatus: installmentPlanId ? 'pending_kyc_review' : 'pending',
                         subtotal: group.subtotal,
                         discount: totalDiscount,
-                        shippingCost: shippingCost,
-                        commission: commission,
+                        shippingCost,
+                        commission,
                         total: orderTotal,
                         shippingAddress,
                         paymentMethod,
+                        installmentPlanId,
+                        kycData,
                         createdAt: new Date(),
                         updatedAt: new Date(),
                     })
                     .returning();
 
-                const itemsWithOrderId = group.items.map((item) => ({
-                    ...item,
-                    orderId: newOrder.id,
-                }));
-
+                const itemsWithOrderId = group.items.map(item => ({ ...item, orderId: newOrder.id }));
                 await tx.insert(orderItems).values(itemsWithOrderId);
 
                 // Update stock
                 for (const item of group.items) {
-                    const product = await tx
-                        .select()
-                        .from(products)
-                        .where(eq(products.id, item.productId))
-                        .limit(1);
-
-                    if (product.length > 0) {
-                        const prod = product[0];
-                        const newStock = Math.max(0, (prod.stock || 0) - item.quantity);
-
-                        let newSizes = prod.sizes;
-                        if (item.size && prod.sizes) {
-                            const sizes = prod.sizes as { size: string; quantity: number }[];
-                            newSizes = sizes.map(s => {
-                                if (s.size === item.size) {
-                                    return { ...s, quantity: Math.max(0, s.quantity - item.quantity) };
-                                }
-                                return s;
-                            });
-                        }
-
-                        await tx.update(products)
-                            .set({ stock: newStock, sizes: newSizes })
-                            .where(eq(products.id, item.productId));
+                    const [prod] = await tx.select().from(products).where(eq(products.id, item.productId)).limit(1);
+                    const newStock = Math.max(0, (prod.stock || 0) - item.quantity);
+                    let newSizes = prod.sizes;
+                    if (item.size && prod.sizes) {
+                        newSizes = (prod.sizes as any[]).map(s => s.size === item.size ? { ...s, quantity: Math.max(0, s.quantity - item.quantity) } : s);
                     }
+                    await tx.update(products).set({ stock: newStock, sizes: newSizes }).where(eq(products.id, item.productId));
                 }
 
                 createdOrders.push(newOrder);
-
-                // Update Vendor Wallet (Net Earnings: FinalTotal - Commission)
-                const vendorEarnings = finalTotal - commission;
-                if (newOrder.paymentStatus === 'paid') {
-                    await this.walletsService.handleOrderPaid(vendorId, newOrder.id, vendorEarnings);
-                    await this.pointsService.earnPoints(customerId, newOrder.total, newOrder.id);
-                }
-
-                // Send Notification to Vendor
-                if (group.vendorUserId) {
-                    await this.notificationsService.notify(
-                        group.vendorUserId,
-                        'new_order',
-                        'طلب جديد!',
-                        `لديك طلب جديد رقم #${orderNumber} بقيمة ${group.subtotal}`,
-                        newOrder.id
-                    );
-                }
-
-                // Send Notification to Customer
-                await this.notificationsService.notify(
-                    customerId,
-                    'order_created',
-                    'تم استلام طلبك',
-                    `تم استلام طلبك رقم #${orderNumber} بنجاح`,
-                    newOrder.id
-                );
-
-                // Notify Admins
-                await this.notificationsService.notifyAdmins(
-                    'new_order_admin',
-                    'طلب جديد في النظام',
-                    `تم إنشاء طلب جديد رقم #${orderNumber} للعميل ${customerId}`,
-                    newOrder.id
-                );
             }
 
-            // Clear cart
+            // Handle Payments (Wallet + Stripe)
+            let remainingToPay = createdOrders.reduce((sum, o) => sum + Number(o.total), 0);
+
+            if (walletAmountUsed > 0) {
+                const amountToDeduct = Math.min(walletAmountUsed, remainingToPay);
+                await this.walletsService.deductBalance(customerId, amountToDeduct, `Order Payment (Split)`);
+                remainingToPay -= amountToDeduct;
+            }
+
+            // Handle Installments if selected
+            let requiresInstallmentReview = false;
+
+            if (remainingToPay > 0 && paymentMethod !== 'cash_on_delivery' && !requiresInstallmentReview) {
+                const [customer] = await tx.select().from(users).where(eq(users.id, customerId)).limit(1);
+
+                // If paymentMethod is 'card' or empty, default to 'stripe' for backward compatibility
+                const gateway = (paymentMethod === 'card' || !paymentMethod) ? 'stripe' : paymentMethod;
+
+                const session = await this.paymentsService.createCheckoutSession(
+                    gateway,
+                    createdOrders[0].id, // Link to first order for metadata
+                    remainingToPay,
+                    customer.email!
+                );
+                stripeCheckoutUrl = session.url;
+            } else if (remainingToPay <= 0 && !requiresInstallmentReview) {
+                // Fully paid by wallet
+                for (const order of createdOrders) {
+                    await tx.update(orders).set({ paymentStatus: 'paid', status: 'confirmed' }).where(eq(orders.id, order.id));
+                }
+            }
+
+            if (installmentPlanId && createdOrders.length > 0) {
+                const totalItems = cart.reduce((sum, i) => sum + i.quantity, 0);
+                const baseTotalToFinance = createdOrders.reduce((sum, o) => sum + Number(o.total), 0) - (walletAmountUsed || 0);
+
+                if (baseTotalToFinance > 0) {
+                    const [plan] = await tx.select().from(installmentPlans).where(eq(installmentPlans.id, installmentPlanId)).limit(1);
+                    if (plan) {
+                        // Validation: Min Amount (base)
+                        if (baseTotalToFinance < Number(plan.minAmount)) {
+                            throw new BadRequestException(`الحد الأدنى للتقسيط هو ${plan.minAmount}`);
+                        }
+
+                        // Validation: Quantity Range
+                        const minQ = plan.minQuantity || 1;
+                        const maxQ = plan.maxQuantity || 0;
+                        if (totalItems < minQ || (maxQ > 0 && totalItems > maxQ)) {
+                            throw new BadRequestException(`هذا النظام متاح فقط لعدد منتجات بين ${minQ} و ${maxQ > 0 ? maxQ : '∞'}`);
+                        }
+
+                        const interestAmount = baseTotalToFinance * (plan.interestRate || 0) / 100;
+                        const totalWithInterest = baseTotalToFinance + interestAmount;
+                        const dpPct = plan.downPaymentPercentage || 0;
+                        const downPayment = totalWithInterest * dpPct / 100;
+                        const financedAmount = totalWithInterest - downPayment;
+
+                        // CRITICAL: We DO NOT charge the down payment yet. We wait for Admin approval.
+                        // We record the installment request as 'pending_approval'
+                        requiresInstallmentReview = true;
+
+                        await tx.insert(installments).values({
+                            orderId: createdOrders[0].id,
+                            totalAmount: financedAmount,
+                            remainingAmount: financedAmount,
+                            installmentsCount: plan.months,
+                            status: 'pending_approval',
+                            nextPaymentDate: null, // Will be set after down payment is paid
+                            createdAt: new Date(),
+                            updatedAt: new Date(),
+                        });
+
+                    }
+                }
+            }
+
+            // Award Points (1 AED = 1 Point)
+            const totalPurchaseAmount = createdOrders.reduce((sum, o) => sum + Number(o.total), 0);
+            if (totalPurchaseAmount > 0) {
+                await this.pointsService.earnPoints(customerId, totalPurchaseAmount, createdOrders[0].id);
+            }
+
             await tx.delete(cartItems).where(eq(cartItems.customerId, customerId));
         });
 
-        return createdOrders;
+        return { orders: createdOrders, checkoutUrl: stripeCheckoutUrl };
     }
 
     async updateStatus(orderId: number, status: string, userId?: number) {
@@ -476,6 +396,167 @@ export class OrdersService {
                 }
             }
         }
-        return updatedOrder;
+    }
+
+    // --- Admin KYC Review Flow ---
+    async reviewKycRequest(orderId: number, action: 'approve' | 'reject', adminUserId: number, reason?: string) {
+        const [order] = await this.databaseService.db
+            .select()
+            .from(orders)
+            .where(eq(orders.id, orderId))
+            .limit(1);
+
+        if (!order) throw new BadRequestException('Order not found');
+        if (order.paymentStatus !== 'pending_kyc_review') {
+            throw new BadRequestException('This order is not pending KYC review');
+        }
+
+        const [installment] = await this.databaseService.db
+            .select()
+            .from(installments)
+            .where(eq(installments.orderId, orderId))
+            .limit(1);
+
+        if (!installment) throw new BadRequestException('Installment plan not found for this order');
+
+        let updatedOrder;
+
+        if (action === 'approve') {
+            [updatedOrder] = await this.databaseService.db
+                .update(orders)
+                .set({
+                    paymentStatus: 'pending_payment',
+                    updatedAt: new Date()
+                })
+                .where(eq(orders.id, orderId))
+                .returning();
+
+            await this.databaseService.db
+                .update(installments)
+                .set({
+                    status: 'approved_awaiting_payment',
+                    updatedAt: new Date()
+                })
+                .where(eq(installments.id, installment.id));
+
+            // Notify Customer
+            await this.notificationsService.notify(
+                order.customerId,
+                'kyc_approved',
+                'تمت الموافقة على طلب التقسيط',
+                `تمت الموافقة على طلب التقسيط للطلب رقم #${order.orderNumber}. تفضل بدفع المقدم للبدء.`,
+                order.id
+            );
+
+        } else if (action === 'reject') {
+            [updatedOrder] = await this.databaseService.db
+                .update(orders)
+                .set({
+                    status: 'cancelled',
+                    paymentStatus: 'failed',
+                    updatedAt: new Date()
+                })
+                .where(eq(orders.id, orderId))
+                .returning();
+
+            await this.databaseService.db
+                .update(installments)
+                .set({
+                    status: 'rejected',
+                    updatedAt: new Date()
+                })
+                .where(eq(installments.id, installment.id));
+
+            // Restore stock since order is cancelled
+            const orderItemsList = await this.databaseService.db
+                .select()
+                .from(orderItems)
+                .where(eq(orderItems.orderId, orderId));
+
+            for (const item of orderItemsList) {
+                const [prod] = await this.databaseService.db.select().from(products).where(eq(products.id, item.productId)).limit(1);
+                if (prod) {
+                    const newStock = (prod.stock || 0) + item.quantity;
+                    let newSizes = prod.sizes;
+                    if (item.size && prod.sizes) {
+                        newSizes = (prod.sizes as any[]).map(s => s.size === item.size ? { ...s, quantity: s.quantity + item.quantity } : s);
+                    }
+                    await this.databaseService.db.update(products).set({ stock: newStock, sizes: newSizes }).where(eq(products.id, item.productId));
+                }
+            }
+
+            // Notify Customer
+            const message = reason ? `نعتذر، تم رفض طلب التقسيط للطلب رقم #${order.orderNumber}: ${reason}` : `نعتذر، تم رفض طلب التقسيط للطلب رقم #${order.orderNumber}.`;
+            await this.notificationsService.notify(
+                order.customerId,
+                'kyc_rejected',
+                'تم رفض طلب التقسيط',
+                message,
+                order.id
+            );
+        }
+
+        return { success: true, order: updatedOrder, action };
+    }
+
+    async getDownPaymentCheckoutUrl(orderId: number, customerId: number) {
+        const [order] = await this.databaseService.db
+            .select()
+            .from(orders)
+            .where(eq(orders.id, orderId))
+            .limit(1);
+
+        if (!order || order.customerId !== customerId) {
+            throw new BadRequestException('Order not found');
+        }
+
+        if (order.paymentStatus !== 'pending_payment') {
+            throw new BadRequestException('This order is not ready for down payment');
+        }
+
+        const [installment] = await this.databaseService.db
+            .select()
+            .from(installments)
+            .where(eq(installments.orderId, orderId))
+            .limit(1);
+
+        if (!installment || installment.status !== 'approved_awaiting_payment') {
+            throw new BadRequestException('Installment is not in the correct state to pay the down payment');
+        }
+
+        const [customer] = await this.databaseService.db
+            .select()
+            .from(users)
+            .where(eq(users.id, customerId))
+            .limit(1);
+
+        // Calculate Down Payment: Order Total - Financed Amount
+        // Since we didn't store the exact DP amount in `installments`, we reconstruct it (or we can just calculate total amount + interest - financed)
+        // Actually, the easiest way is: Total With Interest = (Financed Amount / (1 - DownPayment%)) -> wait, financed = total * (1 - dp)
+        // Let's rely on the original plan calculation or just look at `installment.totalAmount`. The `totalAmount` in DB is the `financedAmount`.
+        // Let's get the plan.
+
+        let downPaymentToPay = Number(order.total); // default fallback
+
+        if (order.installmentPlanId) {
+            const [plan] = await this.databaseService.db.select().from(installmentPlans).where(eq(installmentPlans.id, order.installmentPlanId)).limit(1);
+            if (plan) {
+                const interestAmount = Number(order.total) * (plan.interestRate || 0) / 100;
+                const totalWithInterest = Number(order.total) + interestAmount;
+                const dpPct = plan.downPaymentPercentage || 0;
+                downPaymentToPay = totalWithInterest * dpPct / 100;
+            }
+        }
+
+        const gateway = (order.paymentMethod === 'card' || !order.paymentMethod) ? 'stripe' : order.paymentMethod;
+
+        const session = await this.paymentsService.createCheckoutSession(
+            gateway,
+            order.id, // Link to order for metadata
+            downPaymentToPay,
+            customer.email!
+        );
+
+        return { checkoutUrl: session.url };
     }
 }

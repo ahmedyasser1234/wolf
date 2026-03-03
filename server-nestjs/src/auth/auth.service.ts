@@ -145,6 +145,13 @@ export class AuthService {
             }
 
             // Create session
+            if (data.role === 'vendor') {
+                return {
+                    user: { email: email, name: data.name, role: data.role },
+                    message: 'Registration successful. Your account is pending admin approval.'
+                };
+            }
+
             const token = await this.createSessionToken(newUser.id, openId, data.name, data.role || 'customer', email);
             return { token, user: { email: email, name: data.name, role: data.role } };
         });
@@ -175,6 +182,24 @@ export class AuthService {
             throw new UnauthorizedException(
                 `This account is registered as a ${currentRole}. Please use the correct login page.`
             );
+        }
+
+        // Check Vendor Status
+        if (user.role === 'vendor') {
+            const vendor = await this.databaseService.db
+                .select()
+                .from(vendors)
+                .where(eq(vendors.userId, user.id))
+                .limit(1);
+
+            if (vendor.length > 0) {
+                if (vendor[0].status === 'pending') {
+                    throw new UnauthorizedException('Your account is currently pending admin approval.');
+                }
+                if (vendor[0].status === 'rejected') {
+                    throw new UnauthorizedException('Your account has been rejected by the administrator.');
+                }
+            }
         }
 
         const isValid = await this.validatePassword(data.password, user.password!);

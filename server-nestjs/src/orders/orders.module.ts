@@ -7,9 +7,10 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { CouponsModule } from '../coupons/coupons.module';
 import { WalletsModule } from '../wallets/wallets.module';
 import { PointsModule } from '../points/points.module';
+import { PaymentsModule } from '../payments/payments.module';
 
 @Module({
-    imports: [DatabaseModule, AuthModule, NotificationsModule, CouponsModule, WalletsModule, PointsModule],
+    imports: [DatabaseModule, AuthModule, NotificationsModule, CouponsModule, WalletsModule, PointsModule, PaymentsModule],
     providers: [OrdersService],
     controllers: [OrdersController],
     exports: [OrdersService],

@@ -13,7 +13,10 @@ export class VendorsController {
     ) { }
 
     private async getUserId(req: Request): Promise<number> {
-        const token = req.cookies?.[COOKIE_NAME];
+        const token = req.headers.authorization?.startsWith('Bearer ')
+            ? req.headers.authorization.split(' ')[1]
+            : req.cookies?.[COOKIE_NAME];
+
         if (!token) throw new UnauthorizedException('No token found');
 
         const payload = await this.authService.verifySession(token);
@@ -27,7 +30,10 @@ export class VendorsController {
     }
 
     private async getUser(req: Request) {
-        const token = req.cookies?.[COOKIE_NAME];
+        const token = req.headers.authorization?.startsWith('Bearer ')
+            ? req.headers.authorization.split(' ')[1]
+            : req.cookies?.[COOKIE_NAME];
+
         if (!token) throw new UnauthorizedException('No token found');
 
         const payload = await this.authService.verifySession(token);

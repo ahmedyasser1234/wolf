@@ -80,7 +80,7 @@ export function ReviewModal({ children }: ReviewModalProps) {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                {children || <Button className="w-full md:w-auto px-8 py-6 rounded-full text-lg font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+                {children || <Button className="w-full md:w-auto px-8 py-6 rounded-full text-lg font-bold -primary hover:-primary text-white shadow-lg hover:shadow-xl transition-all duration-300">
                     {language === 'ar' ? "أضف تقييمك" : "Write a Review"}
                 </Button>}
             </DialogTrigger>
@@ -118,7 +118,7 @@ export function ReviewModal({ children }: ReviewModalProps) {
                                     required
                                     defaultValue={user?.name || ''}
                                     readOnly={!!user?.name}
-                                    className="rounded-xl border-gray-200 focus:border-rose-500 focus:ring-rose-500 bg-gray-50/50"
+                                    className="rounded-xl border-gray-200 focus:-primary focus:-primary bg-gray-50/50"
                                     dir={language === 'ar' ? "rtl" : "ltr"}
                                 />
                             </div>
@@ -127,7 +127,7 @@ export function ReviewModal({ children }: ReviewModalProps) {
                                     name="city"
                                     placeholder={language === 'ar' ? "المدينة" : "City"}
                                     required
-                                    className="rounded-xl border-gray-200 focus:border-rose-500 focus:ring-rose-500 bg-gray-50/50"
+                                    className="rounded-xl border-gray-200 focus:-primary focus:-primary bg-gray-50/50"
                                     dir={language === 'ar' ? "rtl" : "ltr"}
                                 />
                             </div>
@@ -138,7 +138,7 @@ export function ReviewModal({ children }: ReviewModalProps) {
                                 name="comment"
                                 placeholder={language === 'ar' ? "اكتب تعليقك هنا..." : "Share your thoughts..."}
                                 required
-                                className="min-h-[120px] rounded-xl border-gray-200 focus:border-rose-500 focus:ring-rose-500 bg-gray-50/50 resize-none"
+                                className="min-h-[120px] rounded-xl border-gray-200 focus:-primary focus:-primary bg-gray-50/50 resize-none"
                                 dir={language === 'ar' ? "rtl" : "ltr"}
                             />
                         </div>
@@ -146,7 +146,7 @@ export function ReviewModal({ children }: ReviewModalProps) {
 
                     <Button
                         type="submit"
-                        className="w-full py-6 rounded-xl text-lg font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-200 transition-all duration-300"
+                        className="w-full py-6 rounded-xl text-lg font-bold -primary hover:-primary text-white shadow-lg -primary/20 transition-all duration-300"
                         disabled={mutation.isPending}
                     >
                         {mutation.isPending ? (

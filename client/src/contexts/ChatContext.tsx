@@ -5,10 +5,9 @@ import { useQueryClient } from '@tanstack/react-query';
 
 export interface ChatSession {
     sessionId: string;
-    vendorId: number;
     recipientId: number;
-    vendorName: string;
-    vendorLogo?: string;
+    name: string;
+    logo?: string;
     isMinimized?: boolean;
 }
 
@@ -62,7 +61,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         if (!socket) {
             // Use environment variable for socket URL
             // CRITICAL: This MUST be a secure URL (wss:// or https://) in production to avoid Mixed Content errors.
-            const socketUrl = import.meta.env.VITE_SOCKET_URL || window.location.origin;
+            const socketUrl = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
             if (!import.meta.env.VITE_SOCKET_URL && window.location.hostname.includes('netlify.app')) {
                 console.error("VITE_SOCKET_URL is missing! You must set this to your secure backend URL (e.g. https://api.yourdomain.com) in Netlify.");
@@ -141,7 +140,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }, [onlineUsers]);
 
     const openChat = useCallback((session: Omit<ChatSession, 'sessionId'> & { sessionId?: string }) => {
-        const id = session.sessionId || `vendor-${session.vendorId}`;
+        const id = session.sessionId || `chat-${session.recipientId}`;
         const newSession = { ...session, sessionId: id };
 
         setOpenChats(prev => {

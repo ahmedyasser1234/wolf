@@ -29,6 +29,8 @@ import { StoreReviewsModule } from './store-reviews/store-reviews.module';
 import { WishlistModule } from './wishlist/wishlist.module';
 import { WalletsModule } from './wallets/wallets.module';
 import { PointsModule } from './points/points.module';
+import { GiftCardsModule } from './gift-cards/gift-cards.module';
+import { InstallmentsModule } from './installments/installments.module';
 
 @Module({
   imports: [
@@ -60,16 +62,18 @@ import { PointsModule } from './points/points.module';
     StoreReviewsModule,
     WalletsModule,
     PointsModule,
+    GiftCardsModule,
+    InstallmentsModule,
 
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([{
       name: 'default',
       ttl: 60000,
-      limit: 100,
+      limit: 1000, // Increased for dashboard and seeding stability
     }, {
       name: 'auth',
       ttl: 60000,
-      limit: 20, // Strict limit for login/register
+      limit: 10, // Stricter for auth
     }]),
   ],
   controllers: [AppController],

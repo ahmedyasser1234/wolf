@@ -33,7 +33,7 @@ export function EmptyState({
                 <Button
                     onClick={onAction}
                     variant="outline"
-                    className="rounded-full px-8 h-12 font-bold border-2 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-all"
+                    className="rounded-full px-8 h-12 font-bold border-2 hover:-white/5 hover:-primary hover:-primary/20 transition-all"
                 >
                     {actionLabel}
                 </Button>

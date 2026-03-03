@@ -12,7 +12,7 @@ export default function NotFound() {
     <div className="min-h-screen w-full flex items-center justify-center bg-white relative overflow-hidden">
       {/* Decorative Elements */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-rose-50 rounded-full blur-[120px] opacity-60" />
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] -white/5 rounded-full blur-[120px] opacity-60" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-50 rounded-full blur-[120px] opacity-60" />
       </div>
 
@@ -26,7 +26,7 @@ export default function NotFound() {
           <div className="relative inline-block">
             <span className="text-[12rem] font-black leading-none text-gray-900/5 select-none">404</span>
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-32 h-32 bg-rose-600 rounded-[2.5rem] rotate-12 flex items-center justify-center shadow-2xl shadow-rose-200">
+              <div className="w-32 h-32 -primary rounded-[2.5rem] rotate-12 flex items-center justify-center shadow-2xl -primary/20">
                 <AlertCircle size={64} className="text-white -rotate-12" />
               </div>
             </div>
@@ -50,7 +50,7 @@ export default function NotFound() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/">
-              <Button className="bg-rose-600 hover:bg-rose-700 text-white rounded-full px-10 h-16 text-xl font-black shadow-xl shadow-rose-100 flex items-center gap-3">
+              <Button className="-primary hover:-primary text-white rounded-full px-10 h-16 text-xl font-black shadow-xl -white/10 flex items-center gap-3">
                 <Home size={24} />
                 {t('backToHome')}
               </Button>
@@ -74,7 +74,7 @@ export default function NotFound() {
         >
           {language === 'ar' ? "هل تحتاجين للمساعدة؟" : "Need help?"}
           <Link href="/contact-us">
-            <span className="text-rose-600 mr-2 cursor-pointer hover:underline">{t('contact')}</span>
+            <span className="-primary mr-2 cursor-pointer hover:underline">{t('contact')}</span>
           </Link>
         </motion.p>
       </div>

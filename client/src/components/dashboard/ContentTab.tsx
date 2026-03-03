@@ -48,7 +48,7 @@ export default function ContentTab() {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
-                <Loader2 className="w-8 h-8 animate-spin text-rose-600" />
+                <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
             </div>
         );
     }
@@ -58,13 +58,13 @@ export default function ContentTab() {
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="space-y-1">
-                    <h2 className="text-xl md:text-2xl font-bold text-gray-900">{t('manageInstagramContent')}</h2>
-                    <p className="text-sm text-gray-500 leading-relaxed max-w-2xl">{t('instagramContentDesc')}</p>
+                    <h2 className="text-xl md:text-2xl font-bold text-white">{t('manageInstagramContent')}</h2>
+                    <p className="text-sm text-gray-400 leading-relaxed max-w-2xl">{t('instagramContentDesc')}</p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
                     <Dialog>
                         <DialogTrigger asChild>
-                            <Button variant="outline" className="gap-2 w-full sm:w-auto justify-center">
+                            <Button variant="outline" className="gap-2 w-full sm:w-auto justify-center border-gray-800 bg-gray-900 text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
                                 <Instagram className="w-4 h-4" />
                                 {t('autoConnect')}
                             </Button>
@@ -78,14 +78,15 @@ export default function ContentTab() {
                             </DialogHeader>
                             <div className="space-y-4 py-4">
                                 <div className="space-y-2">
-                                    <Label>{t('instagramAccessToken')}</Label>
+                                    <Label className="text-white font-bold">{t('instagramAccessToken')}</Label>
                                     <Input
                                         placeholder="Paste your long-lived access token here..."
                                         id="ig-token"
+                                        className="bg-gray-900 border-gray-800 text-white"
                                     />
                                 </div>
                                 <Button
-                                    className="w-full bg-rose-600 hover:bg-rose-700"
+                                    className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                                     onClick={() => {
                                         const token = (document.getElementById('ig-token') as HTMLInputElement).value;
                                         if (!token) return toast.error(t('enterTokenFirst'));
@@ -106,7 +107,7 @@ export default function ContentTab() {
                         variant="ghost"
                         size="icon"
                         title={t('syncNow')}
-                        className="w-full sm:w-10 border border-gray-200 sm:border-transparent"
+                        className="w-full sm:w-10 border border-gray-800 sm:border-transparent"
                         onClick={() => {
                             toast.promise(endpoints.content.syncInstagram(), {
                                 loading: t('syncing'),
@@ -124,8 +125,8 @@ export default function ContentTab() {
             {/* Content Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
                 {socialFeed?.map((item: any) => (
-                    <Card key={item.id} className="overflow-hidden border-0 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full rounded-2xl bg-white border-gray-100">
-                        <div className="aspect-square relative bg-gray-50 group border-b border-gray-100">
+                    <Card key={item.id} className="overflow-hidden border-0 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full rounded-2xl bg-background border border-gray-800">
+                        <div className="aspect-square relative bg-gray-900 group border-b border-gray-800">
                             {item.data.imageUrl ? (
                                 <img
                                     src={item.data.imageUrl}
@@ -133,7 +134,7 @@ export default function ContentTab() {
                                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                 />
                             ) : (
-                                <div className="flex items-center justify-center w-full h-full text-gray-400">
+                                <div className="flex items-center justify-center w-full h-full text-gray-500">
                                     <ImageIcon className="w-12 h-12" />
                                 </div>
                             )}
@@ -142,7 +143,7 @@ export default function ContentTab() {
                                     href={item.data.link}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="p-3 bg-white/90 backdrop-blur rounded-full text-gray-900 hover:text-rose-600 hover:scale-110 transition-all shadow-lg"
+                                    className="p-3 bg-gray-800/90 backdrop-blur rounded-full text-white hover:bg-purple-600 hover:scale-110 transition-all shadow-lg"
                                 >
                                     <ExternalLink className="w-5 h-5" />
                                 </a>
@@ -150,7 +151,7 @@ export default function ContentTab() {
                         </div>
                         <CardContent className="p-4 space-y-4 flex-1 flex flex-col">
                             <div className="space-y-2">
-                                <label className="text-xs md:text-sm font-bold text-gray-700 block text-start">{t('imageUrl')}</label>
+                                <label className="text-xs md:text-sm font-bold text-gray-400 block text-start">{t('imageUrl')}</label>
                                 <Input
                                     defaultValue={item.data.imageUrl}
                                     onBlur={(e) => {
@@ -158,12 +159,12 @@ export default function ContentTab() {
                                             handleUpdate(item.id, item.data, 'imageUrl', e.target.value);
                                         }
                                     }}
-                                    className="text-left ltr h-9 md:h-10 text-xs md:text-sm bg-gray-50/50 focus:bg-white transition-colors border-gray-200"
+                                    className="text-left ltr h-9 md:h-10 text-xs md:text-sm bg-gray-900/50 focus:bg-gray-800 transition-colors border-gray-800"
                                     placeholder="https://example.com/image.jpg"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs md:text-sm font-bold text-gray-700 block text-start">{t('postUrl')}</label>
+                                <label className="text-xs md:text-sm font-bold text-gray-400 block text-start">{t('postUrl')}</label>
                                 <Input
                                     defaultValue={item.data.link}
                                     onBlur={(e) => {
@@ -171,13 +172,13 @@ export default function ContentTab() {
                                             handleUpdate(item.id, item.data, 'link', e.target.value);
                                         }
                                     }}
-                                    className="text-left ltr h-9 md:h-10 text-xs md:text-sm bg-gray-50/50 focus:bg-white transition-colors border-gray-200"
+                                    className="text-left ltr h-9 md:h-10 text-xs md:text-sm bg-gray-900/50 focus:bg-gray-800 transition-colors border-gray-800"
                                     placeholder="https://instagram.com/..."
                                 />
                             </div>
                             <div className="pt-2 flex justify-end mt-auto h-6">
                                 {updatingIds.includes(item.id) && (
-                                    <span className="text-xs text-rose-600 flex items-center gap-1.5 animate-pulse font-medium bg-rose-50 px-2 py-0.5 rounded-full">
+                                    <span className="text-xs text-purple-400 flex items-center gap-1.5 animate-pulse font-medium bg-gray-800 px-2 py-0.5 rounded-full">
                                         <Loader2 className="w-3 h-3 animate-spin" />
                                         {t('saving')}
                                     </span>

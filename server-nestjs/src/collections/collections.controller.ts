@@ -15,7 +15,7 @@ export class CollectionsController {
     @Roles('admin', 'vendor')
     @UseInterceptors(FileInterceptor('image'))
     create(
-        @Body() createCollectionDto: { nameAr: string; nameEn: string; vendorId: string; categoryId: string; description?: string },
+        @Body() createCollectionDto: { nameAr: string; nameEn: string; vendorId: string; categoryId: string; description?: string; downPaymentPercentage?: string },
         @UploadedFile(new FileValidationPipe()) image?: Express.Multer.File
     ) {
         console.log("Controller Received Request:", { body: createCollectionDto, file: image ? 'File Present' : 'No File' });
@@ -23,6 +23,7 @@ export class CollectionsController {
             ...createCollectionDto,
             vendorId: Number(createCollectionDto.vendorId),
             categoryId: Number(createCollectionDto.categoryId),
+            downPaymentPercentage: Number(createCollectionDto.downPaymentPercentage || 0),
             image
         });
     }
@@ -46,6 +47,9 @@ export class CollectionsController {
         @Body() updateCollectionDto: any,
         @UploadedFile(new FileValidationPipe()) image?: Express.Multer.File
     ) {
+        if (updateCollectionDto.downPaymentPercentage !== undefined) {
+            updateCollectionDto.downPaymentPercentage = Number(updateCollectionDto.downPaymentPercentage || 0);
+        }
         return this.collectionsService.update(+id, {
             ...updateCollectionDto,
             image

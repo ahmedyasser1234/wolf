@@ -1,16 +1,14 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Heart, ShoppingCart, Star, ChevronRight, ChevronLeft, ShieldCheck, Zap, CreditCard, Truck, RefreshCw, Headset, Instagram } from "lucide-react";
+
+import { Star, ChevronRight, ChevronLeft, ShieldCheck, Truck, RefreshCw, Headset, Instagram } from "lucide-react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { endpoints } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/lib/i18n";
 import { ProductCard } from "@/components/ProductCard";
-import { TryOnSection } from "@/components/product/TryOnSection";
-import { VendorsSection } from "@/components/home/VendorsSection";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReviewModal } from "@/components/home/ReviewModal";
@@ -49,7 +47,7 @@ export default function Home() {
   const tabsRef = useRef<HTMLDivElement>(null);
   const productsPerPage = 4;
 
-  const videos = ["/132.mp4"];
+  const videos = ["/1.mp4", "/2.mp4", "/3.mp4"];
 
   // Fetch Categories
   const { data: categories } = useQuery({
@@ -136,94 +134,101 @@ export default function Home() {
   return (
     <div className={`min-h-screen bg-[#fafafa] pb-24 ${language === 'ar' ? 'text-right' : 'text-left'}`} dir={dir}>
       <SEO />
-      {/* Ultra-Premium Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center overflow-hidden">
-        {/* Main Background Video */}
-        <div className="absolute inset-0 z-0">
+      {/* Ultra-Premium Tech Hero Section */}
+      <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-background">
+        {/* Modern Tech Background with Video Carousel */}
+        <div className="absolute inset-0 z-0 bg-[#05050A]">
           <AnimatePresence mode="wait">
             <motion.video
-              key={videos[currentVideo]}
+              key={currentVideo}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 1.5 }}
+              transition={{ duration: 1.5, ease: "easeInOut" }}
               autoPlay
-              loop
               muted
               playsInline
-              className="w-full h-full object-cover object-center absolute inset-0"
-            >
-              <source src={videos[currentVideo]} type="video/mp4" />
-            </motion.video>
+              onEnded={() => setCurrentVideo((prev) => (prev + 1) % videos.length)}
+              src={videos[currentVideo]}
+              className="absolute inset-0 w-full h-full object-cover opacity-60"
+            />
           </AnimatePresence>
-          <div className="absolute inset-0 bg-black/40"></div>
-        </div >
-
-
-        {/* Logo at Bottom Side */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.5, duration: 0.8 }}
-          className={`absolute bottom-12 ${language === 'ar' ? 'right-12 lg:right-24' : 'left-12 lg:left-24'} lg:bottom-24 z-30 hidden lg:block`}
-        >
-          <img
-            src="/logo-white.png"
-            alt="Fustan Logo"
-            className="w-48 lg:w-64 object-contain drop-shadow-xl"
-          />
-        </motion.div>
+          <div className="absolute inset-0 bg-gradient-to-b from-[#05050A]/80 via-transparent to-[#05050A]"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-[#05050A] via-transparent to-[#05050A]/40"></div>
+          {/* Subtle grid pattern */}
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgc3Ryb2tlPSIjMUUyOTNCIiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiPjxwYXRoIGQ9Ik02MCAwaE0wIDB2NjAiLz48L2c+PC9zdmc+')] opacity-20 Mix-blend-overlay"></div>
+        </div>
 
         {/* Content Container */}
-        <div className="container mx-auto px-4 relative z-20 h-full flex flex-col justify-center pt-20">
+        <div className="container mx-auto px-4 relative z-20 h-full flex flex-col justify-center items-center text-center pt-20">
           <motion.div
-            initial={{ opacity: 0, x: language === 'ar' ? 50 : -50 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className={`max-w-3xl ${language === 'ar'
-              ? 'mr-auto lg:mr-[40%] text-right lg:-translate-x-[300px]'
-              : 'ml-auto lg:ml-[40%] text-left lg:translate-x-[300px]'
-              }`}
+            className="max-w-4xl mx-auto flex flex-col items-center gap-4"
           >
-            <div className="flex flex-col items-start space-y-6">
-              <h2 className="text-white leading-tight drop-shadow-2xl font-black w-full">
-                <span className="text-2xl sm:text-4xl lg:text-6xl block mb-1 lg:mb-2">{t('heroTitlePart1')}</span>
-                <span className="text-4xl sm:text-6xl lg:text-8xl text-white/90 leading-[1.1] sm:leading-tight">{t('heroTitlePart2')}</span>
-              </h2>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/10 text-primary font-bold text-sm md:text-base mb-6"
+            >
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+              </span>
+              {language === 'ar' ? 'مستقبل التكنولوجيا بين يديك' : 'The Future of Tech in Your Hands'}
+            </motion.div>
 
-              <p className="hidden sm:block text-xl lg:text-2xl text-white/95 max-w-xl leading-relaxed font-bold drop-shadow-md">
-                {t('heroDesc')}
-              </p>
+            <h2 className="leading-tight flex flex-col items-center">
+              <span className="text-6xl sm:text-8xl lg:text-[120px] font-black tracking-tight bg-gradient-to-r from-[#D4AF37] via-[#F2D06B] to-[#D4AF37] bg-clip-text text-transparent mb-2 drop-shadow-2xl">WOLF</span>
+              <span className="text-3xl sm:text-5xl lg:text-[60px] font-medium bg-gradient-to-r from-[#D4AF37] via-[#F2D06B] to-[#D4AF37] bg-clip-text text-transparent tracking-[0.2em] uppercase">{language === 'ar' ? 'تكنو' : 'Techno'}</span>
+            </h2>
 
-              <div className="flex gap-4 sm:gap-6 flex-wrap justify-start pt-4 sm:pt-8 w-full">
-                <Link href="/products">
-                  <Button size="lg" className="h-12 sm:h-16 px-8 sm:px-12 rounded-full bg-[oklch(58.6%_0.253_17.585)] hover:bg-[oklch(58.6%_0.253_17.585)]/90 text-white text-base sm:text-xl font-black shadow-2xl transition-all hover:scale-105 active:scale-95">
-                    {t('shopNow')}
-                  </Button>
-                </Link>
-                <Link href="/products?sort=newest">
-                  <Button size="lg" variant="outline" className="h-12 sm:h-16 px-8 sm:px-12 rounded-full border-2 border-white/30 text-white backdrop-blur-md text-base sm:text-xl font-black hover:bg-white/10 transition-all hover:scale-105 active:scale-95">
-                    {t('newCollection')}
-                  </Button>
-                </Link>
-              </div>
-            </div>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="mt-6 text-lg lg:text-xl text-white/70 max-w-2xl leading-relaxed mx-auto"
+            >
+              {language === 'ar'
+                ? 'اختبر قمة التكنولوجيا مع مجموعتنا الفاخرة من الإلكترونيات. حيث يلتقي الأداء بالتصميم العصري.'
+                : 'Experience the pinnacle of technology with our luxury electronics collection. Where performance meets modern design.'}
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="flex gap-4 sm:gap-6 flex-wrap justify-center pt-8 w-full"
+            >
+              <Link href="/products">
+                <Button size="lg" className="h-14 px-8 rounded-lg bg-primary hover:bg-primary/90 text-white text-base font-bold shadow-lg transition-all hover:-translate-y-1">
+                  {language === 'ar' ? 'تسوق الآن' : 'Shop Now'}
+                </Button>
+              </Link>
+              <Link href="/about-us">
+                <Button size="lg" variant="outline" className="h-14 px-8 rounded-lg border border-white/20 text-white hover:text-white bg-white/5 backdrop-blur-md text-base font-bold hover:bg-white/10 transition-all hover:-translate-y-1">
+                  {language === 'ar' ? 'استكشف المزيد' : 'Explore More'}
+                </Button>
+              </Link>
+            </motion.div>
           </motion.div>
         </div>
-      </section >
+      </section>
 
       {/* Features / Trust Signals Section */}
       < section className="bg-white py-12 border-b border-gray-50 relative z-20" >
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { icon: Truck, titleAr: "شحن سريع ومجاني", titleEn: "Fast & Free Shipping", descAr: "للطلبات فوق 500 ر.س", descEn: "Orders over 500 SAR" },
+              { icon: Truck, titleAr: "شحن سريع ومجاني", titleEn: "Fast & Free Shipping", descAr: "للطلبات فوق 500 د.إ", descEn: "Orders over 500 AED" },
               { icon: ShieldCheck, titleAr: "ضمان الجودة", titleEn: "Quality Guarantee", descAr: "منتجات أصلية 100%", descEn: "100% Authentic" },
               { icon: RefreshCw, titleAr: "استبدال سهل", titleEn: "Easy Returns", descAr: "خلال 14 يوم", descEn: "Within 14 days" },
               { icon: Headset, titleAr: "دعم 24/7", titleEn: "24/7 Support", descAr: "نحن هنا لمساعدتك", descEn: "Here to help you" },
             ].map((feature, i) => (
               <div key={i} className="flex flex-col items-center text-center group">
-                <div className="w-16 h-16 rounded-full bg-rose-50 flex items-center justify-center text-rose-600 mb-4 group-hover:scale-110 transition-transform duration-300 shadow-sm">
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform duration-300 shadow-sm border border-primary/5">
                   <feature.icon size={28} />
                 </div>
                 <h3 className="font-black text-gray-900 text-lg mb-2">{language === 'ar' ? feature.titleAr : feature.titleEn}</h3>
@@ -235,17 +240,19 @@ export default function Home() {
       </section >
 
       {/* Featured Products */}
-      < section className="pt-20 pb-0 relative z-20" >
+      <section className="pt-20 pb-0 relative z-20" >
         <div className="absolute inset-x-0 top-0 bottom-[200px] bg-white -z-10" />
         <div className="container mx-auto px-4 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16 pt-20"
+            className="text-center mb-16 pt-20 flex flex-col items-center relative"
           >
-            <h2 className="text-4xl md:text-5xl font-black mb-4">{t('mostFeatured')}</h2>
-            <p className="text-slate-500 text-lg font-bold">{t('mostFeaturedDesc')}</p>
+            <h2 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">
+              {t('mostFeatured')}
+            </h2>
+            <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 px-4 max-w-2xl mx-auto">{t('mostFeaturedDesc')}</p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
@@ -267,34 +274,29 @@ export default function Home() {
                   transition={{ delay: i * 0.1, duration: 0.5 }}
                   className="group relative w-full aspect-[2/3]"
                 >
-
-                  {/* Product Content 'Capsule' */}
                   <Link href={`/products/${product.id}`}>
-                    <div className="relative z-10 h-full w-full rounded-[30px] overflow-hidden shadow-2xl hover:shadow-purple-200/50 transition-all duration-500">
+                    <div className="relative z-10 h-full w-full rounded-[30px] overflow-hidden shadow-2xl hover:shadow-primary/20 transition-all duration-500">
                       <div className="h-full w-full relative flex flex-col">
-                        {/* Product Image - Full Height */}
                         <div className="flex-grow w-full relative h-full overflow-hidden bg-white">
                           <img
                             src={product.images?.[0] || "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&q=80"}
                             alt={language === 'ar' ? product.nameAr : product.nameEn}
                             className="w-full h-full object-contain object-center transition-transform duration-700 group-hover:scale-110"
+                            onError={(e: any) => {
+                              e.target.src = "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&q=80";
+                            }}
                           />
                         </div>
 
-                        {/* Purple Bottom Overlay */}
-                        <div className="absolute bottom-0 left-0 right-0 h-0 opacity-0 bg-[oklch(58.6%_0.253_17.585)]/10 backdrop-blur-md flex flex-col items-center justify-center text-center p-6 transition-all duration-300 group-hover:h-[40%] group-hover:opacity-100 overflow-hidden">
-                          {/* Product Name */}
-                          <h3 className="text-2xl font-bold text-white mb-2 leading-tight opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
+                        {/* Gold Bottom Overlay */}
+                        <div className="absolute bottom-0 left-0 right-0 h-0 opacity-0 bg-primary/90 backdrop-blur-md flex flex-col items-center justify-center text-center p-6 transition-all duration-300 group-hover:h-[40%] group-hover:opacity-100 overflow-hidden">
+                          <h3 className="text-2xl font-bold text-primary-foreground mb-2 leading-tight opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
                             {language === 'ar' ? product.nameAr : product.nameEn}
                           </h3>
-
-                          {/* Price */}
-                          <p className="text-white/90 text-lg font-medium mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-150">
+                          <p className="text-primary-foreground/90 text-lg font-medium mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-150">
                             {formatPrice(product.price)}
                           </p>
-
-                          {/* More Button */}
-                          <Button className="bg-[oklch(58.6%_0.253_17.585)] text-white hover:bg-[oklch(58.6%_0.253_17.585)]/90 rounded-full px-8 py-1 h-8 text-sm font-bold shadow-sm transition-transform hover:scale-105 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-200">
+                          <Button className="bg-primary-foreground text-primary hover:bg-white rounded-full px-8 py-1 h-8 text-sm font-bold shadow-sm transition-transform hover:scale-105 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-200">
                             {t('more')}
                           </Button>
                         </div>
@@ -306,22 +308,22 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section >
+      </section>
 
       {/* Collections Section */}
-      < section className="pt-0 pb-24 relative z-20" >
-        <div className="absolute inset-x-0 top-0 bottom-0 bg-[#f2f2f2] -z-10" />
+      <section className="pt-0 pb-24 relative z-20" >
+        <div className="absolute inset-x-0 top-0 bottom-0 bg-[#f8f8f8] -z-10" />
         <div className="container mx-auto px-4 relative z-10">
-
-          {/* Section Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16 pt-20"
+            className="text-center mb-16 pt-20 flex flex-col items-center relative"
           >
-            <h2 className="text-4xl md:text-5xl font-black mb-4">{t('shopByOccasion')}</h2>
-            <p className="text-slate-500 text-lg font-bold">{t('shopByOccasionDesc')}</p>
+            <h2 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">
+              {t('shopByOccasion')}
+            </h2>
+            <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 px-4 max-w-2xl mx-auto">{t('shopByOccasionDesc')}</p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
@@ -337,33 +339,32 @@ export default function Home() {
                   transition={{ delay: i * 0.1, duration: 0.5 }}
                   className="group relative w-full aspect-[2/3]"
                 >
-                  {/* Collection Card */}
                   <Link href={`/products?collection=${collection.id}`}>
-                    <div className="relative z-10 h-full w-full rounded-[40px] overflow-hidden shadow-2xl hover:shadow-purple-200/50 transition-all duration-500 bg-white">
+                    <div className="relative z-10 h-full w-full rounded-[40px] overflow-hidden shadow-2xl hover:shadow-primary/20 transition-all duration-500 bg-white">
                       <div className="h-full w-full relative flex flex-col">
-                        {/* Collection Image */}
                         <div className="flex-grow w-full relative h-full overflow-hidden">
                           <img
                             src={collection.coverImage || "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&q=80"}
                             alt={language === 'ar' ? collection.nameAr : collection.nameEn}
                             className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
+                            onError={(e: any) => {
+                              e.target.src = "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&q=80";
+                            }}
                           />
                         </div>
 
-                        {/* Purple Bottom Overlay */}
-                        <div className="absolute bottom-0 left-0 right-0 h-0 opacity-0 bg-[oklch(58.6%_0.253_17.585)]/10 backdrop-blur-md flex flex-col items-center justify-center text-center p-6 transition-all duration-300 group-hover:h-[45%] group-hover:opacity-100 overflow-hidden">
-                          <h3 className="text-2xl md:text-3xl font-black text-white mb-2 leading-tight opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
+                        {/* Gold Bottom Overlay */}
+                        <div className="absolute bottom-0 left-0 right-0 h-0 opacity-0 bg-primary/90 backdrop-blur-md flex flex-col items-center justify-center text-center p-6 transition-all duration-300 group-hover:h-[45%] group-hover:opacity-100 overflow-hidden">
+                          <h3 className="text-2xl md:text-3xl font-black text-primary-foreground mb-2 leading-tight opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
                             {language === 'ar' ? collection.nameAr : collection.nameEn}
                           </h3>
-
                           <div className="flex items-center gap-2 mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-150">
-                            <div className="h-1 w-12 bg-white rounded-full" />
-                            <p className="text-white/90 text-lg font-bold">
+                            <div className="h-1 w-12 bg-primary-foreground rounded-full" />
+                            <p className="text-primary-foreground/90 text-lg font-bold">
                               {collection.productsCount || 0} {language === 'ar' ? 'منتج' : 'Products'}
                             </p>
                           </div>
-
-                          <Button className="bg-white text-[oklch(58.6%_0.253_17.585)] hover:bg-white/90 rounded-full px-8 py-1 h-8 text-sm font-black shadow-sm transition-transform hover:scale-105 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-200">
+                          <Button className="bg-primary-foreground text-primary hover:bg-white rounded-full px-8 py-1 h-8 text-sm font-black shadow-sm transition-transform hover:scale-105 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-200">
                             {t('shopNow')}
                           </Button>
                         </div>
@@ -375,10 +376,10 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section >
+      </section>
 
-      {/* Split Banner Section (Classic Stocking Styles) */}
-      < section className="py-24 bg-[#FDF8F6] relative overflow-hidden" >
+      {/* Split Banner Section (Exceptional Performance) */}
+      <section className="py-24 bg-background relative overflow-hidden text-foreground border-y border-white/5">
         <div className="container mx-auto px-4">
           <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-24">
             {/* Image Side */}
@@ -388,20 +389,20 @@ export default function Home() {
               viewport={{ once: true }}
               className="w-full lg:w-1/2 relative"
             >
-              <div className="aspect-[4/5] rounded-[3rem] overflow-hidden relative shadow-2xl">
+              <div className="aspect-[4/5] rounded-3xl overflow-hidden relative shadow-2xl border border-white/10">
                 <img
-                  src="https://res.cloudinary.com/dk3wwuy5d/image/upload/v1771351298/Gemini_Generated_Image_mcjdegmcjdegmcjd_aipe9g.png"
-                  alt="Classic Stocking Styles"
+                  src="/high-performance-tech.png"
+                  alt="High Performance Tech"
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
               </div>
               {/* Floating Element */}
               <div className="absolute -bottom-12 -right-12 w-48 h-48 hidden lg:block">
                 <img
-                  src="https://res.cloudinary.com/dk3wwuy5d/image/upload/v1771353452/fustan-products/e8dabjs0ub3v6klomsvz.jpg"
-                  alt="Detail"
-                  className="w-full h-full object-cover rounded-full border-4 border-white shadow-xl"
+                  src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?q=80&w=800&auto=format&fit=crop"
+                  alt="Smartwatch"
+                  className="w-full h-full object-cover rounded-full border-4 border-background shadow-xl"
                 />
               </div>
             </motion.div>
@@ -411,38 +412,42 @@ export default function Home() {
               initial={{ opacity: 0, x: 50 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="w-full lg:w-1/2 text-center lg:text-left rtl:lg:text-right"
+              className="w-full lg:w-1/2 text-center lg:text-left rtl:lg:text-right relative flex flex-col"
             >
-              <span className="text-3xl text-rose-500 mb-4 block font-bold">{language === 'ar' ? "أناقة خالدة" : "Timeless Charm"}</span>
-              <h2 className="text-5xl lg:text-7xl text-gray-900 mb-6 leading-tight font-black">
-                {t('classicStyles')}
+              <h2 className="text-4xl lg:text-6xl font-black text-white mb-6 leading-tight max-w-full">
+                {language === 'ar' ? "أداء استثنائي" : "Exceptional Performance"}
               </h2>
-              <p className="text-gray-600 text-lg mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0">
-                {t('classicStylesDesc')}
+              <p className="text-2xl lg:text-4xl text-primary font-bold mb-6">
+                {language === 'ar' ? "تكنولوجيا متطورة" : "Cutting-edge Tech"}
               </p>
-              <Link href="/products">
-                <Button className="bg-rose-900 text-white px-10 py-6 rounded-full text-lg font-bold hover:bg-rose-800 transition-all hover:scale-105 shadow-xl">
+              <p className="text-gray-400 text-lg mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0">
+                {language === 'ar' ? "اكتشف مجموعتنا المميزة التي تجمع بين القوة والأناقة العصرية، مصممة خصيصاً لتلبية احتياجاتك الرقمية." : "Discover our premium collection that combines power with modern elegance, designed specifically to meet your digital needs."}
+              </p>
+              <Link href="/products" className="relative z-10 w-fit mx-auto lg:mx-0">
+                <Button className="bg-primary text-primary-foreground px-10 py-6 rounded-lg text-lg font-bold hover:bg-primary/90 transition-all hover:scale-105 shadow-primary/20 shadow-lg">
                   {t('shopNow')}
                 </Button>
               </Link>
             </motion.div>
           </div>
         </div>
-      </section >
+      </section>
 
       {/* Trending Products Tabbed Section */}
-      < section className="py-24 bg-white" >
+      <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <span className="text-2xl text-rose-500 mb-2 block font-bold">{language === 'ar' ? "أحدث الصيحات" : "Shop the Latest"}</span>
-            <h2 className="text-4xl md:text-5xl font-black text-gray-900">{t('trendingProducts')}</h2>
+          <div className="text-center mb-12 flex flex-col items-center relative">
+            <h2 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">
+              {language === 'ar' ? "أحدث الإصدارات تقنياً" : "Shop the Latest Tech"}
+            </h2>
+            <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto px-4">{t('trendingProducts')}</p>
           </div>
 
           <Tabs defaultValue="all" value={selectedCategory === null ? "all" : selectedCategory.toString()} onValueChange={(val) => setSelectedCategory(val === 'all' ? null : Number(val))} className="w-full" dir={language === 'ar' ? 'rtl' : 'ltr'}>
             <div className="relative group/tabs flex items-center">
               <button
                 onClick={() => scrollTabs('left')}
-                className="absolute -left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center bg-white/90 backdrop-blur-md rounded-full shadow-lg border border-gray-100 md:hidden hover:bg-rose-50 transition-colors text-gray-600"
+                className="absolute -left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center bg-white/90 backdrop-blur-md rounded-full shadow-lg border border-gray-100 md:hidden hover:-white/5 transition-colors text-gray-600"
               >
                 <ChevronLeft size={20} />
               </button>
@@ -454,7 +459,7 @@ export default function Home() {
                 >
                   <TabsTrigger
                     value="all"
-                    className="bg-transparent border-b-4 border-transparent data-[state=active]:border-rose-500 data-[state=active]:text-rose-600 rounded-none px-4 py-4 text-base md:text-lg font-bold text-gray-400 hover:text-rose-400 transition-all uppercase tracking-wider whitespace-nowrap"
+                    className="bg-transparent border-b-4 border-transparent data-[state=active]:-primary data-[state=active]:-primary rounded-none px-4 py-4 text-base md:text-lg font-bold text-gray-400 hover:-primary/80 transition-all uppercase tracking-wider whitespace-nowrap"
                   >
                     {t('all')}
                   </TabsTrigger>
@@ -462,7 +467,7 @@ export default function Home() {
                     <TabsTrigger
                       key={col.id}
                       value={col.id.toString()}
-                      className="bg-transparent border-b-4 border-transparent data-[state=active]:border-rose-500 data-[state=active]:text-rose-600 rounded-none px-4 py-4 text-base md:text-lg font-bold text-gray-400 hover:text-rose-400 transition-all uppercase tracking-wider whitespace-nowrap"
+                      className="bg-transparent border-b-4 border-transparent data-[state=active]:-primary data-[state=active]:-primary rounded-none px-4 py-4 text-base md:text-lg font-bold text-gray-400 hover:-primary/80 transition-all uppercase tracking-wider whitespace-nowrap"
                     >
                       {language === 'ar' ? col.nameAr : col.nameEn}
                     </TabsTrigger>
@@ -472,7 +477,7 @@ export default function Home() {
 
               <button
                 onClick={() => scrollTabs('right')}
-                className="absolute -right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center bg-white/90 backdrop-blur-md rounded-full shadow-lg border border-gray-100 md:hidden hover:bg-rose-50 transition-colors text-gray-600"
+                className="absolute -right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center bg-white/90 backdrop-blur-md rounded-full shadow-lg border border-gray-100 md:hidden hover:-white/5 transition-colors text-gray-600"
               >
                 <ChevronRight size={20} />
               </button>
@@ -497,26 +502,24 @@ export default function Home() {
       {/* Flash Sales Section */}
       <FlashSalesSection onQuickView={setQuickViewProduct} />
 
-      {/* Vendors Section (Already a component, will check later) */}
-      < VendorsSection />
-
       {/* Appointment Booking Section */}
       <AppointmentSection />
 
       {/* New Arrivals Section */}
-      < section className="bg-white relative overflow-hidden pb-32 z-10 pt-0" >
+      <section className="bg-white relative overflow-hidden pb-32 z-10 pt-0" >
         <div className="container mx-auto px-4 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-16 flex flex-col items-center relative"
           >
-            <h2 className="text-4xl md:text-5xl font-black mb-4">{t('newArrivals')}</h2>
-            <p className="text-slate-500 text-lg font-bold">{t('newArrivalsDesc')}</p>
+            <h2 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">
+              {t('newArrivals')}
+            </h2>
+            <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto px-4">{t('newArrivalsDesc')}</p>
           </motion.div>
 
-          {/* New Arrivals Grid / Slider */}
           <div className="relative">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               {newArrivalsLoading ? (
@@ -542,21 +545,24 @@ export default function Home() {
                     >
                       <Link href={`/products/${product.id}`}>
                         <div className="relative group cursor-pointer h-full flex flex-col shadow-2xl rounded-[45px] overflow-hidden">
-                          <div className="bg-white aspect-[3/4] overflow-hidden">
+                          <div className="bg-transparent aspect-[3/4] overflow-hidden">
                             <img
                               src={product.images?.[0]}
                               alt={product.nameAr}
                               className="w-full h-full object-contain object-bottom transition-transform duration-700 group-hover:scale-110"
+                              onError={(e: any) => {
+                                e.target.src = "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&q=80";
+                              }}
                             />
                           </div>
-                          <div className="absolute bottom-0 left-0 right-0 h-0 opacity-0 bg-[oklch(58.6%_0.253_17.585)]/20 backdrop-blur-md flex flex-col items-center justify-center text-center p-6 transition-all duration-300 group-hover:h-[40%] group-hover:opacity-100 overflow-hidden z-20">
-                            <h3 className="text-2xl font-black text-white mb-2 leading-tight">
+                          <div className="absolute bottom-0 left-0 right-0 h-0 opacity-0 bg-primary/90 backdrop-blur-md flex flex-col items-center justify-center text-center p-6 transition-all duration-300 group-hover:h-[40%] group-hover:opacity-100 overflow-hidden z-20">
+                            <h3 className="text-2xl font-black text-primary-foreground mb-2 leading-tight">
                               {language === 'ar' ? product.nameAr : product.nameEn}
                             </h3>
-                            <p className="text-white/90 text-lg font-bold mb-4">
+                            <p className="text-primary-foreground/90 text-lg font-bold mb-4">
                               {formatPrice(product.price)}
                             </p>
-                            <Button className="bg-[oklch(58.6%_0.253_17.585)] text-white hover:bg-[oklch(58.6%_0.253_17.585)]/90 rounded-full px-8 py-2 h-10 text-base font-black shadow-lg transition-transform hover:scale-105">
+                            <Button className="bg-primary-foreground text-primary hover:bg-white rounded-full px-8 py-2 h-10 text-base font-black shadow-lg transition-transform hover:scale-105">
                               {t('more')}
                             </Button>
                           </div>
@@ -569,20 +575,22 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section >
+      </section>
 
       {/* Best Sellers Section */}
-      < section className="pt-0 pb-24 relative z-20" >
-        <div className="absolute inset-0 bg-white -z-10" />
+      <section className="pt-0 pb-24 relative z-20" >
+        <div className="absolute inset-0 bg-[#0A0A0A] -z-10" />
         <div className="container mx-auto px-4 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16 pt-20"
+            className="text-center mb-16 pt-20 flex flex-col items-center relative"
           >
-            <h2 className="text-4xl md:text-5xl font-black mb-4">{t('bestSellers')}</h2>
-            <p className="text-slate-500 text-lg font-bold">{t('bestSellersDesc')}</p>
+            <h2 className="text-3xl md:text-5xl font-black text-white mb-4">
+              {t('bestSellers')}
+            </h2>
+            <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto px-4">{t('bestSellersDesc')}</p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
@@ -599,23 +607,26 @@ export default function Home() {
                   className="group relative w-full aspect-[2/3]"
                 >
                   <Link href={`/products/${product.id}`}>
-                    <div className="relative z-10 h-full w-full rounded-[40px] overflow-hidden shadow-2xl hover:shadow-purple-200/50 transition-all duration-500 bg-white">
+                    <div className="relative z-10 h-full w-full rounded-[40px] overflow-hidden shadow-2xl hover:shadow-primary/20 transition-all duration-500 bg-[#0D0D0D] border border-white/5">
                       <div className="h-full w-full relative flex flex-col">
                         <div className="flex-grow w-full relative h-full overflow-hidden">
                           <img
                             src={product.images?.[0]}
                             alt={language === 'ar' ? product.nameAr : product.nameEn}
                             className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
+                            onError={(e: any) => {
+                              e.target.src = "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&q=80";
+                            }}
                           />
                         </div>
-                        <div className="absolute bottom-0 left-0 right-0 h-0 opacity-0 bg-[oklch(58.6%_0.253_17.585)]/10 backdrop-blur-md flex flex-col items-center justify-center text-center p-6 transition-all duration-300 group-hover:h-[45%] group-hover:opacity-100 overflow-hidden">
-                          <h3 className="text-2xl md:text-3xl font-black text-white mb-2">
+                        <div className="absolute bottom-0 left-0 right-0 h-0 opacity-0 bg-primary/90 backdrop-blur-md flex flex-col items-center justify-center text-center p-6 transition-all duration-300 group-hover:h-[45%] group-hover:opacity-100 overflow-hidden">
+                          <h3 className="text-2xl md:text-3xl font-black text-primary-foreground mb-2">
                             {language === 'ar' ? product.nameAr : product.nameEn}
                           </h3>
-                          <p className="text-white/90 text-lg font-bold mb-4">
+                          <p className="text-primary-foreground/90 text-lg font-bold mb-4">
                             {formatPrice(product.price)}
                           </p>
-                          <Button className="bg-white text-[oklch(58.6%_0.253_17.585)] hover:bg-white/90 rounded-full px-8 py-1 h-8 text-sm font-black shadow-sm transition-transform hover:scale-105">
+                          <Button className="bg-primary-foreground text-primary hover:bg-white rounded-full px-8 py-1 h-8 text-sm font-black shadow-sm transition-transform hover:scale-105">
                             {t('more')}
                           </Button>
                         </div>
@@ -627,62 +638,93 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section >
+      </section>
 
-      {/* AI Try-On Teaser Section */}
-      < section className="py-16 bg-[#f2f2f2] w-full" >
-        <div className="w-full">
-          <TryOnSection
-            productName={language === 'ar' ? "فستان سهرة فاخر" : "Luxury Evening Dress"}
-            productImage="https://res.cloudinary.com/dk3wwuy5d/image/upload/v1770928546/idnbgdxs68lv6abaqh94.png"
-            productDescription={language === 'ar' ? "فستان سهرة أنيق باللون الأحمر" : "Elegant red evening dress"}
-          />
-        </div>
-      </section >
 
-      {/* Luxury Collection Banner */}
-      <section className="py-12 md:py-24 bg-white container mx-auto px-4 max-w-7xl">
-        <div className="relative h-[400px] md:h-[600px] rounded-3xl md:rounded-[4rem] overflow-hidden group shadow-2xl transition-all duration-500">
+      {/* Tech Ecosystem Banner */}
+      <section className="py-12 md:py-24 container mx-auto px-4 max-w-7xl">
+        <div className="relative h-[450px] md:h-[650px] rounded-[3rem] overflow-hidden group shadow-2xl transition-all duration-700 border border-white/10 group">
+          {/* Animated Background Image */}
           <img
-            src="https://juliafashionshop.com/cdn/shop/files/O1CN01lYXWFs1FtCW6vFVYK__3175780544-0-cib_d79e31c8-2930-4724-b59b-bcd2aea4846a_1000x.jpg?v=1760439331"
-            alt="Exclusive"
-            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s] ${language === 'ar' ? 'object-left' : 'object-right'
-              }`}
+            src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2000&auto=format&fit=crop"
+            alt="Tech Ecosystem"
+            className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-[4s] ease-out ${language === 'ar' ? 'object-left' : 'object-right'}`}
           />
+
+          {/* Decorative Corner Accents */}
+          <div className="absolute top-0 right-0 w-32 h-32 border-t-2 border-r-2 border-primary/30 rounded-tr-[3rem] pointer-events-none group-hover:border-primary/60 transition-colors duration-500" />
+          <div className="absolute bottom-0 left-0 w-32 h-32 border-b-2 border-l-2 border-primary/30 rounded-bl-[3rem] pointer-events-none group-hover:border-primary/60 transition-colors duration-500" />
+
+          {/* Luxury Overlay with Gradient */}
           <div className={`absolute inset-0 ${language === 'ar'
-            ? 'bg-gradient-to-l from-white/95 via-white/40 to-transparent md:via-white/20 md:to-black/60 justify-start'
-            : 'bg-gradient-to-r from-white/95 via-white/40 to-transparent md:via-white/20 md:to-black/60 justify-start'
-            } flex items-center p-6 sm:p-12 md:p-24`}>
-            <div className={`max-w-2xl ${language === 'ar' ? 'text-right' : 'text-left'}`}>
-              <motion.h2
-                initial={{ opacity: 0, x: 50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                className="text-3xl sm:text-5xl md:text-6xl font-black text-gray-900 mb-4 sm:mb-8 leading-tight"
-              >
-                {t('exclusiveExperience')}
-              </motion.h2>
-              <p className="text-base sm:text-xl text-gray-800 mb-6 sm:mb-10 leading-relaxed font-medium max-w-md md:max-w-xl">
-                {t('exclusiveExperienceDesc')}
-              </p>
-              <Button size="lg" className="h-12 sm:h-16 px-8 sm:px-12 rounded-full bg-white text-gray-900 border-2 border-gray-100 hover:bg-rose-50 hover:text-rose-600 text-base sm:text-xl font-bold shadow-xl md:shadow-2xl transition-all">
-                {t('discoverExclusive')}
-              </Button>
-            </div>
+            ? 'bg-gradient-to-l from-black/95 via-black/40 to-transparent justify-start'
+            : 'bg-gradient-to-r from-black/95 via-black/40 to-transparent justify-start'
+            } flex items-center p-4 sm:p-12 md:p-20`}>
+
+            {/* Glass Box Content Wrapper */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className={`max-w-2xl p-8 md:p-12 ${language === 'ar' ? 'text-right' : 'text-left'} relative overflow-hidden`}
+            >
+              {/* Subtle light effect inside the box */}
+              <div className="absolute -top-24 -left-24 w-48 h-48 bg-primary/20 blur-[60px] rounded-full pointer-events-none" />
+
+              <div className="relative z-10">
+                <motion.h2
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-3xl sm:text-5xl md:text-6xl font-black mb-6 sm:mb-8 leading-tight tracking-tight drop-shadow-2xl"
+                >
+                  <span className="bg-gradient-to-r from-primary via-white to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient-x">
+                    {t('exclusiveExperience')}
+                  </span>
+                </motion.h2>
+
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-base sm:text-xl text-gray-200/90 mb-8 sm:mb-12 leading-relaxed font-medium max-w-md md:max-w-xl"
+                >
+                  {t('exclusiveExperienceDesc')}
+                </motion.p>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Button
+                    size="lg"
+                    className="h-14 sm:h-18 px-10 sm:px-14 rounded-2xl bg-primary text-white hover:bg-primary/90 text-lg sm:text-2xl font-black shadow-primary/30 shadow-2xl transition-all relative group overflow-hidden"
+                  >
+                    <span className="relative z-10">{t('discoverExclusive')}</span>
+                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                    <div className="absolute -inset-1 bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity animate-pulse" />
+                  </Button>
+                </motion.div>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
       {/* Customer Reviews Section */}
-      <section className="py-24 bg-[#0a0a0a] relative overflow-hidden">
+      <section className="py-24 bg-[#05050A] relative overflow-hidden border-t border-white/5">
         <div className="absolute inset-0 bg-[url('/noise.png')] opacity-5" />
         <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center mb-16">
-            <span className="text-2xl text-rose-500 mb-2 block font-bold">
-              {language === 'ar' ? "آراء عملائنا" : "Customer Reviews"}
-            </span>
-            <h2 className="text-4xl md:text-5xl font-black text-white">
+          <div className="text-center mb-16 flex flex-col items-center relative">
+            <h2 className="text-3xl md:text-5xl font-black text-white mb-4">
               {language === 'ar' ? "تجارب التسوق" : "Shopping Experiences"}
             </h2>
+            <p className="text-lg md:text-xl text-white/70 max-w-2xl mx-auto px-4">
+              {language === 'ar' ? "آراء عملائنا بعد تجربة أجهزتنا" : "Customer reviews after experiencing our devices"}
+            </p>
           </div>
 
           <div className="flex justify-center mb-12">
@@ -706,27 +748,27 @@ export default function Home() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
-                  className="bg-white rounded-[3rem] p-10 shadow-xl relative group hover:-translate-y-2 transition-transform duration-300"
+                  className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[3rem] p-10 shadow-2xl relative group hover:-translate-y-2 transition-transform duration-300"
                 >
-                  <div className="absolute top-10 right-10 text-6xl text-rose-100 opacity-50 font-black">"</div>
+                  <div className="absolute top-10 right-10 text-6xl text-primary/10 opacity-50 font-black">"</div>
 
-                  <div className="flex gap-1 mb-6 text-yellow-400">
+                  <div className="flex gap-1 mb-6 text-yellow-500">
                     {Array(review.rating).fill(0).map((_, i) => (
                       <Star key={i} className="w-5 h-5 fill-current" />
                     ))}
                   </div>
 
-                  <p className="text-gray-600 text-lg leading-relaxed mb-8 font-medium line-clamp-4">
+                  <p className="text-white/70 text-lg leading-relaxed mb-8 font-medium line-clamp-4">
                     {review.comment}
                   </p>
 
-                  <div className="flex items-center gap-4 border-t border-gray-100 pt-6">
-                    <div className="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center text-xl font-bold text-rose-500">
+                  <div className="flex items-center gap-4 border-t border-white/5 pt-6">
+                    <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-xl font-bold text-primary border border-white/10">
                       {review.guestName?.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <h4 className="font-bold text-gray-900">{review.guestName}</h4>
-                      <p className="text-sm text-gray-400 font-medium">{review.city}</p>
+                      <h4 className="font-bold text-white">{review.guestName}</h4>
+                      <p className="text-sm text-white/40 font-medium">{review.city}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -737,18 +779,18 @@ export default function Home() {
       </section >
 
       {/* Social Feed Section */}
-      < section className="py-12 relative z-20" >
+      <section className="py-12 relative z-20" >
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between mb-12 gap-6">
             <div>
               <h2 className="text-3xl font-black mb-2 flex items-center gap-3">
-                <Instagram className="text-rose-600" size={32} />
+                <Instagram className="text-primary" size={32} />
                 @ahmedkrishna
               </h2>
               <p className="text-gray-500 font-bold">{language === 'ar' ? "تابعينا على انستقرام" : "Follow us on Instagram"}</p>
             </div>
             <a href="https://www.instagram.com/ahmedkrishna/ogdg" target="_blank" rel="noopener noreferrer">
-              <Button variant="outline" className="rounded-full px-8 h-12 border-2 border-gray-200 hover:border-rose-600 hover:text-rose-600 font-bold">
+              <Button variant="outline" className="rounded-full px-8 h-12 border-2 border-gray-200 text-gray-900 dark:text-gray-100 hover:border-primary hover:text-primary font-bold">
                 {language === 'ar' ? "مشاهدة الكل" : "View All"}
               </Button>
             </a>
@@ -777,21 +819,21 @@ export default function Home() {
             </div>
           )}
         </div>
-      </section >
+      </section>
 
       {/* Professional Newsletter - Elite Club Design */}
-      <section className="py-24 bg-white relative z-20">
+      <section className="py-24 bg-black relative z-20">
         <div className="container mx-auto px-4">
-          <div className="relative overflow-hidden rounded-[3rem] bg-[#1a0f16] shadow-2xl isolate">
+          <div className="relative overflow-hidden rounded-[3rem] bg-[#0A0A0A] shadow-2xl isolate border border-white/5">
             {/* Background Decor */}
-            <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-[500px] h-[500px] bg-rose-500/20 blur-[100px] rounded-full" />
-            <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-purple-500/10 blur-[100px] rounded-full" />
+            <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-[500px] h-[500px] bg-primary/20 blur-[100px] rounded-full" />
+            <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-primary/10 blur-[100px] rounded-full" />
 
             {/* Texture Overlay */}
             <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03]" />
 
             <div className="relative z-10 px-6 py-20 md:px-20 md:py-24 text-center">
-              <span className="inline-block py-1 px-4 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-300 text-sm font-semibold tracking-widest uppercase mb-6 backdrop-blur-md">
+              <span className="inline-block py-1 px-4 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-semibold tracking-widest uppercase mb-6 backdrop-blur-md">
                 {t('exclusiveInvitation')}
               </span>
 
@@ -808,12 +850,12 @@ export default function Home() {
                   <input
                     type="email"
                     placeholder={t('emailPlaceholder')}
-                    className="w-full px-8 py-5 rounded-full bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:bg-white/10 focus:border-rose-400/50 transition-all duration-300 backdrop-blur-sm"
+                    className="w-full px-8 py-5 rounded-full bg-white/5 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:bg-white/10 focus:border-primary/50 transition-all duration-300 backdrop-blur-sm"
                   />
                   <div className="absolute inset-0 rounded-full ring-1 ring-white/10 group-hover:ring-white/20 pointer-events-none transition-all" />
                 </div>
 
-                <Button className="w-full py-6 rounded-full bg-gradient-to-r from-rose-400 to-rose-600 hover:from-rose-500 hover:to-rose-700 text-white font-bold text-lg shadow-lg shadow-rose-900/20 hover:shadow-rose-900/40 transition-all transform hover:-translate-y-1 h-auto">
+                <Button className="w-full py-6 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-lg shadow-lg shadow-primary/20 transition-all transform hover:-translate-y-1 h-auto">
                   {t('subscribe')}
                 </Button>
               </form>

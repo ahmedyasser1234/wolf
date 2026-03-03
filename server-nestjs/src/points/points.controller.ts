@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, UseGuards, Request, Post } from '@nestjs/common';
 import { PointsService } from './points.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -17,5 +17,12 @@ export class PointsController {
             points: pointsRecord.points,
             history,
         };
+    }
+
+    @Post('redeem')
+    @UseGuards(JwtAuthGuard)
+    async redeem(@Request() req) {
+        const userId = req.user.id;
+        return await this.pointsService.redeemPoints(userId);
     }
 }

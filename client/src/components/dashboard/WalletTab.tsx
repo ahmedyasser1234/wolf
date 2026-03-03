@@ -42,17 +42,17 @@ export default function WalletTab() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-3xl font-black text-slate-900 mb-2 flex items-center gap-3">
+                    <h2 className="text-3xl font-black text-white mb-2 flex items-center gap-3">
                         <div className="w-2 h-8 bg-emerald-500 rounded-full" />
                         {language === 'ar' ? 'المحفظة المالية' : 'Financial Wallet'}
                     </h2>
-                    <p className="text-slate-500 font-bold">
+                    <p className="text-gray-400 font-bold">
                         {language === 'ar' ? 'تتبع أرباحك وعمليات السحب الخاصة بك' : 'Track your earnings and withdrawals'}
                     </p>
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 rounded-2xl border border-emerald-100">
+                <div className="flex items-center gap-2 px-4 py-2 bg-emerald-900/30 rounded-2xl border border-emerald-800">
                     <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                    <span className="text-sm font-black text-emerald-700 capitalize">
+                    <span className="text-sm font-black text-emerald-400 capitalize">
                         {language === 'ar' ? 'محدثة الآن' : 'Updated now'}
                     </span>
                 </div>
@@ -60,7 +60,7 @@ export default function WalletTab() {
 
             {/* Balance Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="rounded-[32px] border-emerald-100 bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-200/50 overflow-hidden relative group">
+                <Card className="rounded-[32px] border-emerald-800 bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-none overflow-hidden relative group">
                     <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-500" />
                     <CardContent className="p-8 relative z-10">
                         <div className="flex items-center justify-between mb-6">
@@ -76,28 +76,28 @@ export default function WalletTab() {
                             {formatPrice(wallet?.availableBalance || 0)}
                         </h3>
                         <div className="flex gap-3">
-                            <button className="flex-1 h-12 bg-white text-emerald-700 font-black rounded-xl hover:bg-emerald-50 transition-colors shadow-lg">
+                            <button className="flex-1 h-12 bg-emerald-500 text-white font-black rounded-xl hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-900/20">
                                 {language === 'ar' ? 'طلب سحب' : 'Request Payout'}
                             </button>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="rounded-[32px] border-slate-200 bg-white shadow-xl shadow-slate-100 overflow-hidden relative group">
+                <Card className="rounded-[32px] border-gray-800 bg-background shadow-none overflow-hidden relative group">
                     <CardContent className="p-8 relative z-10">
                         <div className="flex items-center justify-between mb-6">
-                            <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center">
-                                <Clock className="w-7 h-7 text-blue-600" />
+                            <div className="w-14 h-14 bg-blue-900/30 rounded-2xl flex items-center justify-center">
+                                <Clock className="w-7 h-7 text-blue-400" />
                             </div>
                             <ArrowUpRight className="w-6 h-6 text-blue-300 opacity-50" />
                         </div>
-                        <p className="text-slate-400 font-bold text-sm mb-1 uppercase tracking-widest">
+                        <p className="text-gray-500 font-bold text-sm mb-1 uppercase tracking-widest">
                             {language === 'ar' ? 'أرباح معلقة (تحت المراجعة)' : 'Pending Balance'}
                         </p>
-                        <h3 className="text-4xl font-black text-slate-900 tabular-nums">
+                        <h3 className="text-4xl font-black text-white tabular-nums">
                             {formatPrice(wallet?.pendingBalance || 0)}
                         </h3>
-                        <p className="text-xs text-slate-400 font-bold mt-4 flex items-center gap-2">
+                        <p className="text-xs text-gray-500 font-bold mt-4 flex items-center gap-2">
                             <AlertCircle className="w-4 h-4" />
                             {language === 'ar' ? 'تصبح الأرباح متاحة بعد تأكيد العميل للاستلام' : 'Earnings become available after customer confirms delivery'}
                         </p>
@@ -106,58 +106,58 @@ export default function WalletTab() {
             </div>
 
             {/* Transactions History */}
-            <Card className="rounded-[24px] md:rounded-[40px] border-slate-100 bg-white/80 backdrop-blur-xl shadow-2xl shadow-slate-200/50 overflow-hidden">
-                <div className="p-6 md:p-8 border-b border-slate-100 flex items-center justify-between">
-                    <h3 className="text-lg md:text-xl font-black text-slate-900 flex items-center gap-3">
-                        <div className="w-1.5 h-6 bg-slate-900 rounded-full" />
+            <Card className="rounded-[24px] md:rounded-[40px] border-gray-800 bg-background/80 backdrop-blur-xl shadow-none overflow-hidden">
+                <div className="p-6 md:p-8 border-b border-gray-800 flex items-center justify-between">
+                    <h3 className="text-lg md:text-xl font-black text-white flex items-center gap-3">
+                        <div className="w-1.5 h-6 bg-white rounded-full" />
                         {language === 'ar' ? 'سجل العمليات' : 'Transaction History'}
                     </h3>
-                    <History className="w-6 h-6 text-slate-300" />
+                    <History className="w-6 h-6 text-gray-600" />
                 </div>
                 <CardContent className="p-0">
                     {/* Desktop Table */}
                     <div className="hidden md:block overflow-x-auto">
                         <table className="w-full text-right">
-                            <thead className="bg-slate-50/50">
+                            <thead className="bg-gray-800">
                                 <tr>
-                                    <th className="px-8 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">{language === 'ar' ? 'العملية' : 'Transaction'}</th>
-                                    <th className="px-8 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">{language === 'ar' ? 'المبلغ' : 'Amount'}</th>
-                                    <th className="px-8 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">{language === 'ar' ? 'الحالة' : 'Status'}</th>
-                                    <th className="px-8 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">{language === 'ar' ? 'التاريخ' : 'Date'}</th>
+                                    <th className="px-8 py-4 text-xs font-black text-gray-500 uppercase tracking-widest">{language === 'ar' ? 'العملية' : 'Transaction'}</th>
+                                    <th className="px-8 py-4 text-xs font-black text-gray-500 uppercase tracking-widest">{language === 'ar' ? 'المبلغ' : 'Amount'}</th>
+                                    <th className="px-8 py-4 text-xs font-black text-gray-500 uppercase tracking-widest">{language === 'ar' ? 'الحالة' : 'Status'}</th>
+                                    <th className="px-8 py-4 text-xs font-black text-gray-500 uppercase tracking-widest">{language === 'ar' ? 'التاريخ' : 'Date'}</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-50">
+                            <tbody className="divide-y divide-gray-800">
                                 {transactions.length === 0 ? (
                                     <tr>
-                                        <td colSpan={4} className="px-8 py-12 text-center text-slate-400 font-bold italic">
+                                        <td colSpan={4} className="px-8 py-12 text-center text-gray-500 font-bold italic">
                                             {language === 'ar' ? 'لا توجد عمليات مسجلة حتى الآن' : 'No transactions recorded yet'}
                                         </td>
                                     </tr>
                                 ) : (
                                     transactions.map((tx: any) => (
-                                        <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors">
+                                        <tr key={tx.id} className="hover:bg-gray-800/80 transition-colors">
                                             <td className="px-8 py-5">
                                                 <div className="flex items-center gap-4">
-                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${tx.type === 'credit' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
+                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${tx.type === 'credit' ? 'bg-emerald-900/30 text-emerald-400' : 'bg-red-900/30 text-red-400'
                                                         }`}>
                                                         {tx.type === 'credit' ? <ArrowDownLeft className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
                                                     </div>
                                                     <div>
-                                                        <p className="font-black text-slate-900 text-sm leading-tight">{tx.description}</p>
-                                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">ID: #{tx.relatedId || 'N/A'}</p>
+                                                        <p className="font-black text-white text-sm leading-tight">{tx.description}</p>
+                                                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">ID: #{tx.relatedId || 'N/A'}</p>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-8 py-5">
-                                                <span className={`text-lg font-black tabular-nums ${tx.type === 'credit' ? 'text-emerald-600' : 'text-red-600'
+                                                <span className={`text-lg font-black tabular-nums ${tx.type === 'credit' ? 'text-emerald-400' : 'text-red-400'
                                                     }`}>
                                                     {tx.type === 'credit' ? '+' : '-'}{formatPrice(Math.abs(tx.amount))}
                                                 </span>
                                             </td>
                                             <td className="px-8 py-5">
-                                                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-black tracking-wide uppercase ${tx.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
-                                                    tx.status === 'pending' ? 'bg-blue-100 text-blue-700' :
-                                                        'bg-red-100 text-red-700'
+                                                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-black tracking-wide uppercase ${tx.status === 'completed' ? 'bg-emerald-900/30 text-emerald-400' :
+                                                    tx.status === 'pending' ? 'bg-blue-900/30 text-blue-400' :
+                                                        'bg-red-900/30 text-red-400'
                                                     }`}>
                                                     {tx.status === 'completed' && <CheckCircle2 className="w-3 h-3" />}
                                                     {tx.status === 'pending' && <Clock className="w-3 h-3" />}
@@ -169,7 +169,7 @@ export default function WalletTab() {
                                                 </div>
                                             </td>
                                             <td className="px-8 py-5">
-                                                <p className="font-bold text-slate-500 text-sm">
+                                                <p className="font-bold text-gray-500 text-sm">
                                                     {new Date(tx.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
                                                 </p>
                                             </td>
@@ -188,32 +188,32 @@ export default function WalletTab() {
                             </div>
                         ) : (
                             transactions.map((tx: any) => (
-                                <div key={tx.id} className="p-5 border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
+                                <div key={tx.id} className="p-5 border-b border-gray-800 last:border-0 hover:bg-gray-800/50 transition-colors">
                                     <div className="flex items-start gap-4">
-                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${tx.type === 'credit' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
+                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${tx.type === 'credit' ? 'bg-emerald-900/30 text-emerald-400' : 'bg-red-900/30 text-red-400'
                                             }`}>
                                             {tx.type === 'credit' ? <ArrowDownLeft className="w-6 h-6" /> : <ArrowUpRight className="w-6 h-6" />}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between items-start mb-2">
                                                 <div>
-                                                    <p className="font-black text-slate-900 text-sm leading-snug mb-1">{tx.description}</p>
-                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">ID: #{tx.relatedId || 'N/A'}</p>
+                                                    <p className="font-black text-white text-sm leading-snug mb-1">{tx.description}</p>
+                                                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">ID: #{tx.relatedId || 'N/A'}</p>
                                                 </div>
-                                                <span className={`text-lg font-black tabular-nums whitespace-nowrap ${tx.type === 'credit' ? 'text-emerald-600' : 'text-red-600'
+                                                <span className={`text-lg font-black tabular-nums whitespace-nowrap ${tx.type === 'credit' ? 'text-emerald-400' : 'text-red-400'
                                                     }`}>
                                                     {tx.type === 'credit' ? '+' : '-'}{formatPrice(Math.abs(tx.amount))}
                                                 </span>
                                             </div>
 
                                             <div className="flex items-center justify-between">
-                                                <p className="font-bold text-slate-400 text-xs flex items-center gap-1.5">
+                                                <p className="font-bold text-gray-500 text-xs flex items-center gap-1.5">
                                                     <Clock className="w-3 h-3" />
                                                     {new Date(tx.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
                                                 </p>
-                                                <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black tracking-wide uppercase ${tx.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
-                                                    tx.status === 'pending' ? 'bg-blue-100 text-blue-700' :
-                                                        'bg-red-100 text-red-700'
+                                                <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black tracking-wide uppercase ${tx.status === 'completed' ? 'bg-emerald-900/30 text-emerald-400' :
+                                                    tx.status === 'pending' ? 'bg-blue-900/30 text-blue-400' :
+                                                        'bg-red-900/30 text-red-400'
                                                     }`}>
                                                     {tx.status === 'completed' && <CheckCircle2 className="w-3 h-3" />}
                                                     {tx.status === 'pending' && <Clock className="w-3 h-3" />}

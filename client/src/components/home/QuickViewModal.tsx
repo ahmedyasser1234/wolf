@@ -69,7 +69,7 @@ export function QuickViewModal({ initialProduct, isOpen, onClose }: QuickViewMod
                                 <button
                                     key={i}
                                     onClick={() => setSelectedImage(i)}
-                                    className={`w-10 h-10 rounded-full overflow-hidden border-2 transition-all ${selectedImage === i ? 'border-rose-600 scale-110' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                                    className={`w-10 h-10 rounded-full overflow-hidden border-2 transition-all ${selectedImage === i ? '-primary scale-110' : 'border-transparent opacity-70 hover:opacity-100'}`}
                                 >
                                     <img src={img} alt="" className="w-full h-full object-cover" />
                                 </button>
@@ -77,7 +77,7 @@ export function QuickViewModal({ initialProduct, isOpen, onClose }: QuickViewMod
                         </div>
 
                         {product.discount > 0 && (
-                            <Badge className="absolute top-4 left-4 bg-rose-600 text-white border-none px-3 py-1 text-sm font-bold">
+                            <Badge className="absolute top-4 left-4 -primary text-white border-none px-3 py-1 text-sm font-bold">
                                 -{product.discount}%
                             </Badge>
                         )}
@@ -102,7 +102,7 @@ export function QuickViewModal({ initialProduct, isOpen, onClose }: QuickViewMod
                             </button>
                         </div>
 
-                        <div className="text-3xl font-black text-rose-600 mb-6 flex items-center gap-3">
+                        <div className="text-3xl font-black -primary mb-6 flex items-center gap-3">
                             {price} {t('currency')}
                             {product.originalPrice && (
                                 <span className="text-lg text-gray-300 line-through font-bold">

@@ -30,60 +30,80 @@ export class CategoriesService {
     }
 
     async create(data: any, files: Express.Multer.File[]) {
-        console.log("⚙️ [Backend Service] Processing Create Category...");
+        console.log("⚙️ [Categories Service] Processing Create Category...");
+        console.log("   - Data Received:", JSON.stringify(data));
+
         let imageUrl = data.image || null;
 
         // Upload image if file is provided
         const imageFile = files?.find(f => f.fieldname === 'image');
         if (imageFile) {
-            console.log("   - Uploading image to Cloudinary...");
-            const result = await this.cloudinary.uploadFile(imageFile);
-            if ('secure_url' in result) {
-                imageUrl = result.secure_url;
-                console.log("   - Image Uploaded:", imageUrl);
+            console.log("   - 📸 Image file detected, starting Cloudinary upload...");
+            try {
+                const result = await this.cloudinary.uploadFile(imageFile);
+                if ('secure_url' in result) {
+                    imageUrl = result.secure_url;
+                    console.log("   - ✅ Image Uploaded Successfully:", imageUrl);
+                } else {
+                    console.warn("   - ⚠️ Cloudinary upload returned no secure_url:", result);
+                }
+            } catch (error) {
+                console.error("   - ❌ Cloudinary Upload Failed:", error);
+                throw new Error(`Cloudinary upload failed: ${error.message}`);
             }
+        } else {
+            console.log("   - ℹ️ No new image file provided, using URL if exists:", imageUrl);
         }
 
-        let slug = (data.nameEn || data.nameAr).toLowerCase()
+        // Improved Slug Generation
+        let slug = (data.nameEn || data.nameAr || 'category').toLowerCase()
             .replace(/[^a-z0-9\u0600-\u06FF]+/g, '-') // Allow Arabic chars
             .replace(/^-+|-+$/g, '')
             .replace(/-+/g, '-');
 
-        console.log("   - Generated Slug:", slug);
-
         if (!slug || slug.length < 2) {
-            slug = `category-${Date.now()}`;
-            console.log("   - Slug fallback used:", slug);
+            slug = `cat-${Date.now()}`;
         }
 
-        // Ensure uniqueness (simple append)
+        console.log("   - 🔗 Generated Slug:", slug);
+
+        // Ensure uniqueness
         const existing = await this.databaseService.db.query.categories.findFirst({
             where: eq(categories.slug, slug)
         });
         if (existing) {
             slug = `${slug}-${Date.now().toString().slice(-4)}`;
-            console.log("   - Slug conflict, resolved to:", slug);
+            console.log("   - ⚠️ Slug conflict detected, revised to:", slug);
         }
 
+        const displayOrder = parseInt(data.displayOrder?.toString() || '0');
+
         try {
-            console.log("   - Inserting into DB...");
+            console.log("   - 💾 Attempting Database Insertion...");
+            const insertValues = {
+                nameAr: data.nameAr,
+                nameEn: data.nameEn,
+                descriptionAr: data.descriptionAr || null,
+                descriptionEn: data.descriptionEn || null,
+                image: imageUrl,
+                slug,
+                displayOrder,
+            };
+            console.log("   - 📦 Insert Payload:", JSON.stringify(insertValues));
+
             const [newCategory] = await this.databaseService.db
                 .insert(categories)
-                .values({
-                    nameAr: data.nameAr,
-                    nameEn: data.nameEn,
-                    descriptionAr: data.descriptionAr || null,
-                    descriptionEn: data.descriptionEn || null,
-                    image: imageUrl,
-                    slug,
-                    displayOrder: data.displayOrder || 0,
-                })
+                .values(insertValues)
                 .returning();
 
-            console.log("✅ [Backend Service] Category Created:", newCategory.id);
+            console.log("✅ [Categories Service] Category Created successfully, ID:", newCategory.id);
             return newCategory;
         } catch (error) {
-            console.error("❌ [Backend Service] Insert Failed:", error);
+            console.error("❌ [Categories Service] Database Insert Failed:", error);
+            // Provide more specific error if possible
+            if (error.code === '23505') {
+                throw new Error(`A category with this slug or name already exists (DB Error: ${error.detail})`);
+            }
             throw error;
         }
     }

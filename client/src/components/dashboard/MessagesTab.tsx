@@ -178,19 +178,19 @@ export default function MessagesTab() {
     };
 
     return (
-        <div className="relative flex flex-col md:flex-row h-[calc(100dvh-120px)] md:h-[calc(100vh-200px)] w-full border-0 md:rounded-2xl overflow-hidden bg-white shadow-none md:shadow-xl shadow-slate-100" dir={language === 'ar' ? "rtl" : "ltr"}>
+        <div className="relative flex flex-col md:flex-row h-[calc(100dvh-120px)] md:h-[calc(100vh-200px)] w-full border-0 md:rounded-2xl overflow-hidden bg-background border border-gray-800" dir={language === 'ar' ? "rtl" : "ltr"}>
             {/* Sidebar List */}
             <div className={cn(
-                "w-full md:w-1/3 border-b md:border-b-0 md:border-l md:rtl:border-l-0 md:rtl:border-r border-gray-100 bg-gray-50/50 flex flex-col transition-all duration-300 absolute inset-0 md:relative z-10",
+                "w-full md:w-1/3 border-b md:border-b-0 md:border-l md:rtl:border-l-0 md:rtl:border-r border-gray-800 bg-gray-900/50 flex flex-col transition-all duration-300 absolute inset-0 md:relative z-10",
                 selectedConversation ? '-translate-x-full md:translate-x-0 rtl:translate-x-full rtl:md:translate-x-0 opacity-0 md:opacity-100 pointer-events-none md:pointer-events-auto' : 'translate-x-0 opacity-100'
             )}>
-                <div className="p-4 border-b border-gray-100 bg-white sticky top-0 z-20">
-                    <h3 className={`font-black text-xl text-gray-900 mb-4 ${language === 'ar' ? 'text-right' : 'text-left'}`}>{t('conversations')}</h3>
+                <div className="p-4 border-b border-gray-800 bg-background sticky top-0 z-20">
+                    <h3 className={`font-black text-xl text-white mb-4 ${language === 'ar' ? 'text-right' : 'text-left'}`}>{t('conversations')}</h3>
                     <div className="relative">
-                        <Search className={`absolute ${language === 'ar' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400`} />
+                        <Search className={`absolute ${language === 'ar' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 h-4 w-4 text-white`} />
                         <Input
                             placeholder={t('searchPlaceholder')}
-                            className={`bg-gray-50 border-0 h-11 ${language === 'ar' ? 'pr-10' : 'pl-10'} rounded-2xl focus-visible:ring-1 focus-visible:ring-primary`}
+                            className={`bg-gray-900 border-gray-800 h-11 ${language === 'ar' ? 'pr-10' : 'pl-10'} rounded-2xl focus-visible:ring-1 focus-visible:ring-primary`}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -206,31 +206,31 @@ export default function MessagesTab() {
                                 className={cn(
                                     "p-4 rounded-2xl cursor-pointer flex items-center gap-4 transition-all duration-200 group relative",
                                     selectedConversation?.id === conv.id
-                                        ? 'bg-white shadow-md border border-gray-100 ring-1 ring-primary/10'
-                                        : 'hover:bg-white/60 border border-transparent hover:shadow-sm'
+                                        ? 'bg-gray-800 shadow-md border border-gray-700 ring-1 ring-primary/10'
+                                        : 'hover:bg-gray-800/60 border border-transparent hover:shadow-sm'
                                 )}
                             >
                                 <div className="relative shrink-0">
-                                    <Avatar className="h-14 w-14 border-2 border-white shadow-sm transition-transform group-hover:scale-105">
+                                    <Avatar className="h-14 w-14 border-2 border-gray-800 shadow-sm transition-transform group-hover:scale-105">
                                         <AvatarImage src={conv.counterpartImage} />
-                                        <AvatarFallback className="bg-gradient-to-br from-slate-100 to-slate-200 text-slate-400">
+                                        <AvatarFallback className="bg-gradient-to-br from-gray-800 to-gray-700 text-gray-500">
                                             <User className="h-6 w-6" />
                                         </AvatarFallback>
                                     </Avatar>
                                     {onlineUsers.has(conv.recipientId) && (
-                                        <span className="absolute bottom-0 right-0 h-3.5 w-3.5 bg-emerald-500 border-2 border-white rounded-full shadow-sm ring-2 ring-white"></span>
+                                        <span className="absolute bottom-0 right-0 h-3.5 w-3.5 bg-emerald-500 border-2 border-gray-800 rounded-full shadow-sm ring-2 ring-gray-800"></span>
                                     )}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex justify-between items-center mb-1.5">
-                                        <h4 className={cn("text-base truncate transition-colors", selectedConversation?.id === conv.id ? "font-black text-slate-900" : "font-bold text-slate-700")}>
+                                        <h4 className={cn("text-base truncate transition-colors", selectedConversation?.id === conv.id ? "font-black text-white" : "font-bold text-white")}>
                                             {conv.counterpartName}
                                         </h4>
-                                        <span className="text-xs text-slate-400 font-medium whitespace-nowrap">
+                                        <span className="text-xs text-white font-medium whitespace-nowrap">
                                             {formatDistanceToNow(new Date(conv.lastMessageTime), { addSuffix: true, locale: language === 'ar' ? ar : undefined })}
                                         </span>
                                     </div>
-                                    <p className={cn("text-sm truncate leading-relaxed", conv.unread ? "text-primary font-bold" : "text-slate-400 font-medium")}>
+                                    <p className={cn("text-sm truncate leading-relaxed", conv.unread ? "text-primary font-bold" : "text-white font-medium")}>
                                         {conv.lastMessage || t('startNewChat')}
                                     </p>
                                 </div>
@@ -240,7 +240,7 @@ export default function MessagesTab() {
                             </div>
                         ))}
                         {filteredConversations?.length === 0 && searchTerm && (
-                            <div className="p-8 text-center text-gray-400 text-sm">
+                            <div className="p-8 text-center text-white text-sm">
                                 {t('noConversations')}
                             </div>
                         )}
@@ -250,30 +250,30 @@ export default function MessagesTab() {
 
             {/* Chat Area */}
             <div className={cn(
-                "flex-1 flex flex-col bg-slate-50 absolute inset-0 md:relative z-20 transition-all duration-300",
+                "flex-1 flex flex-col bg-gray-900 absolute inset-0 md:relative z-20 transition-all duration-300",
                 selectedConversation ? 'translate-x-0 opacity-100' : 'translate-x-full md:translate-x-0 rtl:-translate-x-full rtl:md:translate-x-0 opacity-0 md:opacity-100 pointer-events-none md:pointer-events-auto'
             )}>
                 {selectedConversation ? (
                     <>
                         {/* Chat Header */}
-                        <div className="px-4 py-3 md:p-5 border-b border-gray-100 flex items-center justify-between bg-white/90 backdrop-blur-md z-30 sticky top-0 shadow-sm">
+                        <div className="px-4 py-3 md:p-5 border-b border-gray-800 flex items-center justify-between bg-background/90 backdrop-blur-md z-30 sticky top-0 shadow-sm">
                             <div className="flex items-center gap-3 md:gap-4">
                                 {/* Mobile Back Button */}
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="md:hidden -ml-2 rtl:-mr-2 text-slate-500 hover:text-slate-900 rounded-full hover:bg-slate-100"
+                                    className="md:hidden -ml-2 rtl:-mr-2 text-white hover:text-white rounded-full hover:bg-gray-800"
                                     onClick={() => setSelectedConversation(null)}
                                 >
                                     {language === 'ar' ? <ArrowRight className="h-6 w-6" /> : <ArrowLeft className="h-6 w-6" />}
                                 </Button>
 
-                                <Avatar className="h-10 w-10 md:h-12 md:w-12 border border-gray-100 shadow-sm">
+                                <Avatar className="h-10 w-10 md:h-12 md:w-12 border border-gray-800 shadow-sm">
                                     <AvatarImage src={selectedConversation.counterpartImage} />
                                     <AvatarFallback><User className="h-5 w-5 md:h-6 md:w-6" /></AvatarFallback>
                                 </Avatar>
                                 <div>
-                                    <h3 className="font-black text-base md:text-lg text-slate-900">{selectedConversation.counterpartName}</h3>
+                                    <h3 className="font-black text-base md:text-lg text-white">{selectedConversation.counterpartName}</h3>
                                     <div className="flex items-center gap-1.5">
                                         <span className={cn(
                                             "h-2 w-2 rounded-full",
@@ -281,7 +281,7 @@ export default function MessagesTab() {
                                         )} />
                                         <span className={cn(
                                             "text-xs font-bold",
-                                            selectedConversation.recipientId && onlineUsers.has(selectedConversation.recipientId) ? 'text-emerald-500' : 'text-slate-400'
+                                            selectedConversation.recipientId && onlineUsers.has(selectedConversation.recipientId) ? 'text-emerald-500' : 'text-white'
                                         )}>
                                             {selectedConversation.recipientId && onlineUsers.has(selectedConversation.recipientId) ? t('online') : t('offline')}
                                         </span>
@@ -291,7 +291,7 @@ export default function MessagesTab() {
                         </div>
 
                         {/* Messages List - Fixed scroll container */}
-                        <div className="flex-1 overflow-y-auto w-full p-4 md:p-8 space-y-4 bg-slate-50 scroll-smooth" ref={scrollRef}>
+                        <div className="flex-1 overflow-y-auto w-full p-4 md:p-8 space-y-4 bg-gray-900 scroll-smooth" ref={scrollRef}>
                             {messages
                                 .filter(m => m.conversationId === selectedConversation.id)
                                 .map((msg, index, arr) => {
@@ -311,11 +311,11 @@ export default function MessagesTab() {
                                             </div>
                                             {isLastInGroup && (
                                                 <div className={cn("flex items-center gap-1.5 mt-1 px-1", isMe ? 'flex-row-reverse' : 'flex-row')}>
-                                                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                                                    <span className="text-[10px] uppercase font-bold text-white tracking-wider">
                                                         {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                     </span>
                                                     {isMe && (
-                                                        <span className={msg.isRead ? 'text-emerald-500' : 'text-slate-300'}>
+                                                        <span className={msg.isRead ? 'text-emerald-500' : 'text-gray-700'}>
                                                             <Check className="h-3 w-3 stroke-[3]" />
                                                         </span>
                                                     )}
@@ -327,14 +327,14 @@ export default function MessagesTab() {
                         </div>
 
                         {/* Input Area - Sticky Bottom */}
-                        <div className="p-3 md:p-5 bg-white border-t border-gray-100 sticky bottom-0 z-30 pb-[env(safe-area-inset-bottom)]">
-                            <div className="flex gap-2 items-center bg-slate-50 p-2 pr-2 pl-2 rounded-3xl border border-gray-100 focus-within:border-primary/20 focus-within:ring-4 focus-within:ring-primary/5 transition-all shadow-sm">
+                        <div className="p-3 md:p-5 bg-background border-t border-gray-800 sticky bottom-0 z-30 pb-[env(safe-area-inset-bottom)]">
+                            <div className="flex gap-2 items-center bg-gray-900 p-2 pr-2 pl-2 rounded-3xl border border-gray-800 focus-within:border-primary/20 focus-within:ring-4 focus-within:ring-primary/5 transition-all shadow-sm">
                                 <Input
                                     value={inputValue}
                                     onChange={(e) => setInputValue(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                                     placeholder={t('writeReply')}
-                                    className="border-0 bg-transparent h-12 text-base focus-visible:ring-0 placeholder:text-slate-400 font-medium px-4 w-full"
+                                    className="border-0 bg-transparent h-12 text-base focus-visible:ring-0 placeholder:text-white font-medium px-4 w-full"
                                 />
                                 <Button
                                     onClick={handleSend}
@@ -347,17 +347,17 @@ export default function MessagesTab() {
                         </div>
                     </>
                 ) : (
-                    <div className="hidden md:flex flex-1 flex-col items-center justify-center bg-slate-50/50 p-12 text-center h-full">
+                    <div className="hidden md:flex flex-1 flex-col items-center justify-center bg-gray-900/50 p-12 text-center h-full">
                         <div className="relative mb-8">
-                            <div className="h-28 w-28 bg-white rounded-[2rem] shadow-xl flex items-center justify-center rotate-3 transition-transform hover:rotate-6">
+                            <div className="h-28 w-28 bg-gray-800 rounded-[2rem] shadow-xl flex items-center justify-center rotate-3 transition-transform hover:rotate-6">
                                 <MessageSquare className="h-12 w-12 text-primary/80" />
                             </div>
-                            <div className="absolute -bottom-3 -right-3 h-12 w-12 bg-primary rounded-2xl shadow-lg ring-4 ring-slate-50 flex items-center justify-center -rotate-6">
+                            <div className="absolute -bottom-3 -right-3 h-12 w-12 bg-primary rounded-2xl shadow-lg ring-4 ring-gray-900 flex items-center justify-center -rotate-6">
                                 <Zap className="h-6 w-6 text-white" />
                             </div>
                         </div>
-                        <h3 className="text-2xl font-black text-slate-800 mb-3">{t('startChat')}</h3>
-                        <p className="text-slate-400 text-base max-w-[300px] leading-relaxed">{t('selectChat')}</p>
+                        <h3 className="text-2xl font-black text-white mb-3">{t('startChat')}</h3>
+                        <p className="text-white text-base max-w-[300px] leading-relaxed">{t('selectChat')}</p>
                     </div>
                 )}
             </div>

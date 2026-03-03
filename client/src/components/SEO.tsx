@@ -20,14 +20,14 @@ export const SEO = ({
 }: SEOProps) => {
     const { language } = useLanguage();
 
-    const siteName = language === 'ar' ? "فستان - عالم الأناقة" : "Fustan - World of Elegance";
+    const siteName = language === 'ar' ? "وولف تكنو - عالم التقنية الفاخرة" : "Wolf Techno - Premium Electronics";
     const defaultDescription = language === 'ar'
-        ? "اكتشفي أرقى فساتين السهرة والزفاف في أكبر منصة متخصصة. تسوقي من أشهر المصممين واستخدمي تجربة القياس الافتراضية بالذكاء الاصطناعي."
-        : "Discover the finest evening and wedding dresses on the largest specialized platform. Shop from top designers and try our AI virtual try-on experience.";
+        ? "وجهتك الأولى لأحدث الأجهزة الإلكترونية الفاخرة. هواتف، لابتوبات، إكسسوارات تقنية بأفضل الأسعار مع إمكانية الدفع بالتقسيط بدون فوائد."
+        : "Your premier destination for the latest luxury electronics. Phones, laptops, tech accessories at the best prices with interest-free installment payment options.";
 
     const finalTitle = title ? `${title} | ${siteName}` : siteName;
     const finalDescription = description || defaultDescription;
-    const canonical = url ? `https://fustan.com${url}` : "https://fustan.com";
+    const canonical = url ? `https://wolftechno.com${url}` : "https://wolftechno.com";
     const finalImage = image || "/og-image.jpg"; // Default OG image
 
     return (

@@ -118,7 +118,10 @@ export class AuthController {
 
     @Get('me')
     async me(@Req() req: Request) {
-        const token = req.cookies?.[COOKIE_NAME];
+        const token = req.headers.authorization?.startsWith('Bearer ')
+            ? req.headers.authorization.split(' ')[1]
+            : req.cookies?.[COOKIE_NAME];
+
         if (!token) return null;
 
         const payload = await this.authService.verifySession(token);
@@ -130,7 +133,10 @@ export class AuthController {
 
     @Get('profile')
     async getProfile(@Req() req: Request) {
-        const token = req.cookies?.[COOKIE_NAME];
+        const token = req.headers.authorization?.startsWith('Bearer ')
+            ? req.headers.authorization.split(' ')[1]
+            : req.cookies?.[COOKIE_NAME];
+
         if (!token) throw new UnauthorizedException();
 
         const payload = await this.authService.verifySession(token);
@@ -149,7 +155,10 @@ export class AuthController {
         @Body() body: any,
         @UploadedFile(new FileValidationPipe()) avatar: Express.Multer.File
     ) {
-        const token = req.cookies?.[COOKIE_NAME];
+        const token = req.headers.authorization?.startsWith('Bearer ')
+            ? req.headers.authorization.split(' ')[1]
+            : req.cookies?.[COOKIE_NAME];
+
         if (!token) throw new UnauthorizedException();
 
         const payload = await this.authService.verifySession(token);

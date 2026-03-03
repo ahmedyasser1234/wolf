@@ -40,7 +40,7 @@ export default function OffersTab({ vendorId }: OffersTabProps) {
     // Fetch Offers
     const { data: offers, isLoading: offersLoading } = useQuery({
         queryKey: ['vendor', 'offers', vendorId],
-        queryFn: async () => await endpoints.offers.list(vendorId),
+        queryFn: () => endpoints.offers.list(),
     });
 
     // Fetch Products for Selection
@@ -173,17 +173,17 @@ export default function OffersTab({ vendorId }: OffersTabProps) {
         <div className="space-y-8" dir={language === 'ar' ? 'rtl' : 'ltr'}>
             <div className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-4`}>
                 <div className={language === 'ar' ? 'text-right' : 'text-left'}>
-                    <h2 className="text-3xl font-black text-slate-900">{t('offersTitle')}</h2>
-                    <p className="text-slate-500 text-sm">{t('offersDesc')}</p>
+                    <h2 className="text-3xl font-black text-white">{t('offersTitle')}</h2>
+                    <p className="text-gray-400 text-sm">{t('offersDesc')}</p>
                 </div>
                 <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                     <DialogTrigger asChild>
-                        <Button onClick={handleOpenCreate} className="w-full md:w-auto bg-pink-600 hover:bg-pink-700 h-12 px-8 rounded-2xl font-black text-lg gap-2 shadow-xl shadow-pink-100 transition-all active:scale-95">
+                        <Button onClick={handleOpenCreate} className="w-full md:w-auto bg-pink-600 hover:bg-pink-700 h-12 px-8 rounded-2xl font-black text-lg gap-2 shadow-none transition-all active:scale-95">
                             <Plus className="w-6 h-6" />
                             {t('addOffer')}
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-2xl w-[95%] bg-white/95 backdrop-blur-xl border-0 shadow-2xl rounded-[24px] md:rounded-3xl overflow-hidden p-0">
+                    <DialogContent className="max-w-2xl w-[95%] bg-background/95 backdrop-blur-xl border border-gray-800 shadow-2xl rounded-[24px] md:rounded-3xl overflow-hidden p-0">
                         <div className="bg-gradient-to-r from-pink-600 to-purple-600 p-6 md:p-8 text-white" dir={language === 'ar' ? 'rtl' : 'ltr'}>
                             <DialogHeader className={language === 'ar' ? 'text-right' : 'text-left'}>
                                 <DialogTitle className="text-xl md:text-2xl font-black text-white">
@@ -195,14 +195,14 @@ export default function OffersTab({ vendorId }: OffersTabProps) {
 
                         <div className="p-4 md:p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar" dir={language === 'ar' ? 'rtl' : 'ltr'}>
                             {/* Offer Type Selector */}
-                            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                            <div className="flex items-center justify-between p-4 bg-gray-900 rounded-2xl border border-gray-800">
                                 <div className="flex items-center gap-3">
-                                    <div className={cn("p-2 rounded-xl", isFlashSale ? "bg-amber-100" : "bg-blue-100")}>
-                                        <Zap className={cn("w-6 h-6", isFlashSale ? "text-amber-600" : "text-blue-600")} />
+                                    <div className={cn("p-2 rounded-xl", isFlashSale ? "bg-amber-900/30" : "bg-blue-900/30")}>
+                                        <Zap className={cn("w-6 h-6", isFlashSale ? "text-amber-400" : "text-blue-400")} />
                                     </div>
                                     <div>
-                                        <p className="font-black text-slate-800">{t('flashSale')}</p>
-                                        <p className="text-xs text-slate-500">{t('flashSaleDesc')}</p>
+                                        <p className="font-black text-white">{t('flashSale')}</p>
+                                        <p className="text-xs text-gray-400">{t('flashSaleDesc')}</p>
                                     </div>
                                 </div>
                                 <Switch checked={isFlashSale} onCheckedChange={setIsFlashSale} className="data-[state=checked]:bg-amber-500" />
@@ -210,59 +210,59 @@ export default function OffersTab({ vendorId }: OffersTabProps) {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                                 <div className="space-y-2">
-                                    <Label className="font-black text-slate-700">{t('offerNameAr')}</Label>
-                                    <Input placeholder="مثال: خصم الجمعة البيضاء" value={nameAr} onChange={(e) => setNameAr(e.target.value)} className="h-12 rounded-xl border-slate-200" />
+                                    <Label className="font-black text-white">{t('offerNameAr')}</Label>
+                                    <Input placeholder="مثال: خصم الجمعة البيضاء" value={nameAr} onChange={(e) => setNameAr(e.target.value)} className="h-12 rounded-xl border-gray-800 bg-gray-900 text-white" />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="font-black text-slate-700">{t('offerNameEn')}</Label>
-                                    <Input placeholder="Example: Black Friday Sale" value={nameEn} onChange={(e) => setNameEn(e.target.value)} className="h-12 rounded-xl border-slate-200" />
+                                    <Label className="font-black text-white">{t('offerNameEn')}</Label>
+                                    <Input placeholder="Example: Black Friday Sale" value={nameEn} onChange={(e) => setNameEn(e.target.value)} className="h-12 rounded-xl border-gray-800 bg-gray-900 text-white" />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                                 <div className="space-y-2">
-                                    <Label className="font-black text-slate-700">{t('discountPercent')}</Label>
+                                    <Label className="font-black text-white">{t('discountPercent')}</Label>
                                     <div className="relative">
-                                        <Input type="number" min="1" max="100" value={discountPercent} onChange={(e) => setDiscountPercent(e.target.value)} className="h-12 rounded-xl border-slate-200 pl-10 font-black text-lg" />
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 font-black text-slate-400">%</span>
+                                        <Input type="number" min="1" max="100" value={discountPercent} onChange={(e) => setDiscountPercent(e.target.value)} className="h-12 rounded-xl border-gray-800 bg-gray-900 text-white pl-10 font-black text-lg" />
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 font-black text-gray-500">%</span>
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="font-black text-slate-700">{t('maxUsage')}</Label>
-                                    <Input type="number" min="1" placeholder={language === 'ar' ? "اختياري" : "Optional"} value={usageLimit} onChange={(e) => setUsageLimit(e.target.value)} className="h-12 rounded-xl border-slate-200 font-bold" />
+                                    <Label className="font-black text-white">{t('maxUsage')}</Label>
+                                    <Input type="number" min="1" placeholder={language === 'ar' ? "اختياري" : "Optional"} value={usageLimit} onChange={(e) => setUsageLimit(e.target.value)} className="h-12 rounded-xl border-gray-800 bg-gray-900 text-white font-bold" />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="font-black text-slate-700">{t('minQty')}</Label>
-                                    <Input type="number" min="1" value={minQuantity} onChange={(e) => setMinQuantity(e.target.value)} className="h-12 rounded-xl border-slate-200 font-bold" />
+                                    <Label className="font-black text-white">{t('minQty')}</Label>
+                                    <Input type="number" min="1" value={minQuantity} onChange={(e) => setMinQuantity(e.target.value)} className="h-12 rounded-xl border-gray-800 bg-gray-900 text-white font-bold" />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                                 <div className="space-y-2">
-                                    <Label className="font-black text-slate-700">{t('startDate')}</Label>
-                                    <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-12 rounded-xl border-slate-200 font-bold" />
+                                    <Label className="font-black text-white">{t('startDate')}</Label>
+                                    <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-12 rounded-xl border-gray-800 bg-gray-900 text-white font-bold" />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="font-black text-slate-700">{t('endDate')}</Label>
-                                    <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-12 rounded-xl border-slate-200 font-bold" />
+                                    <Label className="font-black text-white">{t('endDate')}</Label>
+                                    <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-12 rounded-xl border-gray-800 bg-gray-900 text-white font-bold" />
                                 </div>
                             </div>
 
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between">
-                                    <Label className="font-black text-slate-700">{t('productsIncluded')}</Label>
-                                    <Badge variant="secondary" className="bg-pink-50 text-pink-600 font-bold">
+                                    <Label className="font-black text-white">{t('productsIncluded')}</Label>
+                                    <Badge variant="secondary" className="bg-pink-900/30 text-pink-400 font-bold">
                                         {selectedProducts.length} {language === 'ar' ? "مختار" : "Selected"}
                                     </Badge>
                                 </div>
-                                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
+                                <div className="p-4 bg-gray-900 rounded-2xl border border-gray-800 space-y-4">
                                     <div className="relative">
-                                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                                         <Input
                                             placeholder={t('searchProduct')}
                                             value={productSearch}
                                             onChange={(e) => setProductSearch(e.target.value)}
-                                            className="h-10 pr-10 bg-white border-slate-200 text-sm rounded-xl"
+                                            className="h-10 pr-10 bg-background border-gray-800 text-white text-sm rounded-xl"
                                         />
                                     </div>
                                     <ScrollArea className="h-40">
@@ -274,8 +274,8 @@ export default function OffersTab({ vendorId }: OffersTabProps) {
                                                     className={cn(
                                                         "flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border",
                                                         selectedProducts.includes(product.id)
-                                                            ? "bg-white border-pink-200 ring-2 ring-pink-500/5 shadow-sm"
-                                                            : "bg-transparent border-transparent hover:bg-white hover:border-slate-200"
+                                                            ? "bg-gray-800 border-pink-900/50 ring-2 ring-pink-500/5 shadow-sm"
+                                                            : "bg-transparent border-transparent hover:bg-gray-800 hover:border-gray-700"
                                                     )}
                                                 >
                                                     <Checkbox
@@ -286,7 +286,7 @@ export default function OffersTab({ vendorId }: OffersTabProps) {
                                                     />
                                                     <div className="flex items-center gap-2 overflow-hidden">
                                                         {product.images?.[0] && <img src={product.images[0]} className="w-8 h-8 rounded-lg object-cover" />}
-                                                        <span className="text-xs font-bold text-slate-700 truncate">
+                                                        <span className="text-xs font-bold text-gray-300 truncate">
                                                             {language === 'ar' ? product.nameAr : product.nameEn}
                                                         </span>
                                                     </div>
@@ -298,11 +298,11 @@ export default function OffersTab({ vendorId }: OffersTabProps) {
                             </div>
                         </div>
 
-                        <div className="p-8 bg-slate-50 border-t border-slate-100 flex justify-end">
+                        <div className="p-8 bg-gray-900/50 border-t border-gray-800 flex justify-end">
                             <Button
                                 onClick={handleSubmit}
                                 disabled={createOffer.isPending || updateOffer.isPending || (selectedProducts.length === 0)}
-                                className="bg-slate-900 hover:bg-slate-800 text-white h-12 px-12 rounded-2xl font-black text-lg shadow-xl shadow-slate-200"
+                                className="bg-white hover:bg-gray-100 text-black h-12 px-12 rounded-2xl font-black text-lg shadow-none"
                             >
                                 {createOffer.isPending || updateOffer.isPending ? (
                                     <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> {t('saving')}</>
@@ -324,17 +324,17 @@ export default function OffersTab({ vendorId }: OffersTabProps) {
 
                     return (
                         <Card key={offer.id} className={cn(
-                            "relative border-0 shadow-lg shadow-slate-200/50 rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 group",
-                            typeFlash ? "bg-gradient-to-br from-amber-50 to-white" : "bg-white"
+                            "relative border border-gray-800 shadow-none rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 group",
+                            typeFlash ? "bg-gradient-to-br from-amber-900/20 to-background" : "bg-background"
                         )}>
                             <div className={cn(
                                 "h-2 w-full",
-                                typeFlash ? "bg-amber-500" : (isActive ? "bg-emerald-500" : "bg-slate-300")
+                                typeFlash ? "bg-amber-500" : (isActive ? "bg-emerald-500" : "bg-gray-700")
                             )} />
 
                             <CardHeader className="relative pb-2">
                                 <div className="flex justify-between items-start mb-4">
-                                    <div className={cn("p-2.5 rounded-2xl", typeFlash ? "bg-amber-100/50 text-amber-600" : "bg-blue-50 text-blue-600")}>
+                                    <div className={cn("p-2.5 rounded-2xl", typeFlash ? "bg-amber-900/30 text-amber-400" : "bg-blue-900/30 text-blue-400")}>
                                         {typeFlash ? <Zap className="w-6 h-6" /> : <Tag className="w-6 h-6" />}
                                     </div>
                                     <div className="flex flex-col items-end gap-2">
@@ -352,10 +352,10 @@ export default function OffersTab({ vendorId }: OffersTabProps) {
                                         )}
                                     </div>
                                 </div>
-                                <CardTitle className="text-xl font-black text-slate-800 leading-tight">
+                                <CardTitle className="text-xl font-black text-white leading-tight">
                                     {language === 'ar' ? offer.nameAr : offer.nameEn}
                                 </CardTitle>
-                                <CardDescription className="flex items-center gap-1.5 pt-2 text-slate-400 font-bold">
+                                <CardDescription className="flex items-center gap-1.5 pt-2 text-gray-500 font-bold">
                                     <Clock className="w-3.5 h-3.5" />
                                     {format(new Date(offer.startDate), 'dd MMM', { locale: ar })} - {format(new Date(offer.endDate), 'dd MMM', { locale: ar })}
                                 </CardDescription>
@@ -363,16 +363,16 @@ export default function OffersTab({ vendorId }: OffersTabProps) {
 
                             <CardContent className="space-y-4">
                                 <div className="grid grid-cols-2 gap-3">
-                                    <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
-                                        <p className="text-[10px] font-black text-slate-400 mb-1">{t('usage')}</p>
-                                        <p className="text-sm font-black text-slate-700 flex items-center gap-1.5">
+                                    <div className="p-3 bg-gray-900 rounded-2xl border border-gray-800">
+                                        <p className="text-[10px] font-black text-gray-500 mb-1">{t('usage')}</p>
+                                        <p className="text-sm font-black text-white flex items-center gap-1.5">
                                             <Users className="w-3.5 h-3.5" />
                                             {offer.usedCount || 0} / {offer.usageLimit || '∞'}
                                         </p>
                                     </div>
-                                    <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100">
-                                        <p className="text-[10px] font-black text-slate-400 mb-1">{t('minQty')}</p>
-                                        <p className="text-sm font-black text-slate-700 flex items-center gap-1.5">
+                                    <div className="p-3 bg-gray-900 rounded-2xl border border-gray-800">
+                                        <p className="text-[10px] font-black text-gray-500 mb-1">{t('minQty')}</p>
+                                        <p className="text-sm font-black text-white flex items-center gap-1.5">
                                             <Package className="w-3.5 h-3.5" />
                                             {offer.minQuantity} {language === 'ar' ? "قطعة" : "items"}
                                         </p>
@@ -380,7 +380,7 @@ export default function OffersTab({ vendorId }: OffersTabProps) {
                                 </div>
 
                                 {offer.usageLimit && (
-                                    <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                    <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
                                         <div
                                             className={cn("h-full transition-all duration-500", typeFlash ? "bg-amber-500" : "bg-blue-500")}
                                             style={{ width: `${Math.min(((offer.usedCount || 0) / offer.usageLimit) * 100, 100)}%` }}
@@ -389,16 +389,16 @@ export default function OffersTab({ vendorId }: OffersTabProps) {
                                 )}
                             </CardContent>
 
-                            <CardFooter className="bg-slate-50/50 pt-4 flex items-center justify-between group-hover:bg-slate-50 transition-colors">
+                            <CardFooter className="bg-gray-900/50 pt-4 flex items-center justify-between group-hover:bg-gray-900 transition-colors">
                                 <div className="flex items-center gap-2">
-                                    <ShieldCheck className={cn("w-4 h-4", isActive ? "text-emerald-500" : "text-slate-300")} />
-                                    <span className="text-[10px] font-bold text-slate-500">{t('verifiedOffer')}</span>
+                                    <ShieldCheck className={cn("w-4 h-4", isActive ? "text-emerald-500" : "text-gray-700")} />
+                                    <span className="text-[10px] font-bold text-gray-400">{t('verifiedOffer')}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-10 w-10 text-blue-300 hover:text-blue-500 hover:bg-blue-50 rounded-xl transition-all"
+                                        className="h-10 w-10 text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 rounded-xl transition-all"
                                         onClick={() => handleOpenEdit(offer)}
                                     >
                                         <Edit className="w-5 h-5" />
@@ -406,7 +406,7 @@ export default function OffersTab({ vendorId }: OffersTabProps) {
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="h-10 w-10 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                                        className="h-10 w-10 text-gray-500 hover:text-red-400 hover:bg-red-900/30 rounded-xl transition-all"
                                         onClick={() => {
                                             if (confirm(t('deleteOfferConfirm'))) {
                                                 deleteOffer.mutate(offer.id);
@@ -421,13 +421,13 @@ export default function OffersTab({ vendorId }: OffersTabProps) {
                     );
                 })}
                 {offers?.length === 0 && (
-                    <div className="col-span-full py-32 flex flex-col items-center justify-center bg-slate-50 border-2 border-dashed border-slate-200 rounded-[40px] text-center px-6">
-                        <div className="w-24 h-24 bg-white rounded-3xl shadow-xl flex items-center justify-center mb-6">
-                            <Tag className="w-10 h-10 text-slate-200" />
+                    <div className="col-span-full py-32 flex flex-col items-center justify-center bg-gray-900 border-2 border-dashed border-gray-800 rounded-[40px] text-center px-6">
+                        <div className="w-24 h-24 bg-background border border-gray-800 rounded-3xl shadow-none flex items-center justify-center mb-6">
+                            <Tag className="w-10 h-10 text-gray-700" />
                         </div>
-                        <h3 className="text-2xl font-black text-slate-700 mb-2">{t('noOffers')}</h3>
-                        <p className="text-slate-400 max-w-sm mb-8">{t('offersDesc')}</p>
-                        <Button onClick={handleOpenCreate} className="bg-slate-900 h-12 px-8 rounded-2xl font-bold">{t('startOffer')}</Button>
+                        <h3 className="text-2xl font-black text-white mb-2">{t('noOffers')}</h3>
+                        <p className="text-gray-500 max-w-sm mb-8">{t('offersDesc')}</p>
+                        <Button onClick={handleOpenCreate} className="bg-pink-600 hover:bg-pink-700 text-white h-12 px-8 rounded-2xl font-bold">{t('startOffer')}</Button>
                     </div>
                 )}
             </div>

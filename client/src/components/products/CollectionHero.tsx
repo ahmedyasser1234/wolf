@@ -24,14 +24,14 @@ export function CollectionHero({ title, description, image, itemCount }: Collect
             </div>
 
             {/* Content Container */}
-            <div className="relative h-full container mx-auto px-4 flex flex-col items-center justify-center text-center text-white z-10">
+            <div className="relative h-full container mx-auto px-4 flex flex-col items-center justify-center text-center text-white z-10 pt-20 md:pt-0">
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8 }}
                 >
                     <div className="flex flex-col items-center space-y-4">
-                        <h1 className="text-5xl md:text-7xl font-serif font-black mb-4 tracking-tight drop-shadow-xl text-white">
+                        <h1 className="text-5xl md:text-7xl font-serif font-black mb-4 tracking-tight drop-shadow-xl bg-gradient-to-r from-[#D4AF37] via-[#F2D06B] to-[#D4AF37] bg-clip-text text-transparent">
                             {title}
                         </h1>
                         {description && (

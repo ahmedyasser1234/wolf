@@ -18,8 +18,32 @@ export default function Login() {
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    const [, setLocation] = useLocation();
+    const [location, setLocation] = useLocation();
+    const queryParams = new URLSearchParams(window.location.search);
+    const redirectPath = queryParams.get('redirect') || "/";
     const { refresh } = useAuth();
+
+    const syncCart = async () => {
+        const guestItemsRaw = localStorage.getItem('wolf-techno-guest-items');
+        if (!guestItemsRaw) return;
+        try {
+            const guestItems = JSON.parse(guestItemsRaw);
+            if (Array.isArray(guestItems) && guestItems.length > 0) {
+                for (const item of guestItems) {
+                    await api.post('/cart', {
+                        productId: item.productId,
+                        quantity: item.quantity,
+                        size: item.size,
+                        color: item.color
+                    });
+                }
+                localStorage.removeItem('wolf-techno-guest-items');
+                window.dispatchEvent(new CustomEvent('wolf-techno-cart-updated'));
+            }
+        } catch (e) {
+            console.error("Cart sync failed", e);
+        }
+    };
 
     const handleGoogleSuccess = async (credentialResponse: any) => {
         setIsLoading(true);
@@ -29,13 +53,14 @@ export default function Login() {
             if (response.data.token) {
                 localStorage.setItem('app_token', response.data.token);
             }
+            await syncCart();
             await refresh();
             toast.success(language === 'ar' ? 'تم تسجيل الدخول بنجاح' : 'Logged in successfully');
             const userRole = response.data.user?.role;
             if (userRole === 'vendor') {
                 setLocation("/vendor-dashboard");
             } else {
-                setLocation("/");
+                setLocation(redirectPath);
             }
         } catch (error) {
             toast.error(language === 'ar' ? 'فشل تسجيل الدخول بواسطة جوجل' : 'Google Login failed');
@@ -58,9 +83,10 @@ export default function Login() {
             if (response.data.token) {
                 localStorage.setItem('app_token', response.data.token);
             }
+            await syncCart();
             await refresh(); // Refresh auth state
             toast.success(language === 'ar' ? 'تم تسجيل الدخول بنجاح' : 'Logged in successfully');
-            setLocation("/");
+            setLocation(redirectPath);
         } catch (error: any) {
             const message = error.response?.data?.message || (language === 'ar' ? 'فشل تسجيل الدخول. تحقق من بياناتك' : 'Login failed. Check your credentials');
             toast.error(message);
@@ -72,15 +98,7 @@ export default function Login() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <Card className="w-full max-w-md shadow-xl border-0 bg-white/80 backdrop-blur-xl overflow-hidden focus-within:ring-2 ring-rose-500/20 transition-all">
-                <div className="flex w-full border-b border-gray-100">
-                    <Link href="/login" className="flex-1 py-4 text-center text-sm font-bold bg-white text-rose-600 border-b-2 border-rose-600 transition-all">
-                        {language === 'ar' ? 'حساب العميل' : 'Customer Account'}
-                    </Link>
-                    <Link href="/vendor/login" className="flex-1 py-4 text-center text-sm font-bold text-gray-400 hover:text-gray-600 hover:bg-gray-50/50 transition-all">
-                        {language === 'ar' ? 'حساب التاجر' : 'Vendor Account'}
-                    </Link>
-                </div>
+            <Card className="w-full max-w-md shadow-xl border-0 bg-white/95 backdrop-blur-xl overflow-hidden focus-within:ring-2 focus-within:ring-primary/20 transition-all font-arabic force-light">
                 <CardHeader className="space-y-1 text-center pt-8">
                     <CardTitle className="text-2xl font-bold tracking-tight text-gray-900">
                         {language === 'ar' ? 'تسجيل الدخول' : 'Sign in to your account'}
@@ -92,7 +110,7 @@ export default function Login() {
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className={`space-y-2 text-${language === 'ar' ? 'right' : 'left'}`}>
-                            <Label htmlFor="email">{language === 'ar' ? 'البريد الإلكتروني' : 'Email'}</Label>
+                            <Label htmlFor="email" className="text-gray-900 font-bold">{language === 'ar' ? 'البريد الإلكتروني' : 'Email'}</Label>
                             <Input
                                 id="email"
                                 type="email"
@@ -100,11 +118,11 @@ export default function Login() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value.toLowerCase())}
                                 required
-                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-500 focus:ring-rose-500"
+                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary !text-black !placeholder-gray-500 bg-white"
                             />
                         </div>
                         <div className={`space-y-2 text-${language === 'ar' ? 'right' : 'left'}`}>
-                            <Label htmlFor="password">{language === 'ar' ? 'كلمة المرور' : 'Password'}</Label>
+                            <Label htmlFor="password" className="text-gray-900 font-bold">{language === 'ar' ? 'كلمة المرور' : 'Password'}</Label>
                             <div className="relative">
                                 <Input
                                     id="password"
@@ -112,7 +130,7 @@ export default function Login() {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
-                                    className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-500 focus:ring-rose-500 ${language === 'ar' ? 'pl-10' : 'pr-10'}`}
+                                    className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary !text-black bg-white !placeholder-gray-500 ${language === 'ar' ? 'pl-10' : 'pr-10'}`}
                                 />
                                 <button
                                     type="button"
@@ -126,7 +144,7 @@ export default function Login() {
 
                         <Button
                             type="submit"
-                            className="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition-all"
+                            className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-2 px-4 rounded-full shadow-lg transition-all"
                             disabled={isLoading}
                         >
                             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (language === 'ar' ? 'تسجيل الدخول' : 'Sign In')}
@@ -158,7 +176,7 @@ export default function Login() {
                 <CardFooter className="justify-center">
                     <div className="text-sm text-center">
                         <span className="text-gray-500">{language === 'ar' ? 'ليس لديك حساب؟' : "Don't have an account?"} </span>
-                        <Link href="/register" className="font-medium text-rose-600 hover:text-rose-500">
+                        <Link href="/register" className="font-black text-primary hover:opacity-80 transition-opacity">
                             {language === 'ar' ? 'إنشاء حساب جديد' : 'Sign up'}
                         </Link>
                     </div>

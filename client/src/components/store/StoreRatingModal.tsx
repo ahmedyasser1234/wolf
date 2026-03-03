@@ -25,7 +25,7 @@ export function StoreRatingModal({ isOpen, onClose, vendorId, vendorName }: Stor
 
     const mutation = useMutation({
         mutationFn: (data: { vendorId: number; rating: number; comment?: string }) =>
-            endpoints.reviews.vendor.create(data),
+            endpoints.storeReviews.create(data),
         onSuccess: () => {
             toast.success(language === 'ar' ? "تم إرسال تقييمك بنجاح" : "Review submitted successfully");
             queryClient.invalidateQueries({ queryKey: ['reviews', 'vendor', vendorId] });
@@ -71,8 +71,8 @@ export function StoreRatingModal({ isOpen, onClose, vendorId, vendorName }: Stor
                             >
                                 <Star
                                     className={`w-10 h-10 transition-colors ${star <= (hoverRating || rating)
-                                            ? "fill-yellow-400 text-yellow-400"
-                                            : "text-gray-300"
+                                        ? "fill-yellow-400 text-yellow-400"
+                                        : "text-gray-300"
                                         }`}
                                 />
                             </button>

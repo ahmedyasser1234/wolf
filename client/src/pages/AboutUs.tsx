@@ -1,29 +1,22 @@
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle2, ShieldCheck, Sparkles } from "lucide-react";
+import { CheckCircle2, ShieldCheck, Sparkles, Zap } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 
 export default function AboutUs() {
     const { language } = useLanguage();
 
-    const fadeInUp = {
-        initial: { opacity: 0, y: 20 },
-        animate: { opacity: 1, y: 0 },
-        transition: { duration: 0.6 }
-    };
-
     return (
         <div className="min-h-screen bg-[#fafafa] pb-20">
             {/* Hero Section */}
-            <section className="relative h-[60vh] overflow-hidden flex items-center justify-center">
+            <section className="relative h-[60vh] overflow-hidden flex items-center justify-center bg-black">
                 <div className="absolute inset-0">
                     <img
-                        src="/about.png"
-                        className="w-full h-full object-cover object-top"
-                        alt="Atelier Background"
+                        src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=1600&h=900&fit=crop"
+                        className="w-full h-full object-cover object-center opacity-60"
+                        alt="Wolf Techno Background"
                     />
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/70" />
                 </div>
 
                 <div className="container mx-auto px-4 relative z-10 text-center text-white">
@@ -37,13 +30,13 @@ export default function AboutUs() {
                                 {language === 'ar' ? "قصتنا" : "Our Story"}
                             </Badge>
                             <h1 className="text-5xl md:text-7xl font-black mb-6 leading-tight">
-                                {language === 'ar' ? "حيث تلتقي الفخامة" : "Where Luxury Meets"} <br />
-                                <span className="text-rose-200">{language === 'ar' ? "بالتقاليد العريقة" : "Timeless Traditions"}</span>
+                                {language === 'ar' ? "حيث تلتقي التقنية" : "Where Technology"} <br />
+                                <span className="text-yellow-400">{language === 'ar' ? "بالفخامة الحقيقية" : "Meets True Luxury"}</span>
                             </h1>
                             <p className="text-xl md:text-2xl text-white/90 max-w-2xl mx-auto leading-relaxed font-bold">
                                 {language === 'ar'
-                                    ? "رحلة في عالم الأزياء الراقية، ننسج فيها خيوط الإبداع لنصنع لكِ إطلالة تخلد في الذاكرة."
-                                    : "A journey into the world of haute couture, weaving threads of creativity to craft a look preserved in memory."}
+                                    ? "رحلة في عالم التكنولوجيا الفاخرة، نجمع فيها أفضل الأجهزة العالمية لنمنحك تجربة تقنية لا مثيل لها."
+                                    : "A journey into the world of premium technology, bringing together the best global devices to give you an unparalleled tech experience."}
                             </p>
                         </div>
                     </motion.div>
@@ -62,30 +55,30 @@ export default function AboutUs() {
                         viewport={{ once: true }}
                     >
                         <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-8 leading-tight">
-                            {language === 'ar' ? "أتيليه فستان: رؤية جديدة للأناقة" : "Atelier Fustan: A New Vision of Elegance"}
+                            {language === 'ar' ? "Wolf Techno: رؤية جديدة للتقنية الفاخرة" : "Wolf Techno: A New Vision of Premium Tech"}
                         </h2>
                         <div className="space-y-6 text-gray-500 text-lg leading-relaxed font-medium text-justify" dir={language === 'ar' ? "rtl" : "ltr"}>
                             <p>
                                 {language === 'ar'
-                                    ? "منذ تأسيسنا، ونحن نؤمن بأن فستان الزفاف أو السهرة ليس مجرد قطعة قماش، بل هو تعبير عن شخصية المرأة ولحظاتها الأكثر تميزاً. في 'فستان'، نجمع بين الحرفية اليدوية الدقيقة وأحدث صيحات الموضة العالمية."
-                                    : "Since our inception, we have believed that a wedding or evening dress is not just a piece of fabric, but an expression of a woman's personality and her most distinctive moments. At 'Fustan', we combine precise craftsmanship with the latest global fashion trends."}
+                                    ? "منذ تأسيسنا، ونحن نؤمن بأن التقنية الفاخرة ليست مجرد أجهزة، بل هي تجربة متكاملة تعبّر عن أسلوب حياة متطور. في Wolf Techno، نجمع بين أحدث الابتكارات التكنولوجية وأرقى معايير الجودة."
+                                    : "Since our founding, we have believed that premium technology is not just about devices — it's a complete experience that reflects a sophisticated lifestyle. At Wolf Techno, we combine the latest tech innovations with the highest quality standards."}
                             </p>
                             <p>
                                 {language === 'ar'
-                                    ? "فريقنا من المصممين المحترفين يعمل بشغف لتحويل أحلامك إلى واقع ملموس، مستخدمين أرقى أنواع الأقمشة والتطريزات التي تليق بليلة العمر."
-                                    : "Our team of professional designers works passionately to turn your dreams into tangible reality, using the finest fabrics and embroideries worthy of your big night."}
+                                    ? "فريقنا من الخبراء التقنيين يعمل بشغف لاختيار أفضل الأجهزة من أبرز العلامات العالمية، مع توفير خدمة عملاء استثنائية وخيارات دفع مرنة بالتقسيط."
+                                    : "Our team of tech experts works passionately to select the best devices from top global brands, while providing exceptional customer service and flexible installment payment options."}
                             </p>
                         </div>
 
                         <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
                             {[
-                                { icon: Sparkles, textAr: "تصاميم حصرية", textEn: "Exclusive Designs" },
-                                { icon: ShieldCheck, textAr: "جودة مضمونة", textEn: "Guaranteed Quality" },
-                                { icon: CheckCircle2, textAr: "خامات فاخرة", textEn: "Luxury Fabrics" },
-                                { icon: ArrowLeft, textAr: "خدمة ما بعد البيع", textEn: "After-Sales Service" },
+                                { icon: Sparkles, textAr: "أجهزة حصرية", textEn: "Exclusive Devices" },
+                                { icon: ShieldCheck, textAr: "ضمان رسمي", textEn: "Official Warranty" },
+                                { icon: CheckCircle2, textAr: "جودة مضمونة", textEn: "Guaranteed Quality" },
+                                { icon: Zap, textAr: "تقسيط بدون فوائد", textEn: "0% Installments" },
                             ].map((item, i) => (
-                                <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-rose-50/50 border border-rose-100">
-                                    <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600">
+                                <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50/50 border border-gray-100">
+                                    <div className="w-10 h-10 rounded-full bg-yellow-50 flex items-center justify-center text-yellow-600">
                                         <item.icon size={20} />
                                     </div>
                                     <span className="font-bold text-gray-800">{language === 'ar' ? item.textAr : item.textEn}</span>
@@ -94,7 +87,7 @@ export default function AboutUs() {
                         </div>
                     </motion.div>
 
-                    {/* Image Grid */}
+                    {/* Stats Grid */}
                     <motion.div
                         className="grid grid-cols-2 gap-6"
                         initial={{ opacity: 0, x: -50 }}
@@ -103,24 +96,24 @@ export default function AboutUs() {
                     >
                         <div className="space-y-6 mt-12">
                             <img
-                                src="https://images.unsplash.com/photo-1546193430-c2d207739ed7?q=80&w=1966&auto=format&fit=crop"
+                                src="https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=600&h=800&fit=crop"
                                 className="w-full aspect-[3/4] object-cover rounded-[2.5rem] shadow-lg hover:scale-[1.02] transition-transform duration-500"
-                                alt="Detail 1"
+                                alt="Tech Device"
                             />
-                            <div className="bg-rose-600 p-8 rounded-[2.5rem] text-white text-center shadow-lg shadow-rose-200">
-                                <span className="block text-4xl font-black mb-1">+15</span>
-                                <span className="text-sm font-bold opacity-90">{language === 'ar' ? "عاماً من الخبرة" : "Years Experience"}</span>
+                            <div className="bg-yellow-400 p-8 rounded-[2.5rem] text-black text-center shadow-lg">
+                                <span className="block text-4xl font-black mb-1">+50</span>
+                                <span className="text-sm font-bold">{language === 'ar' ? "علامة تجارية عالمية" : "Global Brands"}</span>
                             </div>
                         </div>
                         <div className="space-y-6">
                             <div className="bg-gray-900 p-8 rounded-[2.5rem] text-white text-center shadow-xl">
-                                <span className="block text-4xl font-black mb-1">5000+</span>
-                                <span className="text-sm font-bold opacity-90">{language === 'ar' ? "عميلة سعيدة" : "Happy Clients"}</span>
+                                <span className="block text-4xl font-black mb-1">10K+</span>
+                                <span className="text-sm font-bold opacity-90">{language === 'ar' ? "عميل سعيد" : "Happy Clients"}</span>
                             </div>
                             <img
-                                src="https://images.unsplash.com/photo-1566174053879-31528523f8ae?q=80&w=1908&auto=format&fit=crop"
+                                src="https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=600&h=800&fit=crop"
                                 className="w-full aspect-[3/4] object-cover rounded-[2.5rem] shadow-lg hover:scale-[1.02] transition-transform duration-500"
-                                alt="Detail 2"
+                                alt="Tech Store"
                             />
                         </div>
                     </motion.div>

@@ -14,7 +14,10 @@ export class ShippingController {
     ) { }
 
     private async getVendorId(req: Request): Promise<number> {
-        const token = req.cookies?.[COOKIE_NAME];
+        const token = req.headers.authorization?.startsWith('Bearer ')
+            ? req.headers.authorization.split(' ')[1]
+            : req.cookies?.[COOKIE_NAME];
+
         if (!token) throw new UnauthorizedException();
 
         const payload = await this.authService.verifySession(token);

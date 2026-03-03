@@ -36,13 +36,15 @@ export class OffersService {
         return createdOffer;
     }
 
-    async findAll(vendorId: number) {
+    async findAll(vendorId?: number) {
         // Get offers
-        const offersList = await this.databaseService.db
+        const query = this.databaseService.db
             .select()
-            .from(offers)
-            .where(eq(offers.vendorId, vendorId))
-            .orderBy(desc(offers.createdAt));
+            .from(offers);
+
+        const offersList = vendorId
+            ? await query.where(eq(offers.vendorId, vendorId)).orderBy(desc(offers.createdAt))
+            : await query.orderBy(desc(offers.createdAt));
 
         // attach productIds to each offer
         // This is N+1, but for small number of offers/products it is fine.

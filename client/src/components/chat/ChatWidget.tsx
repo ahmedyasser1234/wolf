@@ -8,6 +8,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { endpoints } from "@/lib/api";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useChat } from "@/contexts/ChatContext";
+import { useLanguage } from "@/lib/i18n";
 
 interface Message {
     id: number;
@@ -20,17 +21,17 @@ interface Message {
 }
 
 interface ChatWidgetProps {
-    vendorId: number;
     recipientId?: number; // The counterparty's UserID for presence hooks
-    vendorName: string;
-    vendorLogo?: string;
+    name: string;
+    logo?: string;
     isMinimized?: boolean;
     onClose?: () => void;
     onMinimize?: () => void;
 }
 
-export function ChatWidget({ vendorId, recipientId: explicitRecipientId, vendorName, vendorLogo, isMinimized, onClose, onMinimize }: ChatWidgetProps) {
+export function ChatWidget({ recipientId: explicitRecipientId, name, logo, isMinimized, onClose, onMinimize }: ChatWidgetProps) {
     const { user } = useAuth();
+    const { language } = useLanguage();
     const queryClient = useQueryClient();
     const { socket, isUserOnline, checkOnlineStatus } = useChat();
     const [messages, setMessages] = useState<Message[]>([]);
@@ -46,14 +47,14 @@ export function ChatWidget({ vendorId, recipientId: explicitRecipientId, vendorN
     }, [conversationId]);
 
     // The ID we use for real-time presence (must be a UserID)
-    const presenceUserId = explicitRecipientId || vendorId;
+    const presenceUserId = explicitRecipientId || 0;
     const isRecipientOnline = isUserOnline(presenceUserId);
 
     // Helper to mark read
     const markAsRead = () => {
         if (conversationId) {
             // Signal to backend (persistent)
-            console.log(`ChatWidget: Marking conversation ${conversationId} as read via API`);
+            console.log(`ChatWidget: Started new conversation for Admin`);
             endpoints.chat.markRead(conversationId).then(() => {
                 console.log(`ChatWidget: Marked ${conversationId} as read successfully`);
                 queryClient.invalidateQueries({ queryKey: ['chat', 'unread-count'] });
@@ -123,12 +124,10 @@ export function ChatWidget({ vendorId, recipientId: explicitRecipientId, vendorN
     });
 
     useEffect(() => {
-        if (conversations && (vendorId || explicitRecipientId)) {
+        if (conversations && explicitRecipientId) {
+            console.log(`ChatWidget: Check existing conversation for Admin`);
             const existing = conversations.find((c: any) => {
-                if (vendorId) {
-                    return c.recipientId === presenceUserId && (c.vendorId === vendorId || !c.vendorId);
-                }
-                return c.recipientId === presenceUserId || c.counterpartName === vendorName;
+                return c.recipientId === presenceUserId;
             });
 
             if (existing) {
@@ -139,7 +138,7 @@ export function ChatWidget({ vendorId, recipientId: explicitRecipientId, vendorN
                 setMessages([]);
             }
         }
-    }, [conversations, vendorId, explicitRecipientId, vendorName, presenceUserId]);
+    }, [conversations, explicitRecipientId, presenceUserId]);
 
     const handleSend = async () => {
         if (!inputValue.trim()) return;
@@ -151,13 +150,11 @@ export function ChatWidget({ vendorId, recipientId: explicitRecipientId, vendorN
         if (socket && socket.connected) {
             console.log('📤 Debug: Emit sendMessage', {
                 conversationId: conversationIdRef.current,
-                vendorId,
                 recipientId: presenceUserId,
                 content,
             });
             socket.emit("sendMessage", {
                 conversationId: conversationIdRef.current,
-                vendorId,
                 recipientId: presenceUserId,
                 content,
             }, (response: { message: Message, conversationId: number }) => {
@@ -180,8 +177,7 @@ export function ChatWidget({ vendorId, recipientId: explicitRecipientId, vendorN
                 const response = await endpoints.chat.sendMessage({
                     conversationId: conversationIdRef.current || undefined,
                     content,
-                    vendorId,
-                    userId: explicitRecipientId // If vendor is sending to customer
+                    userId: explicitRecipientId // If admin is sending to customer
                 });
 
                 console.log('✅ Debug: sendMessage API Response:', response);
@@ -230,14 +226,14 @@ export function ChatWidget({ vendorId, recipientId: explicitRecipientId, vendorN
                 <div className="flex items-center gap-2">
                     <div className="relative">
                         <Avatar className="w-8 h-8 border border-gray-100">
-                            <AvatarImage src={vendorLogo} />
-                            <AvatarFallback>{vendorName[0]}</AvatarFallback>
+                            <AvatarImage src={logo} />
+                            <AvatarFallback className="-primary bg-white font-bold">{name[0]}</AvatarFallback>
                         </Avatar>
                         {isRecipientOnline && (
                             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
                         )}
                     </div>
-                    <span className="font-semibold text-sm truncate max-w-[120px]">{vendorName}</span>
+                    <h3 className="font-bold text-sm leading-tight">{name}</h3>
                 </div>
                 <div className="flex items-center gap-1">
                     <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={(e) => { e.stopPropagation(); onClose?.(); }}>
@@ -251,23 +247,27 @@ export function ChatWidget({ vendorId, recipientId: explicitRecipientId, vendorN
     return (
         <div className="w-[95vw] sm:w-80 h-[70vh] sm:h-[500px] bg-white rounded-t-2xl shadow-2xl flex flex-col border border-gray-100 ring-1 ring-black/5 animate-in slide-in-from-bottom-10 duration-200 relative mb-4 sm:mb-0">
             {/* Header */}
-            <div className="p-3 border-b flex items-center justify-between bg-gradient-to-r from-rose-500 to-rose-600 text-white rounded-t-2xl shadow-sm cursor-pointer"
+            <div className="p-3 border-b flex items-center justify-between bg-gradient-to-r -primary -primary text-white rounded-t-2xl shadow-sm cursor-pointer"
                 onClick={onMinimize}>
                 <div className="flex items-center gap-3">
-                    <div className="relative">
-                        <Avatar className="w-10 h-10 border-2 border-white/20 shadow-sm">
-                            <AvatarImage src={vendorLogo} />
-                            <AvatarFallback className="text-rose-600 bg-white font-bold">{vendorName[0]}</AvatarFallback>
+                    <div className="flex items-center gap-3">
+                        <Avatar className="h-10 w-10 border-2 border-white shadow-sm ring-2 ring-primary/10">
+                            <AvatarImage src={logo} />
+                            <AvatarFallback className="bg-primary/5 text-primary font-black">
+                                {name?.substring(0, 1) || 'C'}
+                            </AvatarFallback>
                         </Avatar>
-                        {isRecipientOnline && (
-                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-rose-600 rounded-full shadow-sm animate-pulse"></span>
-                        )}
-                    </div>
-                    <div>
-                        <h3 className="font-bold text-sm leading-tight">{vendorName}</h3>
-                        <span className="text-[10px] text-white/80 font-medium flex items-center gap-1">
-                            {isRecipientOnline ? 'متصل الآن' : 'غير متصل'}
-                        </span>
+                        <div className="flex flex-col">
+                            <span className="text-sm font-black text-slate-800 leading-none mb-1">
+                                {name}
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                                <span className={`w-2 h-2 rounded-full ${isRecipientOnline ? 'bg-green-500 animate-pulse' : 'bg-slate-300'}`}></span>
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                    {isRecipientOnline ? (language === 'ar' ? 'متصل الآن' : 'Online Now') : (language === 'ar' ? 'غير متصل' : 'Offline')}
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div className="flex items-center gap-1">
@@ -293,7 +293,7 @@ export function ChatWidget({ vendorId, recipientId: explicitRecipientId, vendorN
                         return (
                             <div key={idx} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                                 <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm shadow-sm relative group ${isMe
-                                    ? "bg-rose-600 text-white rounded-br-none"
+                                    ? "-primary text-white rounded-br-none"
                                     : "bg-white text-gray-800 border border-gray-100 rounded-bl-none"
                                     }`}>
                                     <p className="leading-relaxed">{msg.content}</p>
@@ -328,7 +328,7 @@ export function ChatWidget({ vendorId, recipientId: explicitRecipientId, vendorN
                     />
                     <Button
                         size="icon"
-                        className={`h-9 w-9 rounded-full transition-all duration-300 ${inputValue.trim() ? 'bg-rose-600 hover:bg-rose-700 scale-100' : 'bg-gray-200 text-gray-400 scale-90'}`}
+                        className={`h-9 w-9 rounded-full transition-all duration-300 ${inputValue.trim() ? '-primary hover:-primary scale-100' : 'bg-gray-200 text-gray-400 scale-90'}`}
                         onClick={handleSend}
                         disabled={!inputValue.trim()}
                     >

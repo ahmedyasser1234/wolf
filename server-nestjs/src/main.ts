@@ -15,6 +15,12 @@ async function bootstrap() {
   }));
   app.use(compression());
   app.use(cookieParser());
+
+  // Increase body parser limits for large image uploads
+  const { json, urlencoded } = require('express');
+  app.use(json({ limit: '50mb' }));
+  app.use(urlencoded({ extended: true, limit: '50mb' }));
+
   app.setGlobalPrefix('api');
   app.enableCors({
     origin: process.env.NODE_ENV === 'production'

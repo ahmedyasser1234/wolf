@@ -23,9 +23,9 @@ export const useSocket = () => {
                 import.meta.env.VITE_API_URL ||
                 'http://localhost:3001';
 
-            // Prevent connecting to self (Netlify) if URL is relative or missing
-            if (!SOCKET_URL || SOCKET_URL.startsWith('/')) {
-                console.error('Socket URL is missing or relative. Please set VITE_SOCKET_URL in your environment variables.');
+            // Prevent connecting to self if URL is relative (but we hardcoded it to 3001)
+            if (!SOCKET_URL) {
+                console.error('Socket URL is missing. Please set VITE_SOCKET_URL in your environment variables.');
                 return;
             }
 

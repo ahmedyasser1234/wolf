@@ -1,33 +1,12 @@
 {
-  "version": "7",
-  "dialect": "postgresql",
+  "version": "5",
+  "dialect": "pg",
   "entries": [
     {
       "idx": 0,
-      "version": "7",
-      "when": 1770927830486,
-      "tag": "0000_free_silverclaw",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1770928388459,
-      "tag": "0001_reflective_jean_grey",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1771101983688,
-      "tag": "0002_messy_colleen_wing",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1771365488221,
-      "tag": "0003_fearless_the_spike",
+      "version": "5",
+      "when": 1772039284327,
+      "tag": "0000_futuristic_captain_midlands",
       "breakpoints": true
     }
   ]

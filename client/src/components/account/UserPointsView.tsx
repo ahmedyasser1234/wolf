@@ -61,7 +61,7 @@ export default function UserPointsView() {
                                 <p className="text-[10px] font-black text-purple-200 uppercase mb-1">{language === 'ar' ? 'المستوى القادم' : 'Next Reward'}</p>
                                 <p className="font-black flex items-center gap-2">
                                     <Gift className="w-4 h-4 text-pink-300" />
-                                    {language === 'ar' ? 'خصم 50 ر.س' : '50 SAR Off'}
+                                    {language === 'ar' ? 'خصم 50 د.إ' : '50 AED Off'}
                                 </p>
                             </div>
                             <div className="bg-white/10 backdrop-blur-md px-6 py-4 rounded-3xl border border-white/20 text-center">
@@ -105,8 +105,8 @@ export default function UserPointsView() {
                                 <div className="flex items-center justify-between gap-4">
                                     <div className="flex items-center gap-5">
                                         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${tx.type === 'earn'
-                                                ? 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100'
-                                                : 'bg-red-50 text-red-600 group-hover:bg-red-100'
+                                            ? 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100'
+                                            : 'bg-red-50 text-red-600 group-hover:bg-red-100'
                                             }`}>
                                             {tx.type === 'earn' ? <ArrowDownCircle className="w-7 h-7" /> : <ArrowUpCircle className="w-7 h-7" />}
                                         </div>

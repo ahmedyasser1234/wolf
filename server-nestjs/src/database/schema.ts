@@ -96,6 +96,7 @@ export const collections = pgTable(
         description: text("description"),
         coverImage: text("coverImage"),
         categoryId: integer("categoryId"), // Linked Category (Nullable for backward compat)
+        downPaymentPercentage: doublePrecision("downPaymentPercentage").default(0).notNull(), // New field
         isActive: boolean("isActive").default(true),
         createdAt: timestamp("createdAt").defaultNow().notNull(),
         updatedAt: timestamp("updatedAt").defaultNow().notNull(),
@@ -263,6 +264,12 @@ export const orders = pgTable(
         paymentMethod: text("paymentMethod"),
         paymentStatus: text("paymentStatus").default("pending").notNull(),
         stripePaymentId: text("stripePaymentId"),
+        installmentPlanId: integer("installmentPlanId"), // Link to installment plan if chosen
+        kycData: jsonb("kycData").$type<{
+            faceIdImage: string;
+            residencyImage: string;
+            passportImage: string;
+        }>(),
         trackingNumber: text("trackingNumber"),
         notes: text("notes"),
         createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -272,6 +279,7 @@ export const orders = pgTable(
         customerIdIdx: index("orders_customerId_idx").on(table.customerId),
         vendorIdIdx: index("orders_vendorId_idx").on(table.vendorId),
         orderNumberIdx: uniqueIndex("orders_orderNumber_idx").on(table.orderNumber),
+        installmentPlanIdIdx: index("orders_installmentPlanId_idx").on(table.installmentPlanId),
     })
 );
 
@@ -547,10 +555,11 @@ export const walletTransactions = pgTable(
         id: serial("id").primaryKey(),
         walletId: integer("walletId").notNull(),
         amount: doublePrecision("amount").notNull(),
-        type: text("type").notNull(), // 'credit' (add), 'debit' (withdraw)
-        status: text("status").default("completed").notNull(), // 'pending', 'completed', 'failed'
+        type: text("type").notNull(), // funding, payment, refund, withdrawal
+        status: text("status").default("completed").notNull(), // pending, completed, failed
+        referenceId: text("referenceId"), // stripe session id
+        relatedId: integer("relatedId"), // order id
         description: text("description"),
-        relatedId: integer("relatedId"), // E.g., Order ID
         createdAt: timestamp("createdAt").defaultNow().notNull(),
     },
     (table) => ({
@@ -603,3 +612,73 @@ export const wishlistSettings = pgTable(
         userIdIdx: index("wishlistSettings_userId_idx").on(table.userId),
     })
 );
+
+export const paymentGateways = pgTable("paymentGateways", {
+    id: serial("id").primaryKey(),
+    name: text("name").notNull(), // stripe, tap, etc
+    displayNameAr: text("displayNameAr").notNull(),
+    displayNameEn: text("displayNameEn").notNull(),
+    logo: text("logo"),
+    isActive: boolean("isActive").default(true),
+    isTestMode: boolean("isTestMode").default(true),
+    publishableKey: text("publishableKey"),
+    secretKey: text("secretKey"),
+    merchantId: text("merchantId"),
+    config: jsonb("config").$type<any>(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export const giftCards = pgTable("giftCards", {
+    id: serial("id").primaryKey(),
+    code: text("code").notNull().unique(),
+    amount: doublePrecision("amount").notNull(),
+    senderName: text("senderName"),
+    senderEmail: text("senderEmail"),
+    recipientName: text("recipientName"),
+    recipientEmail: text("recipientEmail"),
+    message: text("message"),
+    style: text("style"), // card design theme
+    isRead: boolean("isRead").default(false),
+    isRedeemed: boolean("isRedeemed").default(false),
+    redeemedByUserId: integer("redeemedByUserId"),
+    redeemedAt: timestamp("redeemedAt"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export const installments = pgTable("installments", {
+    id: serial("id").primaryKey(),
+    orderId: integer("orderId").notNull(),
+    totalAmount: doublePrecision("totalAmount").notNull(),
+    remainingAmount: doublePrecision("remainingAmount").notNull(),
+    installmentsCount: integer("installmentsCount").notNull(),
+    nextPaymentDate: timestamp("nextPaymentDate"),
+    status: text("status").default("active").notNull(), // active, completed, overdue
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export const customerWallets = pgTable("customerWallets", {
+    id: serial("id").primaryKey(),
+    userId: integer("userId").notNull().unique(),
+    balance: doublePrecision("balance").default(0).notNull(),
+    currency: text("currency").default("SAR").notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export const installmentPlans = pgTable("installmentPlans", {
+    id: serial("id").primaryKey(),
+    name: text("name").notNull(),
+    collectionId: integer("collectionId"), // Link to specific collection (brand)
+    months: integer("months").notNull(),
+    interestRate: doublePrecision("interestRate").default(0).notNull(),
+    downPaymentPercentage: doublePrecision("downPaymentPercentage").default(0).notNull(),
+    minQuantity: integer("minQuantity").default(1).notNull(), // Default to at least 1
+    maxQuantity: integer("maxQuantity").default(0).notNull(), // 0 = unlimited
+    minAmount: doublePrecision("minAmount").default(0).notNull(),
+    isActive: boolean("isActive").default(true).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+}, (table) => ({
+    collectionIdIdx: index("installment_plans_collectionId_idx").on(table.collectionId),
+}));

@@ -37,7 +37,7 @@ export default function OrderSuccess() {
     return (
         <div className="min-h-screen bg-white flex items-center justify-center pt-20 pb-32 overflow-hidden relative">
             {/* Decorative Orbs */}
-            <div className="absolute top-20 left-10 w-64 h-64 bg-rose-50 rounded-full blur-3xl opacity-50" />
+            <div className="absolute top-20 left-10 w-64 h-64 -white/5 rounded-full blur-3xl opacity-50" />
             <div className="absolute bottom-20 right-10 w-96 h-96 bg-orange-50 rounded-full blur-3xl opacity-50" />
 
             <div className="container mx-auto px-4 max-w-2xl text-center relative z-10">
@@ -75,7 +75,7 @@ export default function OrderSuccess() {
                     className="grid gap-4"
                 >
                     <Link href="/orders">
-                        <Button className="w-full h-16 rounded-full bg-rose-600 hover:bg-rose-700 text-xl font-bold shadow-xl shadow-rose-100 gap-3">
+                        <Button className="w-full h-16 rounded-full -primary hover:-primary text-xl font-bold shadow-xl -white/10 gap-3">
                             <ShoppingBag size={24} />
                             {t('trackOrder')}
                         </Button>
@@ -101,7 +101,7 @@ export default function OrderSuccess() {
                     </div>
                     <div className="w-px h-4 bg-gray-100" />
                     <div className="flex items-center gap-2">
-                        <Heart size={16} className="text-rose-500 fill-rose-500" />
+                        <Heart size={16} className="-primary -primary" />
                         <span className="text-xs font-bold uppercase tracking-widest">Handled with Care</span>
                     </div>
                 </motion.div>

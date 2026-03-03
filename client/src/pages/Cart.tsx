@@ -4,7 +4,7 @@ import { endpoints } from "@/lib/api";
 import api from "@/lib/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Trash2, ShoppingCart, ArrowRight, Minus, Plus, ShieldCheck, Truck, RotateCcw, ChevronLeft, Tag } from "lucide-react";
+import { Trash2, ShoppingCart, ArrowRight, Minus, Plus, ShieldCheck, Truck, RotateCcw, ChevronLeft, Tag, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/lib/i18n";
@@ -44,13 +44,11 @@ export default function Cart() {
 
     // Add guest items
     if (typeof window !== "undefined") {
-      const guestItemsRaw = localStorage.getItem('fustan-guest-items');
+      const guestItemsRaw = localStorage.getItem('wolf-techno-guest-items');
       if (guestItemsRaw) {
         try {
           const guestItems = JSON.parse(guestItemsRaw);
           if (Array.isArray(guestItems)) {
-            // Filter out items already in server cart matches by productId, size, color if user logged in?
-            // Actually usually we merge them on login. For now, just show them.
             finalItems = [...finalItems, ...guestItems.map(item => ({ ...item, isGuestItem: true }))];
           }
         } catch (e) {
@@ -66,12 +64,12 @@ export default function Cart() {
       // Check if it's a guest item (string id or has isGuestItem flag)
       const item = items.find((i: any) => i.id === cartItemId);
       if (item?.isGuestItem) {
-        const guestItemsRaw = localStorage.getItem('fustan-guest-items');
+        const guestItemsRaw = localStorage.getItem('wolf-techno-guest-items');
         if (guestItemsRaw) {
           const guestItems = JSON.parse(guestItemsRaw);
           const filtered = guestItems.filter((i: any) => i.id !== cartItemId);
-          localStorage.setItem('fustan-guest-items', JSON.stringify(filtered));
-          window.dispatchEvent(new CustomEvent('fustan-cart-updated'));
+          localStorage.setItem('wolf-techno-guest-items', JSON.stringify(filtered));
+          window.dispatchEvent(new CustomEvent('wolf-techno-cart-updated'));
         }
         return Promise.resolve();
       }
@@ -87,12 +85,12 @@ export default function Cart() {
     mutationFn: async ({ cartItemId, quantity }: { cartItemId: any, quantity: number }) => {
       const item = items.find((i: any) => i.id === cartItemId);
       if (item?.isGuestItem) {
-        const guestItemsRaw = localStorage.getItem('fustan-guest-items');
+        const guestItemsRaw = localStorage.getItem('wolf-techno-guest-items');
         if (guestItemsRaw) {
           const guestItems = JSON.parse(guestItemsRaw);
           const updated = guestItems.map((i: any) => i.id === cartItemId ? { ...i, quantity } : i);
-          localStorage.setItem('fustan-guest-items', JSON.stringify(updated));
-          window.dispatchEvent(new CustomEvent('fustan-cart-updated'));
+          localStorage.setItem('wolf-techno-guest-items', JSON.stringify(updated));
+          window.dispatchEvent(new CustomEvent('wolf-techno-cart-updated'));
         }
         return Promise.resolve();
       }
@@ -126,6 +124,34 @@ export default function Cart() {
       toast.error(err.response?.data?.message || (language === 'ar' ? "كود الخصم غير صالح" : "Invalid coupon code"));
     }
   });
+
+  const clearCartMutation = useMutation({
+    mutationFn: () => endpoints.cart.clear(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+    },
+    onError: (err: any) => {
+      console.error("Failed to clear cart", err);
+      toast.error(language === 'ar' ? "فشل إفراغ السلة" : "Failed to clear cart");
+    }
+  });
+
+  const handleClearCart = async () => {
+    // 1. Clear Guest Items
+    localStorage.removeItem('wolf-techno-guest-items');
+    window.dispatchEvent(new CustomEvent('wolf-techno-cart-updated')); // For headers/other components
+    window.dispatchEvent(new CustomEvent('wolf-techno-cart-updated')); // For this component's effect
+
+    // 2. Clear Database Cart if User is logged in
+    if (user) {
+      await clearCartMutation.mutateAsync();
+    } else {
+      // If guest, just invalidate local query to show empty state
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+    }
+
+    toast.success(language === 'ar' ? "تم إفراغ السلة" : "Cart cleared successfully");
+  };
 
   const items = (cartItems as any[]) || [];
 
@@ -227,7 +253,7 @@ export default function Cart() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#fafafa] flex items-center justify-center">
-        <div className="w-16 h-16 border-4 border-rose-200 border-t-rose-600 rounded-full animate-spin" />
+        <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
       </div>
     );
   }
@@ -240,13 +266,13 @@ export default function Cart() {
           animate={{ opacity: 1, scale: 1 }}
           className="text-center max-w-md"
         >
-          <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl shadow-rose-50 border border-rose-50">
-            <ShoppingCart size={48} className="text-rose-600" />
+          <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl border border-white/5">
+            <ShoppingCart size={48} className="text-primary" />
           </div>
           <h1 className="text-4xl font-black text-gray-900 mb-4">{language === 'ar' ? 'سلّتك مشتاقة إليك' : 'Your cart is missing you'}</h1>
-          <p className="text-lg text-gray-500 mb-10 leading-relaxed">{language === 'ar' ? 'بإمكانكِ إضافة أجمل التصاميم الحصرية من مجموعتنا الجديدة الآن.' : 'You can add the most beautiful exclusive designs from our new collection now.'}</p>
+          <p className="text-lg text-gray-500 mb-10 leading-relaxed">{language === 'ar' ? 'بإمكانكِ إضافة أفضل المنتجات التقنية من مجموعتنا الجديدة الآن.' : 'You can add the best tech products from our new collection now.'}</p>
           <Link href="/products">
-            <Button size="lg" className="h-16 px-12 rounded-full bg-rose-600 hover:bg-rose-700 text-xl font-bold shadow-xl shadow-rose-100">{language === 'ar' ? 'ابدئي التسوق' : 'Start Shopping'}</Button>
+            <Button size="lg" className="h-16 px-12 rounded-full bg-primary hover:bg-primary/90 text-xl font-bold shadow-xl shadow-primary/20">{language === 'ar' ? 'ابدأ التسوق' : 'Start Shopping'}</Button>
           </Link>
         </motion.div>
       </div>
@@ -269,17 +295,12 @@ export default function Cart() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              localStorage.removeItem('fustan-guest-items');
-              queryClient.invalidateQueries({ queryKey: ['cart'] });
-              window.dispatchEvent(new CustomEvent('fustan-cart-update-trigger')); // Changed event name to match App if needed, but let's stick to what we used
-              window.dispatchEvent(new CustomEvent('fustan-cart-updated'));
-              toast.success(language === 'ar' ? "تم إفراغ السلة" : "Cart cleared successfully");
-            }}
-            className="text-gray-500 hover:text-rose-600 hover:border-rose-200 font-bold rounded-xl border-gray-200"
+            onClick={handleClearCart}
+            disabled={clearCartMutation.isPending}
+            className="text-gray-500 hover:text-primary hover:bg-primary/20 font-bold rounded-xl border-gray-200"
           >
-            <Trash2 className="w-4 h-4 mr-2" />
-            {language === 'ar' ? 'إفراغ سلة الزوار' : 'Clear Guest Cart'}
+            {clearCartMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
+            {language === 'ar' ? 'إفراغ السلة' : 'Clear Cart'}
           </Button>
         </div>
         <div className="grid lg:grid-cols-12 gap-16">
@@ -327,7 +348,7 @@ export default function Cart() {
                         </div>
                       )}
 
-                      <div className={`flex items-center ${language === 'ar' ? 'justify-end' : 'justify-start'} gap-3 text-2xl font-black text-rose-600`}>
+                      <div className={`flex items-center ${language === 'ar' ? 'justify-end' : 'justify-start'} gap-3 text-2xl font-black text-primary`}>
                         {formatPrice(item.product?.price)}
                       </div>
                     </div>
@@ -338,7 +359,7 @@ export default function Cart() {
                           variant="ghost"
                           size="icon"
                           onClick={() => updateQuantityMutation.mutate({ cartItemId: item.id, quantity: item.quantity + 1 })}
-                          className="text-rose-600 hover:bg-white rounded-xl"
+                          className="text-primary hover:bg-white rounded-xl"
                         >
                           <Plus size={18} />
                         </Button>
@@ -378,7 +399,7 @@ export default function Cart() {
 
                 <div className="space-y-6 mb-10 border-b border-gray-50 pb-10">
                   <div className="flex justify-between items-center">
-                    <span className="text-xl font-black text-rose-600">{formatPrice(subtotal)}</span>
+                    <span className="text-xl font-black text-primary">{formatPrice(subtotal)}</span>
                     <span className="text-lg text-gray-500 font-bold">{language === 'ar' ? 'المجموع الفرعي' : 'Subtotal'}</span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -404,7 +425,7 @@ export default function Cart() {
                         value={appliedCoupon ? appliedCoupon.code : couponCode}
                         onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                         disabled={!!appliedCoupon}
-                        className={`w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 ${language === 'ar' ? 'text-right' : 'text-left'} focus:outline-none focus:border-rose-300`}
+                        className={`w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 ${language === 'ar' ? 'text-right' : 'text-left'} focus:outline-none focus:ring-primary/40`}
                       />
                     </div>
                     {/* Discounts Display */}
@@ -432,13 +453,13 @@ export default function Cart() {
                 </div>
 
                 <div className="flex justify-between items-center mb-12">
-                  <span className="text-4xl font-black text-rose-600">{formatPrice(total)}</span>
+                  <span className="text-4xl font-black text-primary">{formatPrice(total)}</span>
                   <span className="text-2xl font-black text-gray-900">{language === 'ar' ? 'الإجمالي' : 'Total'}</span>
                 </div>
 
                 <Button
                   onClick={handleCheckoutClick}
-                  className="w-full h-20 rounded-full bg-rose-600 hover:bg-rose-700 text-2xl font-black shadow-xl shadow-rose-100 group"
+                  className="w-full h-20 rounded-full bg-primary hover:bg-primary/90 text-2xl font-black shadow-xl shadow-primary/20 group text-primary-foreground"
                 >
                   {language === 'ar' ? 'إتمام الشراء' : 'Checkout'} <ChevronLeft className={`mr-3 group-hover:-translate-x-2 transition-transform ${language === 'ar' ? '' : 'rotate-180 ml-3 mr-0'}`} />
                 </Button>
@@ -447,15 +468,15 @@ export default function Cart() {
                 <div className="mt-12 space-y-4">
                   <div className={`flex items-center ${language === 'ar' ? 'justify-end' : 'justify-start'} gap-3 text-gray-400`}>
                     <span className="text-sm font-bold">{language === 'ar' ? 'دفع آمن 100%' : '100% Secure Payment'}</span>
-                    <ShieldCheck size={20} className="text-rose-400" />
+                    <ShieldCheck size={20} className="text-primary/80" />
                   </div>
                   <div className={`flex items-center ${language === 'ar' ? 'justify-end' : 'justify-start'} gap-3 text-gray-400`}>
                     <span className="text-sm font-bold">{language === 'ar' ? 'شحن سريع ومؤمن' : 'Fast & Insured Shipping'}</span>
-                    <Truck size={20} className="text-rose-400" />
+                    <Truck size={20} className="text-primary/80" />
                   </div>
                   <div className={`flex items-center ${language === 'ar' ? 'justify-end' : 'justify-start'} gap-3 text-gray-400`}>
                     <span className="text-sm font-bold">{language === 'ar' ? 'سياسة استرجاع مرنة' : 'Flexible Return Policy'}</span>
-                    <RotateCcw size={20} className="text-rose-400" />
+                    <RotateCcw size={20} className="text-primary/80" />
                   </div>
                 </div>
               </div>

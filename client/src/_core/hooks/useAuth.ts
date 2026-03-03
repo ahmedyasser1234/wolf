@@ -36,6 +36,7 @@ export function useAuth(options?: UseAuthOptions) {
     },
     retry: false,
     refetchOnWindowFocus: false,
+    enabled: typeof window !== "undefined" && !!localStorage.getItem("app_token"),
     // @ts-ignore
     onError: (err: any) => {
       if (err.response?.status === 401 || err.response?.status === 403) {

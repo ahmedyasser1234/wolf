@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { endpoints } from "@/lib/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "wouter";
-import { Package, Clock, CheckCircle, Truck, ArrowRight, MapPin, CreditCard, ShoppingBag, Download, AlertCircle } from "lucide-react";
+import { Package, Clock, CheckCircle, Truck, ArrowRight, MapPin, CreditCard, ShoppingBag, Download, AlertCircle, UserCheck } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { toast } from "sonner";
 import { useRef } from "react";
@@ -105,7 +105,7 @@ export default function OrderDetails() {
                             </div>
                         </div>
                         <div className="flex gap-2">
-                            <Button variant="outline" onClick={handlePrintInvoice}>
+                            <Button variant="outline" className="border-gray-300 text-gray-900 hover:bg-gray-100" onClick={handlePrintInvoice}>
                                 <Download className={`w-4 h-4 ${language === 'ar' ? 'ml-2' : 'mr-2'}`} />
                                 {language === 'ar' ? 'طباعة الفاتورة' : 'Print Invoice'}
                             </Button>
@@ -146,13 +146,13 @@ export default function OrderDetails() {
                                             </div>
                                             <div className="text-right">
                                                 <h4 className="font-bold text-blue-900 mb-1">
-                                                    {language === 'ar' ? "تأكيد جودة فستانك" : "Confirm Your Dress Quality"}
+                                                    {language === 'ar' ? "تأكيد جودة منتجك" : "Confirm Your Product Quality"}
                                                 </h4>
                                                 <p className="text-sm text-blue-700 leading-relaxed">
                                                     {user?.role === 'customer'
                                                         ? (language === 'ar'
-                                                            ? "بمجرد استلامك للفستان والتأكد من جودته، يرجى الضغط على زر 'تأكيد الاستلام' لإخفاء الطلب من قائمة الشحن وتحويل المستحقات للتاجر."
-                                                            : "Once you receive the dress and verify its quality, please click 'Confirm Delivery' to complete the order and release funds to the vendor.")
+                                                            ? "بمجرد استلامك للمنتج والتأكد من جودته، يرجى الضغط على زر 'تأكيد الاستلام' لإخفاء الطلب من قائمة الشحن وتحويل المستحقات للتاجر."
+                                                            : "Once you receive the product and verify its quality, please click 'Confirm Delivery' to complete the order and release funds to the vendor.")
                                                         : (language === 'ar'
                                                             ? "الطلب الآن بانتظار تأكيد الاستلام من قبل العميل. لا يمكن للتاجر تغيير الحالة إلى 'تم التسليم' لضمان حقوق العميل."
                                                             : "The order is awaiting delivery confirmation from the customer. Vendors cannot change the status to 'Delivered' to ensure customer rights.")
@@ -175,7 +175,7 @@ export default function OrderDetails() {
 
                                                 return (
                                                     <div key={statusKey} className="flex flex-col items-center gap-3">
-                                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center border-4 transition-all duration-500 ${isCompleted ? 'bg-green-500 border-green-100 text-white scale-110 shadow-lg shadow-green-100' : 'bg-white border-gray-100 text-gray-300'
+                                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center border-4 transition-all duration-500 ${isCompleted ? 'bg-green-500 border-green-100 text-white scale-110 shadow-lg shadow-green-100' : 'bg-white border-gray-200 text-gray-400'
                                                             }`}>
                                                             <s.icon className="w-5 h-5" />
                                                         </div>
@@ -196,7 +196,7 @@ export default function OrderDetails() {
                     <Card className="border-0 shadow-sm">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                <ShoppingBag className="w-5 h-5 text-rose-500" />
+                                <ShoppingBag className="w-5 h-5 -primary" />
                                 {language === 'ar' ? 'المنتجات' : 'Products'} ({order.items.length})
                             </CardTitle>
                         </CardHeader>
@@ -235,7 +235,7 @@ export default function OrderDetails() {
                                             </div>
                                         </div>
                                         <div className={`mt-2 flex ${language === 'ar' ? 'justify-end' : 'justify-start'}`}>
-                                            <span className="font-black text-rose-600">
+                                            <span className="font-black -primary">
                                                 {language === 'ar' ? 'الإجمالي' : 'Total'}: {formatPrice(item.total)}
                                             </span>
                                         </div>
@@ -271,7 +271,7 @@ export default function OrderDetails() {
                                 <span>{formatPrice(order.shippingCost)}</span>
                             </div>
                             {Number(order.discount) > 0 && (
-                                <div className="flex justify-between text-green-600 bg-green-50 p-2 rounded-lg">
+                                <div className="flex justify-between text-primary bg-primary/10 p-2 rounded-lg">
                                     <span>{language === 'ar' ? 'الخصم' : 'Discount'}</span>
                                     <span>- {formatPrice(order.discount)}</span>
                                 </div>
@@ -282,10 +282,16 @@ export default function OrderDetails() {
                                     <span>{formatPrice(order.tax)}</span>
                                 </div>
                             )}
+                            {Number(order.walletAmountUsed) > 0 && (
+                                <div className="flex justify-between text-emerald-600 font-bold bg-emerald-50 p-2 rounded-lg mt-2">
+                                    <span>{language === 'ar' ? 'تم الدفع عبر المحفظة' : 'Paid via Wallet'}</span>
+                                    <span>{formatPrice(order.walletAmountUsed)}</span>
+                                </div>
+                            )}
                             <div className="border-t border-dashed border-gray-200 my-4 pt-4">
                                 <div className="flex justify-between items-center">
                                     <span className="font-bold text-lg text-gray-900">{language === 'ar' ? 'الإجمالي النهائي' : 'Final Total'}</span>
-                                    <span className="font-black text-xl text-rose-600">
+                                    <span className="font-black text-xl -primary">
                                         {formatPrice(order.total)}
                                     </span>
                                 </div>
@@ -325,6 +331,11 @@ export default function OrderDetails() {
                                     <>
                                         <span className="text-sm font-bold">{language === 'ar' ? 'الدفع عند الاستلام' : 'Cash on Delivery'}</span>
                                     </>
+                                ) : order.paymentMethod === 'installments' ? (
+                                    <>
+                                        <UserCheck className="w-4 h-4 text-primary" />
+                                        <span className="text-sm font-bold">{language === 'ar' ? 'نظام التقسيط' : 'Installment System'}</span>
+                                    </>
                                 ) : (
                                     <>
                                         <CreditCard className="w-4 h-4" />
@@ -332,6 +343,15 @@ export default function OrderDetails() {
                                     </>
                                 )}
                             </div>
+                            {order.paymentMethod === 'installments' && order.installmentPlanId && (
+                                <div className="mt-4 p-4 bg-primary/5 rounded-xl border border-primary/10">
+                                    <p className="text-xs font-bold text-primary uppercase mb-2">{language === 'ar' ? 'تفاصيل التقسيط' : 'Installment Details'}</p>
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-bold">{language === 'ar' ? 'رقم الخطة:' : 'Plan ID:'} #{order.installmentPlanId}</p>
+                                        <p className="text-xs text-gray-500">{language === 'ar' ? 'تم اختيار التقسيط عند الطلب وسيتم مراجعة المستندات.' : 'Installment plan selected. Documents are under review.'}</p>
+                                    </div>
+                                </div>
+                            )}
                             <div className={`mt-2 text-xs font-bold px-2 py-1 rounded inline-block ${order.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
                                 }`}>
                                 {order.paymentStatus === 'paid' ? (language === 'ar' ? 'مدفوع' : 'Paid') : (language === 'ar' ? 'غير مدفوع' : 'Unpaid')}

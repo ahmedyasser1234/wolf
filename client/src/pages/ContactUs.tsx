@@ -28,7 +28,7 @@ export default function ContactUs() {
             <section className="relative h-[60vh] overflow-hidden flex items-center justify-center">
                 <div className="absolute inset-0">
                     <img
-                        src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070&auto=format&fit=crop"
+                        src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop"
                         className="w-full h-full object-cover object-center"
                         alt="Contact Us Background"
                     />
@@ -50,8 +50,8 @@ export default function ContactUs() {
                             </h1>
                             <p className="text-xl md:text-2xl text-white/90 max-w-2xl mx-auto leading-relaxed font-bold">
                                 {language === 'ar'
-                                    ? "لديك استفسار عن فستان معين أو تريدين حجز موعد للقياس؟ لا تترددي في التواصل معنا."
-                                    : "Have a question about a specific dress or want to book a fitting appointment? Don't hesitate to reach out."}
+                                    ? "لديك استفسار عن منتج معين أو تحتاج مساعدة تقنية؟ لا تتردد في التواصل معنا."
+                                    : "Have a question about a specific product or need technical assistance? Don't hesitate to reach out."}
                             </p>
                         </div>
                     </motion.div>
@@ -69,18 +69,18 @@ export default function ContactUs() {
                         transition={{ delay: 0.2 }}
                     >
                         <div className="bg-white p-8 rounded-[2rem] shadow-xl border border-gray-100 hover:shadow-2xl transition-all">
-                            <div className="w-12 h-12 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-600 mb-6">
+                            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6">
                                 <MapPin size={24} />
                             </div>
                             <h3 className="text-xl font-bold text-gray-900 mb-2">{language === 'ar' ? "العنوان" : "Address"}</h3>
                             <p className="text-gray-500 font-medium">
-                                {language === 'ar' ? "شارع التحلية، جدة، المملكة العربية السعودية" : "Tahlia Street, Jeddah, KSA"}
+                                {language === 'ar' ? "شارع الشيخ زايد، دبي، الإمارات العربية المتحدة" : "Sheikh Zayed Road, Dubai, UAE"}
                             </p>
                         </div>
                         ... (rest of the cards)
 
                         <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 hover:shadow-md transition-all">
-                            <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 mb-6">
+                            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6">
                                 <Phone size={24} />
                             </div>
                             <h3 className="text-xl font-bold text-gray-900 mb-2">{language === 'ar' ? "الهاتف" : "Phone"}</h3>
@@ -89,7 +89,7 @@ export default function ContactUs() {
                         </div>
 
                         <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 hover:shadow-md transition-all">
-                            <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600 mb-6">
+                            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6">
                                 <Clock size={24} />
                             </div>
                             <h3 className="text-xl font-bold text-gray-900 mb-2">{language === 'ar' ? "ساعات العمل" : "Working Hours"}</h3>
@@ -109,29 +109,29 @@ export default function ContactUs() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-gray-700">{language === 'ar' ? "الاسم" : "Name"}</label>
-                                    <Input required className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:border-rose-300" placeholder={language === 'ar' ? "اسمك الكريم" : "Your Name"} />
+                                    <Input required className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:-primary/40" placeholder={language === 'ar' ? "اسمك الكريم" : "Your Name"} />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-gray-700">{language === 'ar' ? "البريد الإلكتروني" : "Email"}</label>
-                                    <Input required type="email" className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:border-rose-300" placeholder="example@email.com" />
+                                    <Input required type="email" className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:-primary/40" placeholder="example@email.com" />
                                 </div>
                             </div>
 
                             <div className="space-y-2">
                                 <label className="text-sm font-bold text-gray-700">{language === 'ar' ? "الموضوع" : "Subject"}</label>
-                                <Input required className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:border-rose-300" placeholder={language === 'ar' ? "استفسار بخصوص..." : "Inquiry about..."} />
+                                <Input required className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:-primary/40" placeholder={language === 'ar' ? "استفسار بخصوص..." : "Inquiry about..."} />
                             </div>
 
                             <div className="space-y-2">
                                 <label className="text-sm font-bold text-gray-700">{language === 'ar' ? "الرسالة" : "Message"}</label>
-                                <Textarea required className="min-h-[150px] rounded-2xl bg-gray-50 border-gray-200 focus:border-rose-300 p-4" placeholder={language === 'ar' ? "اكتبي رسالتك هنا..." : "Type your message here..."} />
+                                <Textarea required className="min-h-[150px] rounded-2xl bg-gray-50 border-gray-200 focus:ring-primary/40 p-4" placeholder={language === 'ar' ? "اكتب رسالتك هنا..." : "Type your message here..."} />
                             </div>
 
                             <div className="pt-4 text-right">
                                 <Button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="h-14 px-10 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-lg shadow-lg shadow-rose-200"
+                                    className="h-14 px-10 rounded-full bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-lg shadow-primary/20"
                                 >
                                     {isSubmitting ? (language === 'ar' ? "جاري الإرسال..." : "Sending...") : (
                                         <>

@@ -50,7 +50,7 @@ export default function AdminLogin() {
             </div>
 
             <Card className="w-full max-w-md bg-white/80 backdrop-blur-xl border border-white/20 shadow-2xl relative z-10 overflow-hidden rounded-3xl ring-1 ring-slate-100">
-                <div className="h-1.5 bg-gradient-to-r from-primary via-rose-400 to-primary"></div>
+                <div className="h-1.5 bg-gradient-to-r from-primary -primary/80 to-primary"></div>
                 <CardHeader className="space-y-2 text-center pb-8 pt-8">
                     <div className="w-20 h-20 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-primary/10 ring-8 ring-primary/5 shadow-inner rotate-3 transition-transform hover:rotate-6 duration-500">
                         <ShieldCheck className="w-10 h-10 text-primary" />

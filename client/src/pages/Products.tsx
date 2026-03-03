@@ -97,7 +97,7 @@ export default function Products() {
       ? (language === 'ar' ? (currentCategory.nameAr || currentCategory.name) : (currentCategory.nameEn || currentCategory.name))
       : t('latestCollections');
 
-  const heroImage = currentCollection?.coverImage || currentCategory?.image;
+  const heroImage = currentCollection?.coverImage || currentCategory?.image || "/shop-hero.png";
 
   // Nav Items
   const navItems = [
@@ -113,8 +113,8 @@ export default function Products() {
   const topRated = productData.sort((a, b) => b.rating - a.rating).slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-white pb-20">
-      <SEO title={heroTitle} description={language === 'ar' ? `تسوقي ${heroTitle} من فستان` : `Shop ${heroTitle} from Fustan`} />
+    <div className="min-h-screen bg-[#0A0A0A] pb-20">
+      <SEO title={heroTitle} description={language === 'ar' ? `تسوق ${heroTitle} من WOLF TECHNO` : `Shop ${heroTitle} from WOLF TECHNO`} />
       {/* 1. Hero Banner */}
       <CollectionHero
         title={heroTitle}
@@ -227,7 +227,7 @@ export default function Products() {
               <div className="mt-16 text-center">
                 <Button
                   onClick={() => setDisplayCount(prev => prev + 12)}
-                  className="bg-gray-900 text-white hover:bg-gray-800 rounded-full px-10 py-6 text-lg font-bold shadow-xl hover:scale-105 transition-transform"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-10 py-6 text-lg font-bold shadow-xl shadow-primary/20 hover:scale-105 transition-transform h-auto"
                 >
                   {t('loadMore')}
                 </Button>

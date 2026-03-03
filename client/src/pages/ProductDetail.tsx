@@ -26,9 +26,9 @@ import {
   Twitter,
   Linkedin,
   Instagram,
-  Sparkles,
   Tag,
-  AlertTriangle
+  AlertTriangle,
+  CreditCard
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -43,7 +43,6 @@ import { cn } from "@/lib/utils";
 import api from "@/lib/api";
 import { useChat } from "@/contexts/ChatContext";
 import { ProductCard } from "@/components/ProductCard";
-import { TryOnSection } from "@/components/product/TryOnSection";
 import { SEO } from "@/components/SEO";
 import { QuickViewModal } from "@/components/home/QuickViewModal";
 
@@ -67,7 +66,7 @@ function RelatedProducts({ collectionId, currentProductId, language }: { collect
       <div className="flex items-center justify-between mb-12" dir="rtl">
         <h2 className="text-3xl font-black text-gray-900">{language === 'ar' ? "منتجات قد تعجبك" : "Products You May Like"}</h2>
         <Link href="/products">
-          <Button variant="ghost" className="text-rose-600 font-bold hover:bg-rose-50 rounded-full">
+          <Button variant="ghost" className="-primary font-bold hover:-white/5 rounded-full">
             {t('viewAll')} <ChevronRight className={`mr-2 w-4 h-4 ${language === 'ar' ? 'rotate-180' : ''}`} />
           </Button>
         </Link>
@@ -82,27 +81,19 @@ function RelatedProducts({ collectionId, currentProductId, language }: { collect
   );
 }
 
-function OffersDisplay({ vendorId, productId, language }: { vendorId?: number, productId: number, language: string }) {
+function OffersDisplay({ productId, language }: { productId: number, language: string }) {
   const { data: offers } = useQuery({
     queryKey: ['offers', 'product', productId],
     queryFn: async () => {
-      if (!vendorId) return [];
-      // Fetch all vendor offers and filter for this product
-      const res = await api.get(`/offers?vendorId=${vendorId}`);
+      // Fetch all global offers and filter for this product
+      const res = await api.get(`/offers`);
       const allOffers = res.data;
       const now = new Date();
-
-      // Filter offers that include this product and are active
-      // Note: We need to know if offer applies to this product. 
-      // Since backend return format might verify, let's assume we filter by productIds if available 
-      // OR if backend response includes productIds. 
-      // My previous update to OffersService.findAll included productIds.
 
       return allOffers.filter((o: any) => {
         const now = new Date();
         const startDate = new Date(o.startDate);
         const endDate = new Date(o.endDate);
-        // Set end date to end of day to be inclusive
         endDate.setHours(23, 59, 59, 999);
 
         return o.isActive &&
@@ -110,8 +101,7 @@ function OffersDisplay({ vendorId, productId, language }: { vendorId?: number, p
           endDate >= now &&
           (!o.productIds || o.productIds.length === 0 || o.productIds.includes(productId));
       });
-    },
-    enabled: !!vendorId
+    }
   });
 
   if (!offers || offers.length === 0) return null;
@@ -120,16 +110,16 @@ function OffersDisplay({ vendorId, productId, language }: { vendorId?: number, p
     <div className="container mx-auto px-4 mt-6">
       <div className="grid gap-4">
         {offers.map((offer: any) => (
-          <div key={offer.id} className="bg-gradient-to-r from-rose-50 to-orange-50 border border-rose-100 p-4 rounded-xl flex items-center justify-between shadow-sm animate-pulse" dir="rtl">
+          <div key={offer.id} className="bg-gradient-to-r -white/5 to-orange-50 border -white/10 p-4 rounded-xl flex items-center justify-between shadow-sm animate-pulse" dir="rtl">
             <div className="flex items-center gap-3">
-              <div className="bg-rose-500 text-white p-2 rounded-full">
+              <div className="-primary text-white p-2 rounded-full">
                 <Tag size={20} />
               </div>
               <div>
-                <h3 className="font-bold text-rose-700 text-lg">
+                <h3 className="font-bold -primary text-lg">
                   {language === 'ar' ? offer.nameAr : offer.nameEn}
                 </h3>
-                <p className="text-rose-600 text-sm font-medium">
+                <p className="-primary text-sm font-medium">
                   {language === 'ar' ? "خصم " : "OFF "} <span className="font-black text-xl">{offer.discountPercent}%</span>
                   {offer.minQuantity > 1 ? (language === 'ar' ? ` عند شراء ${offer.minQuantity} قطع فأكثر` : ` for ${offer.minQuantity} items or more`) : ''}
                 </p>
@@ -137,7 +127,7 @@ function OffersDisplay({ vendorId, productId, language }: { vendorId?: number, p
             </div>
             <div className="text-center bg-white/50 p-2 rounded-lg">
               <span className="block text-xs text-gray-500 font-bold">{language === 'ar' ? "ينتهي في" : "Ends on"}</span>
-              <span className="font-mono text-rose-600 font-bold">{new Date(offer.endDate).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-GB')}</span>
+              <span className="font-mono -primary font-bold">{new Date(offer.endDate).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-GB')}</span>
             </div>
           </div>
         ))}
@@ -161,8 +151,9 @@ export default function ProductDetail() {
   const [activeTab, setActiveTab] = useState<"details" | "reviews">("details");
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState("");
-  const [vendorReviewRating, setVendorReviewRating] = useState(5);
-  const [vendorReviewComment, setVendorReviewComment] = useState("");
+  // Payment method selection state
+  const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null);
+  const [paymentChoice, setPaymentChoice] = useState<'cash' | 'installment' | null>(null);
   const queryClient = useQueryClient();
   const { language, t } = useLanguage();
   const [, setLocation] = useLocation();
@@ -192,6 +183,14 @@ export default function ProductDetail() {
 
   const addToCartMutation = useAddToCart();
 
+  // Fetch installment plans for BNPL display
+  const { data: installmentPlans } = useQuery({
+    queryKey: ['installments', 'active', productData?.product?.collectionId],
+    queryFn: () => endpoints.installments.active(productData?.product?.collectionId),
+    staleTime: 1000 * 60 * 10,
+    enabled: !!productData?.product?.collectionId
+  });
+
   const submitReviewMutation = useMutation({
     mutationFn: (data: { productId: number; rating: number; comment?: string }) =>
       endpoints.reviews.product.create(data),
@@ -206,18 +205,7 @@ export default function ProductDetail() {
     },
   });
 
-  const submitVendorReviewMutation = useMutation({
-    mutationFn: (data: { vendorId: number; rating: number; comment?: string }) =>
-      endpoints.reviews.vendor.create(data),
-    onSuccess: () => {
-      toast.success("تم تقييم المتجر بنجاح");
-      setVendorReviewComment("");
-      setVendorReviewRating(5);
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || "حدث خطأ. تأكد من تسجيل الدخول");
-    },
-  });
+
 
   const { data: navData } = useQuery({
     queryKey: ['products', 'navigation', productData?.collectionId, productData?.categoryId],
@@ -262,9 +250,9 @@ export default function ProductDetail() {
   const totalSelectedItems = Object.values(sizeQuantities).reduce((a, b) => a + b, 0);
 
   const handleAddToCartMulti = async () => {
-    // Check if user is vendor or admin
-    if (user && (user.role === 'vendor' || user.role === 'admin')) {
-      toast.error(language === 'ar' ? "لا يمكن للمسؤول أو التاجر إضافة منتجات للسلة" : "Vendors and Admins cannot add items to cart");
+    // Check if user is admin
+    if (user && user.role === 'admin') {
+      toast.error(language === 'ar' ? "لا يمكن للمسؤول إضافة منتجات للسلة" : "Admins cannot add items to cart");
       return;
     }
 
@@ -378,7 +366,7 @@ export default function ProductDetail() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#fafafa] flex items-center justify-center">
-        <div className="w-16 h-16 border-4 border-rose-200 border-t-rose-600 rounded-full animate-spin" />
+        <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
       </div>
     );
   }
@@ -389,7 +377,7 @@ export default function ProductDetail() {
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">المنتج غير موجود</h1>
           <Link href="/products">
-            <Button size="lg" className="rounded-full bg-rose-600">العودة للمنتجات</Button>
+            <Button size="lg" className="rounded-full bg-primary text-primary-foreground">العودة للمنتجات</Button>
           </Link>
         </div>
       </div>
@@ -397,7 +385,6 @@ export default function ProductDetail() {
   }
 
   const product = productData.product;
-  const vendor = productData.vendor;
   const collection = productData.collection;
   const category = productData.category;
   const colors = productData.colors || [];
@@ -412,7 +399,7 @@ export default function ProductDetail() {
   return (
     <div className="min-h-screen bg-white pb-20 overflow-x-hidden">
       <section className="pt-4">
-        <OffersDisplay vendorId={vendor?.id} productId={product.id} language={language} />
+        <OffersDisplay productId={product.id} language={language} />
       </section>
 
       <section className="container mx-auto px-4 mt-4">
@@ -441,6 +428,9 @@ export default function ProductDetail() {
                     src={displayImage}
                     alt={language === 'ar' ? product.nameAr : product.nameEn}
                     className="w-full h-full object-cover"
+                    onError={(e: any) => {
+                      e.target.src = "https://images.unsplash.com/photo-1594465919760-441fe5908ab0?w=1200&h=1500&fit=crop";
+                    }}
                     style={isZoomed ? {
                       transform: `scale(2.2)`,
                       transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`
@@ -450,7 +440,7 @@ export default function ProductDetail() {
 
                 {product.discount > 0 && (
                   <div className="absolute top-10 right-10 z-20">
-                    <div className="bg-rose-600 text-white px-8 py-3 rounded-full text-2xl font-black shadow-[0_15px_30px_rgba(225,29,72,0.4)] transform rotate-3">
+                    <div className="bg-primary text-primary-foreground px-8 py-3 rounded-full text-2xl font-black shadow-[0_15px_30px_rgba(212,175,55,0.4)] transform rotate-3">
                       -{product.discount}%
                     </div>
                   </div>
@@ -486,10 +476,14 @@ export default function ProductDetail() {
                     onClick={() => {
                       setSelectedImage(idx);
                     }}
-                    className={`relative w-20 h-20 md:w-28 md:h-28 rounded-2xl md:rounded-3xl overflow-hidden border-2 md:border-4 transition-all duration-500 shrink-0 ${selectedImage === idx ? "border-rose-500 scale-105 md:scale-110 shadow-lg md:shadow-2xl shadow-rose-100" : "border-transparent opacity-50 hover:opacity-100 scale-100 hover:scale-105"
+                    className={`relative w-20 h-20 md:w-28 md:h-28 rounded-2xl md:rounded-3xl overflow-hidden border-2 md:border-4 transition-all duration-500 shrink-0 ${selectedImage === idx ? "border-primary scale-105 md:scale-110 shadow-lg md:shadow-2xl bg-white/10" : "border-transparent opacity-50 hover:opacity-100 scale-100 hover:scale-105"
                       }`}
                   >
-                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <img src={img} alt="" className="w-full h-full object-cover"
+                      onError={(e: any) => {
+                        e.target.src = "https://images.unsplash.com/photo-1594465919760-441fe5908ab0?w=300&h=400&fit=crop";
+                      }}
+                    />
                   </button>
                 ))}
 
@@ -503,7 +497,11 @@ export default function ProductDetail() {
                     }}
                     className="relative w-20 h-20 md:w-28 md:h-28 rounded-2xl md:rounded-3xl overflow-hidden border-2 md:border-4 border-transparent opacity-50 hover:opacity-100 scale-100 hover:scale-105 transition-all duration-500 shrink-0"
                   >
-                    <img src={color.images?.[0] || product.images?.[0]} alt={color.colorName} className="w-full h-full object-cover" />
+                    <img src={color.images?.[0] || product.images?.[0]} alt={color.colorName} className="w-full h-full object-cover"
+                      onError={(e: any) => {
+                        e.target.src = "https://images.unsplash.com/photo-1594465919760-441fe5908ab0?w=300&h=400&fit=crop";
+                      }}
+                    />
                     <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
                       <div className="w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: color.colorCode }} />
                     </div>
@@ -524,7 +522,7 @@ export default function ProductDetail() {
               <div className="flex items-center justify-between gap-4 mb-4 md:mb-6" dir="rtl">
                 <div className="flex bg-gray-50/50 backdrop-blur-sm px-3 py-1.5 rounded-full items-center gap-1.5 md:gap-2 text-[10px] md:text-xs font-bold text-gray-500 border border-gray-100/50 overflow-x-auto max-w-[200px] md:max-w-none no-scrollbar whitespace-nowrap">
                   <Link href="/">
-                    <span className="hover:text-rose-600 transition-colors">الرئيسية</span>
+                    <span className="hover:text-primary transition-colors">الرئيسية</span>
                   </Link>
                   <ChevronRight className="w-3 h-3 translate-y-[1px]" />
                   {category && (
@@ -533,7 +531,7 @@ export default function ProductDetail() {
                       <ChevronRight className="w-3 h-3 translate-y-[1px]" />
                     </>
                   )}
-                  <span className="text-rose-600 truncate max-w-[100px] md:max-w-none">{language === 'ar' ? product.nameAr : product.nameEn}</span>
+                  <span className="text-primary truncate max-w-[100px] md:max-w-none">{language === 'ar' ? product.nameAr : product.nameEn}</span>
                 </div>
 
                 <div className="flex items-center gap-1 md:gap-2 shrink-0">
@@ -542,7 +540,7 @@ export default function ProductDetail() {
                     size="icon"
                     disabled={!navigation?.prevId}
                     onClick={() => navigation?.prevId && setLocation(`/products/${navigation.prevId}`)}
-                    className="w-8 h-8 rounded-full hover:bg-rose-50 text-gray-400 hover:text-rose-600 transition-colors disabled:opacity-30"
+                    className="w-8 h-8 rounded-full hover:bg-white/5 text-gray-400 hover:text-primary transition-colors disabled:opacity-30"
                   >
                     <ChevronRight size={16} />
                   </Button>
@@ -551,7 +549,7 @@ export default function ProductDetail() {
                     size="icon"
                     disabled={!navigation?.nextId}
                     onClick={() => navigation?.nextId && setLocation(`/products/${navigation.nextId}`)}
-                    className="w-8 h-8 rounded-full hover:bg-rose-50 text-gray-400 hover:text-rose-600 transition-colors disabled:opacity-30"
+                    className="w-8 h-8 rounded-full hover:bg-white/5 text-gray-400 hover:text-primary transition-colors disabled:opacity-30"
                   >
                     <ChevronLeft size={16} />
                   </Button>
@@ -564,51 +562,25 @@ export default function ProductDetail() {
                     onClick={handleShare}
                     variant="outline"
                     size="icon"
-                    className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl border-gray-100 hover:border-rose-200 hover:text-rose-600 transition-all shadow-sm"
+                    className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl border-gray-100 hover:bg-primary/20 hover:text-primary transition-all shadow-sm"
                   >
                     <Share2 size={20} className="md:w-6 md:h-6" />
                   </Button>
-                  {user?.role !== 'admin' && user?.role !== 'vendor' && (
+                  {user?.role !== 'admin' && (
                     <Button
                       onClick={handleToggleFavorite}
                       variant="outline"
                       size="icon"
-                      className={`w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl border-gray-100 hover:border-rose-200 hover:text-red-500 transition-all shadow-sm ${isFavorite ? 'bg-red-50 text-red-500 border-red-100' : ''}`}
+                      className={`w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl border-gray-100 hover:bg-primary/20 hover:text-red-500 transition-all shadow-sm ${isFavorite ? 'bg-red-50 text-red-500 border-red-100' : ''}`}
                     >
                       <Heart size={20} className={`md:w-6 md:h-6 ${isFavorite ? "fill-current" : ""}`} />
                     </Button>
                   )}
                 </div>
-                {vendor && (
-                  <Link href={`/vendor/${vendor.storeSlug}`}>
-                    <div className="flex items-center gap-3 md:gap-4 group cursor-pointer bg-white/50 p-1.5 md:p-0 rounded-2xl md:bg-transparent">
-                      <div className="text-right">
-                        <p className="font-black text-sm md:text-base text-gray-900 group-hover:text-rose-600 transition-colors">{language === 'ar' ? vendor.storeNameAr : vendor.storeNameEn}</p>
-                        <div className="flex items-center gap-2 justify-end mt-0.5 md:mt-1">
-                          <div className="flex items-center gap-1">
-                            <Star className="w-3 h-3 md:w-3.5 md:h-3.5 fill-yellow-400 text-yellow-400" />
-                            <span className="text-xs md:text-sm font-black text-gray-900">{Number(vendor.rating || 0).toFixed(1)}</span>
-                          </div>
-                          <span className="text-[10px] md:text-xs text-gray-400">({vendor.totalReviews})</span>
-                        </div>
-                      </div>
-                      <div className="w-10 h-10 md:w-14 md:h-14 rounded-lg md:rounded-2xl bg-white border border-gray-100 p-0.5 overflow-hidden shadow-sm group-hover:shadow-md transition-all shrink-0">
-                        {vendor.logo ? (
-                          <img
-                            src={vendor.logo}
-                            className="w-full h-full object-cover rounded-md md:rounded-xl"
-                            alt={language === 'ar' ? vendor.storeNameAr : vendor.storeNameEn}
-                          />
-                        ) : (
-                          <Store className="w-6 h-6 md:w-8 md:h-8 text-gray-300" />
-                        )}
-                      </div>
-                    </div>
-                  </Link>
-                )}
+
               </div>
 
-              <div className="inline-block bg-rose-50 text-rose-600 px-4 md:px-6 py-1.5 md:py-2 rounded-full text-[10px] md:text-sm font-black tracking-widest uppercase mb-4 md:mb-6 border border-rose-100/50">
+              <div className="inline-block bg-white/5 text-primary px-4 md:px-6 py-1.5 md:py-2 rounded-full text-[10px] md:text-sm font-black tracking-widest uppercase mb-4 md:mb-6 border border-white/10">
                 {collection ? (language === 'ar' ? collection.nameAr : collection.nameEn) : 'Exclusive Edition'}
               </div>
 
@@ -636,7 +608,7 @@ export default function ProductDetail() {
               </div>
 
               <div className="bg-white p-5 md:p-10 rounded-[2rem] md:rounded-[3.5rem] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.08)] md:shadow-[0_40px_80px_-15px_rgba(0,0,0,0.08)] border border-gray-50 mb-8 md:mb-12 relative overflow-hidden ring-1 ring-gray-100 md:ring-0">
-                <div className="absolute top-0 right-0 w-20 h-20 md:w-32 md:h-32 bg-rose-50/50 blur-2xl md:blur-3xl -mr-10 -mt-10 rounded-full"></div>
+                <div className="absolute top-0 right-0 w-20 h-20 md:w-32 md:h-32 -white/5/50 blur-2xl md:blur-3xl -mr-10 -mt-10 rounded-full"></div>
 
                 <div className="flex flex-wrap items-end justify-between gap-4 mb-6 md:mb-10 relative z-10" dir="rtl">
                   <div className="text-right">
@@ -645,7 +617,7 @@ export default function ProductDetail() {
                       <span className="text-4xl md:text-6xl font-black text-gray-900 tracking-tight">
                         {language === 'ar' ? Number(product.price).toLocaleString('ar-SA') : Number(product.price).toLocaleString()}
                       </span>
-                      <span className="text-lg md:text-2xl font-black text-rose-600 mt-2 md:mt-4 uppercase">{t('currency')}</span>
+                      <span className="text-lg md:text-2xl font-black text-primary mt-2 md:mt-4 uppercase">{t('currency')}</span>
                     </div>
                   </div>
                   {product.originalPrice && Number(product.originalPrice) > Number(product.price) && (
@@ -658,9 +630,314 @@ export default function ProductDetail() {
                   )}
                 </div>
 
+
+                {/* ===== INSTALLMENT / PAYMENT SECTION ===== */}
+                {installmentPlans && (installmentPlans as any[]).filter((p: any) => p.isActive && product.price >= (p.minOrderAmount || 0)).length > 0 && (
+                  <div className="mb-6 md:mb-8 relative z-10" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+
+                    {/* Section header */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <CreditCard size={16} className="text-green-600 shrink-0" />
+                      <p className="text-sm font-black text-gray-700">
+                        {language === 'ar' ? 'قسّط الآن — اختر خطتك' : 'Pay in Installments — Choose Your Plan'}
+                      </p>
+                    </div>
+
+                    {/* Clickable Plan Cards */}
+                    <div className="grid grid-cols-3 gap-2 mb-4">
+                      {(installmentPlans as any[])
+                        .filter((p: any) => p.isActive && product.price >= (p.minAmount || 0))
+                        .map((plan: any) => {
+                          const interestAmount = product.price * (plan.interestRate || 0) / 100;
+                          const total = product.price + interestAmount;
+                          const monthly = total / plan.months;
+                          const isZeroInterest = !plan.interestRate || plan.interestRate === 0;
+                          const isSelected = selectedPlanId === plan.id;
+                          return (
+                            <button
+                              key={plan.id}
+                              onClick={() => {
+                                setSelectedPlanId(isSelected ? null : plan.id);
+                                setPaymentChoice(null); // reset choice when plan changes
+                              }}
+                              className={`relative border-2 rounded-xl p-3 text-center transition-all duration-200 ${isSelected
+                                ? 'border-primary bg-primary/5 shadow-md scale-[1.02]'
+                                : isZeroInterest
+                                  ? 'border-green-200 bg-green-50 hover:border-green-400'
+                                  : 'border-orange-200 bg-orange-50 hover:border-orange-400'
+                                }`}
+                            >
+                              {/* Selected checkmark */}
+                              {isSelected && (
+                                <div className="absolute -top-2 -right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </div>
+                              )}
+                              <p className={`text-[10px] font-black uppercase mb-1 ${isSelected ? 'text-primary' : isZeroInterest ? 'text-green-600' : 'text-orange-600'}`}>
+                                {plan.months} {language === 'ar' ? 'شهر' : 'Months'}
+                              </p>
+                              <p className={`text-lg font-black ${isSelected ? 'text-primary' : isZeroInterest ? 'text-green-800' : 'text-orange-800'}`}>
+                                {monthly.toLocaleString(language === 'ar' ? 'ar-SA' : 'en', { maximumFractionDigits: 0 })}
+                              </p>
+                              <p className={`text-[10px] font-bold mb-1.5 ${isSelected ? 'text-primary' : isZeroInterest ? 'text-green-600' : 'text-orange-600'}`}>
+                                {t('currency')}/{language === 'ar' ? 'شهر' : 'mo'}
+                              </p>
+                              <div className={`w-full h-px mb-1.5 ${isSelected ? 'bg-primary/30' : isZeroInterest ? 'bg-green-200' : 'bg-orange-200'}`} />
+                              <p className="text-[10px] text-gray-500 font-bold">
+                                {language === 'ar' ? 'الإجمالي:' : 'Total:'} <span className="font-black text-gray-700">{total.toLocaleString(language === 'ar' ? 'ar-SA' : 'en', { maximumFractionDigits: 0 })} {t('currency')}</span>
+                              </p>
+                              {isZeroInterest ? (
+                                <span className="text-[9px] text-green-600 font-black bg-green-100 px-1.5 py-0.5 rounded-full">
+                                  {language === 'ar' ? '0% فوائد' : '0% interest'}
+                                </span>
+                              ) : (
+                                <span className="text-[9px] text-orange-600 font-black">
+                                  +{interestAmount.toLocaleString('en', { maximumFractionDigits: 0 })} {t('currency')} {language === 'ar' ? 'فوائد' : 'interest'}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                    </div>
+
+                    {/* Down Payment info */}
+                    {selectedPlanId && (() => {
+                      const plan = (installmentPlans as any[]).find((p: any) => p.id === selectedPlanId);
+                      if (!plan) return null;
+
+                      const interestAmount = product.price * (plan.interestRate || 0) / 100;
+                      const totalWithInterest = product.price + interestAmount;
+
+                      const dpPct = plan.downPaymentPercentage > 0 ? plan.downPaymentPercentage : (category?.downPaymentPercentage || 0);
+
+                      if (dpPct <= 0) return null;
+
+                      const dpAmount = totalWithInterest * dpPct / 100;
+                      const financedAmount = totalWithInterest - dpAmount;
+                      return (
+                        <div className="mb-4 bg-purple-50 border border-purple-200 rounded-xl p-3" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-xs font-black text-purple-700">
+                              💳 {language === 'ar' ? 'الدفعة الأولى المطلوبة' : 'Required Down Payment'}
+                            </span>
+                            <span className="ms-auto text-xs font-black bg-purple-200 text-purple-800 px-2 py-0.5 rounded-full">{dpPct}%</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <div className="text-center">
+                              <p className="text-[10px] text-purple-500 font-bold">{language === 'ar' ? 'الدفعة الأولى' : 'Down Payment'}</p>
+                              <p className="text-base font-black text-purple-800">
+                                {dpAmount.toLocaleString(language === 'ar' ? 'ar-SA' : 'en', { maximumFractionDigits: 0 })} {t('currency')}
+                              </p>
+                            </div>
+                            <div className="text-purple-300 font-black">+</div>
+                            <div className="text-center">
+                              <p className="text-[10px] text-purple-500 font-bold">{language === 'ar' ? 'المبلغ المتبقي للأقساط' : 'Financed Amount'}</p>
+                              <p className="text-base font-black text-purple-800">
+                                {financedAmount.toLocaleString(language === 'ar' ? 'ar-SA' : 'en', { maximumFractionDigits: 0 })} {t('currency')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {selectedPlanId && (() => {
+                      const plan = (installmentPlans as any[]).find((p: any) => p.id === selectedPlanId);
+                      const minQ = plan?.minQuantity || 1;
+                      const maxQ = plan?.maxQuantity || 0;
+                      const isLow = quantity < minQ;
+                      const isHigh = maxQ > 0 && quantity > maxQ;
+                      const isInvalid = isLow || isHigh;
+
+                      if (!isInvalid) return null;
+
+                      return (
+                        <div className="mb-4 bg-red-50 border border-red-200 rounded-xl p-3 flex items-center gap-2 text-red-600 font-bold text-xs" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                          <AlertTriangle size={16} />
+                          <span>
+                            {language === 'ar'
+                              ? `هذا النظام متاح فقط لكمية بين ${minQ} و ${maxQ > 0 ? maxQ : '∞'} قطع. يرجى تعديل الكمية لاستخدام التقسيط.`
+                              : `This plan is only available for quantities between ${minQ} and ${maxQ > 0 ? maxQ : 'unlimited'}. Please adjust quantity to use installments.`}
+                          </span>
+                        </div>
+                      );
+                    })()}
+
+                    {/* ===== PAYMENT METHOD CHOICE ===== */}
+                    <div className="border border-gray-100 rounded-2xl p-4 bg-gray-50/50">
+                      <p className="text-xs font-black text-gray-500 mb-3 text-center uppercase tracking-wider">
+                        {language === 'ar' ? 'اختر طريقة الدفع' : 'Choose Payment Method'}
+                      </p>
+                      <div className="grid grid-cols-2 gap-3">
+                        {/* Cash Button */}
+                        <button
+                          onClick={() => {
+                            setPaymentChoice('cash');
+                            // Go directly to checkout - no intent needed
+                            localStorage.removeItem('wolf_payment_intent');
+                          }}
+                          className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 font-bold transition-all duration-200 ${paymentChoice === 'cash'
+                            ? 'border-green-500 bg-green-50 text-green-800 scale-[1.02] shadow-md'
+                            : 'border-gray-200 bg-white text-gray-600 hover:border-green-300 hover:bg-green-50/50'
+                            }`}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className={`w-7 h-7 ${paymentChoice === 'cash' ? 'text-green-600' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                          </svg>
+                          <span className="text-sm font-black">{language === 'ar' ? 'دفع كاش' : 'Pay Cash'}</span>
+                          <span className="text-[10px] font-medium text-gray-400">{language === 'ar' ? 'الدفع الكامل فوراً' : 'Full payment now'}</span>
+                        </button>
+
+                        {/* Installment Button */}
+                        <button
+                          disabled={selectedPlanId ? (() => {
+                            const plan = (installmentPlans as any[]).find((p: any) => p.id === selectedPlanId);
+                            if (!plan) return false;
+                            const minQ = plan.minQuantity || 1;
+                            const maxQ = plan.maxQuantity || 0;
+                            return quantity < minQ || (maxQ > 0 && quantity > maxQ);
+                          })() : false}
+                          onClick={() => {
+                            if (!selectedPlanId) {
+                              // flash message to pick a plan
+                              const el = document.getElementById('installment-plans-hint');
+                              if (el) { el.classList.remove('hidden'); setTimeout(() => el.classList.add('hidden'), 2500); }
+                              return;
+                            }
+                            const plan = (installmentPlans as any[]).find((p: any) => p.id === selectedPlanId);
+                            if (!plan) return;
+
+                            const basePrice = product.price * quantity;
+                            const interestAmount = basePrice * (plan.interestRate || 0) / 100;
+                            const totalWithInterest = basePrice + interestAmount;
+                            const dpPct = plan.downPaymentPercentage > 0 ? plan.downPaymentPercentage : (category?.downPaymentPercentage || 0);
+                            const downPayment = totalWithInterest * dpPct / 100;
+                            const financedAmount = totalWithInterest - downPayment;
+                            const monthly = financedAmount / plan.months;
+
+                            const intent = {
+                              paymentMethod: 'installments',
+                              planId: plan.id,
+                              planMonths: plan.months,
+                              interestRate: plan.interestRate || 0,
+                              downPaymentPct: dpPct,
+                              downPayment: Math.round(downPayment),
+                              financedAmount: Math.round(financedAmount),
+                              monthly: Math.round(monthly),
+                              total: Math.round(totalWithInterest),
+                              productPrice: basePrice, // Now base price of all quantity
+                              minQuantity: plan.minQuantity || 1,
+                              maxQuantity: plan.maxQuantity,
+                              itemQuantity: quantity
+                            };
+                            localStorage.setItem('wolf_payment_intent', JSON.stringify(intent));
+                            setPaymentChoice('installment');
+                          }}
+                          className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 font-bold transition-all duration-200 ${paymentChoice === 'installment'
+                            ? 'border-primary bg-primary/5 text-primary scale-[1.02] shadow-md'
+                            : 'border-gray-200 bg-white text-gray-600 hover:border-primary/40 hover:bg-primary/5'
+                            }`}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className={`w-7 h-7 ${paymentChoice === 'installment' ? 'text-primary' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                          </svg>
+                          <span className="text-sm font-black">{language === 'ar' ? 'تقسيط' : 'Installments'}</span>
+                          <span className="text-[10px] font-medium text-gray-400">
+                            {selectedPlanId
+                              ? (() => {
+                                const plan = (installmentPlans as any[]).find((p: any) => p.id === selectedPlanId);
+                                const interestAmount = product.price * (plan.interestRate || 0) / 100;
+                                const monthly = Math.round((product.price + interestAmount) / plan.months);
+                                return `${monthly.toLocaleString()} ${t('currency')}/${language === 'ar' ? 'شهر' : 'mo'}`;
+                              })()
+                              : language === 'ar' ? 'اختر خطة أولاً ↑' : 'Select plan ↑'}
+                          </span>
+                        </button>
+                      </div>
+
+                      {/* Hint: pick a plan first */}
+                      <p id="installment-plans-hint" className="hidden text-center text-xs font-black text-orange-500 mt-2 animate-pulse">
+                        ⬆ {language === 'ar' ? 'اختر خطة تقسيط أولاً' : 'Please select a plan first'}
+                      </p>
+
+                      {/* Proceed Button — shows once both selected */}
+                      {paymentChoice && (
+                        <button
+                          onClick={() => {
+                            if (paymentChoice === 'cash') {
+                              localStorage.removeItem('wolf_payment_intent');
+                            }
+
+                            // Check quantity limit again
+                            if (paymentChoice === 'installment') {
+                              const plan = (installmentPlans as any[]).find((p: any) => p.id === selectedPlanId);
+                              if (plan?.maxQuantity > 0 && quantity > plan.maxQuantity) {
+                                toast.error(language === 'ar' ? 'الكمية تتجاوز الحد المسموح لهذه الخطة' : 'Quantity exceeds limit for this plan');
+                                return;
+                              }
+
+                              // REFRESH INTENT right before moving to ensure it's fresh for Checkout.tsx
+                              const basePrice = product.price * quantity;
+                              const interestAmount = basePrice * (plan.interestRate || 0) / 100;
+                              const totalWithInterest = basePrice + interestAmount;
+                              const dpPct = plan.downPaymentPercentage > 0 ? plan.downPaymentPercentage : (category?.downPaymentPercentage || 0);
+                              const downPayment = totalWithInterest * dpPct / 100;
+                              const financedAmount = totalWithInterest - downPayment;
+                              const monthly = financedAmount / plan.months;
+
+                              const intent = {
+                                paymentMethod: 'installments',
+                                planId: plan.id,
+                                planMonths: plan.months,
+                                interestRate: plan.interestRate || 0,
+                                downPaymentPct: dpPct,
+                                downPayment: Math.round(downPayment),
+                                financedAmount: Math.round(financedAmount),
+                                monthly: Math.round(monthly),
+                                total: Math.round(totalWithInterest),
+                                productPrice: basePrice,
+                                minQuantity: plan.minQuantity || 1,
+                                maxQuantity: plan.maxQuantity,
+                                itemQuantity: quantity
+                              };
+                              localStorage.setItem('wolf_payment_intent', JSON.stringify(intent));
+                            }
+
+                            // Add product to cart via existing mutation then navigate
+                            addToCartMutation.mutate(
+                              {
+                                productId,
+                                quantity,
+                                color: selectedColor?.colorName,
+                              },
+                              {
+                                onSuccess: () => setLocation('/checkout'),
+                                onError: () => {
+                                  // Already in cart or other error — navigate anyway
+                                  setLocation('/checkout');
+                                }
+                              }
+                            );
+                          }}
+                          className="w-full mt-4 h-12 rounded-xl font-black text-sm bg-primary text-background hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 hover:scale-[1.02] flex items-center justify-center gap-2"
+                        >
+                          {paymentChoice === 'cash'
+                            ? (language === 'ar' ? '💵 متابعة للدفع الكاش' : '💵 Continue to Cash Checkout')
+                            : (language === 'ar' ? '📋 متابعة وتحميل المستندات' : '📋 Continue & Upload Documents')}
+                          <svg xmlns="http://www.w3.org/2000/svg" className={`w-4 h-4 ${language === 'ar' ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {colors && colors.length > 0 && (
                   <div className="mb-6 md:mb-10 relative z-10" dir="rtl">
-                    <p className="text-base md:text-lg font-black text-gray-900 mb-3 md:mb-5">{language === 'ar' ? "اللون:" : "Color:"} <span className="text-rose-600">{selectedColor?.colorName || (language === 'ar' ? "الكل" : "All")}</span></p>
+                    <p className="text-base md:text-lg font-black text-gray-900 mb-3 md:mb-5">{language === 'ar' ? "اللون:" : "Color:"} <span className="text-primary">{selectedColor?.colorName || (language === 'ar' ? "الكل" : "All")}</span></p>
                     <div className="flex flex-wrap gap-3 md:gap-4">
                       {/* Optional: Add a "Show All" or "Reset" button if desired, or just allow toggling */}
                       {colors.map((color: any) => (
@@ -675,7 +952,7 @@ export default function ProductDetail() {
                               setSelectedImage(0);
                             }
                           }}
-                          className={`group relative w-12 h-12 md:w-16 md:h-16 rounded-xl overflow-hidden border-2 transition-all duration-300 ${selectedColor?.id === color.id ? "border-rose-500 scale-110 shadow-lg" : "border-gray-100 hover:border-gray-300"}`}
+                          className={`group relative w-12 h-12 md:w-16 md:h-16 rounded-xl overflow-hidden border-2 transition-all duration-300 ${selectedColor?.id === color.id ? "border-primary scale-110 shadow-lg" : "border-gray-100 hover:border-gray-300"}`}
                         >
                           <img src={color.images?.[0] || product.images?.[0]} className="w-full h-full object-cover" alt={color.colorName} />
                           {/* Color indicator dot */}
@@ -697,7 +974,7 @@ export default function ProductDetail() {
                           <div key={idx} className="relative">
                             <button
                               onClick={() => setSelectedSize(sizeObj.size)}
-                              className={`min-w-12 h-12 md:min-w-14 md:h-14 px-3 md:px-4 rounded-xl font-black text-base md:text-lg transition-all border-2 ${isSelected ? "border-rose-600 bg-rose-50 text-rose-600" : "bg-white text-gray-500 border-gray-100 hover:border-gray-200"}`}
+                              className={`min-w-12 h-12 md:min-w-14 md:h-14 px-3 md:px-4 rounded-xl font-black text-base md:text-lg transition-all border-2 ${isSelected ? "-primary -white/5 -primary" : "bg-white text-gray-500 border-gray-100 hover:border-gray-200"}`}
                             >
                               {sizeObj.size}
                             </button>
@@ -713,7 +990,7 @@ export default function ProductDetail() {
                   </div>
                 )}
 
-                {user?.role !== 'admin' && user?.role !== 'vendor' && (
+                {user?.role !== 'admin' && (
                   <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 md:gap-6 mb-0 md:mb-12" dir="rtl">
                     <div className="flex items-center justify-between bg-gray-50 rounded-2xl p-1 border border-gray-100 h-14 md:h-16">
                       <button
@@ -725,12 +1002,12 @@ export default function ProductDetail() {
                             setQuantity(q => Math.max(1, q - 1));
                           }
                         }}
-                        className="w-12 h-full flex items-center justify-center text-gray-400 hover:text-rose-600 transition-colors"
+                        className="w-12 h-full flex items-center justify-center text-gray-400 hover:text-primary transition-colors"
                       >
                         <Minus size={18} strokeWidth={3} />
                       </button>
                       <span className="flex-1 w-10 text-center font-black text-xl text-gray-900">
-                        {product.sizes?.length > 0 ? (selectedSize ? (sizeQuantities[selectedSize] || 0) : 0) : quantity}
+                        {product.sizes?.length > 0 ? (selectedSize ? (sizeQuantities[selectedSize as string] || 0) : 0) : quantity}
                       </span>
                       <button
                         onClick={() => {
@@ -741,7 +1018,7 @@ export default function ProductDetail() {
                             setQuantity(q => q + 1);
                           }
                         }}
-                        className="w-12 h-full flex items-center justify-center text-gray-400 hover:text-rose-600 transition-colors"
+                        className="w-12 h-full flex items-center justify-center text-gray-400 hover:text-primary transition-colors"
                       >
                         <Plus size={18} strokeWidth={3} />
                       </button>
@@ -760,23 +1037,13 @@ export default function ProductDetail() {
                         {t('addToCart')}
                       </Button>
 
-                      <Button
-                        onClick={() => {
-                          const element = document.getElementById('ai-try-on-section');
-                          element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }}
-                        className="flex-1 h-14 md:h-16 rounded-[2rem] md:rounded-[4rem] bg-gradient-to-r from-purple-600 to-rose-600 hover:from-purple-700 hover:to-rose-700 text-white text-lg md:text-xl font-black shadow-xl shadow-purple-200 gap-3 md:gap-4 w-full md:w-auto"
-                      >
-                        <Sparkles size={20} />
-                        {language === 'ar' ? 'تجربة ذكية' : 'Magic Try-On'}
-                      </Button>
 
                       <Button
                         onClick={handleToggleWishlist}
                         variant="outline"
                         className={cn(
                           "w-14 h-14 md:w-16 md:h-16 rounded-full border-2 transition-all flex items-center justify-center p-0 md:hidden shrink-0",
-                          isFavorite ? "bg-rose-50 border-rose-200 text-rose-600" : "bg-white border-gray-100 text-gray-400 hover:text-rose-600 hover:border-rose-100"
+                          isFavorite ? "bg-white/5 bg-primary/20 text-primary" : "bg-white border-gray-100 text-gray-400 hover:text-primary hover:bg-white/10"
                         )}
                       >
                         <Heart size={24} className={isFavorite ? "fill-current" : ""} />
@@ -803,7 +1070,7 @@ export default function ProductDetail() {
                       <span className="text-gray-900 ml-2 uppercase">Tags:</span>
                       <div className="flex flex-wrap gap-2">
                         {product.tags.map((tag: string, i: number) => (
-                          <Badge key={i} variant="secondary" className="bg-gray-100 text-gray-600 hover:bg-rose-50 hover:text-rose-600 border-0 rounded-lg px-3 py-1 transition-colors">
+                          <Badge key={i} variant="secondary" className="bg-gray-100 text-gray-600 hover:-white/5 hover:-primary border-0 rounded-lg px-3 py-1 transition-colors">
                             {tag}
                           </Badge>
                         ))}
@@ -831,23 +1098,6 @@ export default function ProductDetail() {
           </div>
         </div>
 
-        <div id="ai-try-on-section">
-          <AnimatePresence>
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="mt-20 md:mt-32"
-            >
-              <TryOnSection
-                productName={language === 'ar' ? product.nameAr : product.nameEn}
-                productImage={displayImage}
-                productDescription={language === 'ar' ? product.descriptionAr : product.descriptionEn}
-              />
-            </motion.div>
-          </AnimatePresence>
-        </div>
 
         {/* Tabs System */}
         <div className="mt-16">
@@ -855,7 +1105,7 @@ export default function ProductDetail() {
             <button
               onClick={() => setActiveTab("details")}
               className={`text-2xl font-bold transition-colors relative ${activeTab === "details"
-                ? "text-rose-600 font-black after:absolute after:bottom-[-33px] after:left-0 after:w-full after:h-1.5 after:bg-rose-600 after:rounded-full"
+                ? "text-primary font-black after:absolute after:bottom-[-33px] after:left-0 after:w-full after:h-1.5 after:bg-primary after:rounded-full"
                 : "text-gray-400 hover:text-gray-900"
                 }`}
             >
@@ -864,7 +1114,7 @@ export default function ProductDetail() {
             <button
               onClick={() => setActiveTab("reviews")}
               className={`text-2xl font-bold transition-colors relative ${activeTab === "reviews"
-                ? "text-rose-600 font-black after:absolute after:bottom-[-33px] after:left-0 after:w-full after:h-1.5 after:bg-rose-600 after:rounded-full"
+                ? "text-primary font-black after:absolute after:bottom-[-33px] after:left-0 after:w-full after:h-1.5 after:bg-primary after:rounded-full"
                 : "text-gray-400 hover:text-gray-900"
                 }`}
             >
@@ -936,7 +1186,7 @@ export default function ProductDetail() {
                           comment: reviewComment || undefined,
                         })}
                         disabled={submitReviewMutation.isPending}
-                        className="bg-rose-600 hover:bg-rose-700"
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground"
                       >
                         إرسال التقييم
                       </Button>
