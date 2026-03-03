@@ -194,6 +194,7 @@ export const endpoints = {
         create: (data: any) => api.post('/gift-cards', data).then(res => res.data),
         delete: (id: number) => api.delete(`/gift-cards/${id}`).then(res => res.data),
         redeem: (code: string) => api.post('/gift-cards/redeem', { code }).then(res => res.data),
+        purchase: (amount: number, recipientName?: string) => api.post('/gift-cards/purchase', { amount, recipientName }).then(res => res.data),
     },
     vendors: {
         getDashboard: () => api.get('/vendors/dashboard').then(res => res.data),
