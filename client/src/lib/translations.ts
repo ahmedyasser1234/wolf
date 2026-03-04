@@ -362,7 +362,6 @@ export const translations = {
         manageVendors: "إدارة البائعين",
         searchVendor: "ابحث عن البائع...",
         storeName: "اسم المتجر",
-        city: "المدينة",
         rating: "التقييم",
         commission: "العمولة",
         actions: "الإجراءات",
@@ -506,7 +505,6 @@ export const translations = {
         discountLabel: "الخصم",
         updateOrderStatus: "تحديث حالة الطلب",
         creditCard: "بطاقة ائتمان",
-        cashOnDelivery: "عند الاستلام",
         paid: "تم الدفع",
         pending: "قيد الانتظار",
         noMessages: "لا توجد رسائل",
@@ -658,11 +656,6 @@ export const translations = {
         tags: "Tags",
         share: "Share",
         scrollZoom: "Scroll to Zoom",
-
-        // Checkout
-        checkoutReady: "Checkout",
-        shippingInfo: "Shipping Info",
-        paymentInfo: "Payment Info",
 
         // Home Sections
         shopByOccasion: "Shop by Category",
@@ -862,7 +855,6 @@ export const translations = {
         perItem: "per item",
         status: "Status",
         date: "Date",
-        total: "Total",
         guest: "Guest",
         vatIncluded: "* Incl. VAT & Shipping",
         tableCoupon: "Coupon",
@@ -936,7 +928,6 @@ export const translations = {
         manageVendors: "Manage Vendors",
         searchVendor: "Search Vendor...",
         storeName: "Store Name",
-        city: "City",
         rating: "Rating",
         commission: "Commission",
         actions: "Actions",
@@ -1078,7 +1069,6 @@ export const translations = {
         discountLabel: "Discount",
         updateOrderStatus: "Update Order Status",
         creditCard: "Credit Card",
-        cashOnDelivery: "Cash on Delivery",
         paid: "Paid",
         pending: "Pending",
         noMessages: "No messages",
@@ -1109,9 +1099,6 @@ export const translations = {
         send: "Send",
         messageSent: "Message sent successfully",
         errorSendingMessage: "Error sending message",
-        deleteProductConfirm: "Are you sure you want to delete this product?",
-        productDeleted: "Product deleted successfully",
-        errorDeleting: "Error deleting item",
     }
 };
 
