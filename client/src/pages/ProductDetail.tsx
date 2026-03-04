@@ -355,18 +355,18 @@ export default function ProductDetail() {
         <OffersDisplay productId={product.id} language={language} />
       </section>
 
-      <section className="container mx-auto px-4 mt-4">
-        <div className="grid lg:grid-cols-[1fr_550px] gap-12 relative items-start">
+      <section className="container mx-auto px-2 md:px-4 mt-4 overflow-hidden w-full max-w-[100vw]">
+        <div className="grid lg:grid-cols-[1fr_550px] gap-6 md:gap-12 relative items-start w-full">
           {/* Left: Product Media */}
-          <div className="relative">
+          <div className="relative w-full max-w-full">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8 }}
-              className="lg:sticky lg:top-20 h-fit"
+              className="lg:sticky lg:top-20 h-fit w-full"
             >
               <div
-                className="aspect-[3/4] md:aspect-[3/4] rounded-[2.5rem] md:rounded-[4rem] overflow-hidden bg-white shadow-[0_20px_50px_-15px_rgba(0,0,0,0.1)] md:shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] mb-6 md:mb-10 relative group cursor-zoom-in max-w-2xl mx-auto"
+                className="aspect-[4/5] md:aspect-[3/4] rounded-[2rem] md:rounded-[4rem] overflow-hidden bg-white shadow-xl md:shadow-2xl mb-6 md:mb-10 relative group cursor-zoom-in w-full max-w-lg md:max-w-2xl mx-auto border border-gray-100/50"
                 onMouseEnter={() => setIsZoomed(true)}
                 onMouseLeave={() => setIsZoomed(false)}
                 onMouseMove={handleMouseMove}
@@ -422,7 +422,7 @@ export default function ProductDetail() {
               </div>
 
               {/* Enhanced Thumbnails */}
-              <div className="flex gap-3 md:gap-6 justify-start md:justify-center overflow-x-auto py-4 md:py-6 px-4 no-scrollbar scroll-pl-4">
+              <div className="flex gap-2 md:gap-6 justify-start md:justify-center overflow-x-auto py-2 md:py-6 w-full no-scrollbar pb-4 md:pb-6">
                 {galleryImages.map((img: string, idx: number) => (
                   <button
                     key={`thumb-${idx}`}
