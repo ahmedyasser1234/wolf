@@ -22,7 +22,8 @@ export class PaymentsService {
             .where(eq(paymentGateways.name, name))
             .limit(1);
 
-        if (!gateway || (!gateway.secretKey && name !== 'cash_on_delivery')) {
+        const noKeyRequired = ['cash_on_delivery', 'installments', 'cash'];
+        if (!gateway || (!gateway.secretKey && !noKeyRequired.includes(name))) {
             console.error(`Gateway configuration missing for: ${name}`);
             return null;
         }
@@ -55,6 +56,11 @@ export class PaymentsService {
 
             case 'cash_on_delivery':
                 return { url: `${this.configService.get('FRONTEND_URL')}/checkout/success?orderId=${orderId}&method=cod` };
+
+            case 'installments':
+            case 'cash':
+                // Handled internally - redirect directly to success
+                return { url: `${this.configService.get('FRONTEND_URL')}/checkout/success?orderId=${orderId}&method=${gatewayName}` };
 
             case 'payby':
                 return this.handlePaybyPayment(config!, orderId, amount, customerEmail);
