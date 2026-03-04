@@ -31,6 +31,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
     // LOG THE ERROR FOR THE DEVELOPER
     console.error(`🚨 [AllExceptionsFilter] ERROR EXCEPTION DETECTED:`);
     console.error(`   - Path: ${request.method} ${request.url}`);
+    console.error(`   - User-Agent: ${request.headers['user-agent']}`);
+    console.error(`   - Origin: ${request.headers['origin'] || 'N/A'}`);
     console.error(`   - Status: ${httpStatus}`);
     console.error(`   - Body Sent:`, JSON.stringify(request.body, null, 2));
     console.error(`   - Error Message:`, responseBody.message);

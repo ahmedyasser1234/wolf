@@ -403,10 +403,10 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
 
             {/* CREATE/EDIT PRODUCT MODAL */}
             <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
-                <DialogContent className="w-full h-full sm:h-[95vh] sm:max-w-7xl sm:w-[95vw] p-0 overflow-hidden shadow-2xl transition-all duration-700 animate-in zoom-in-95 rounded-none sm:rounded-[2.5rem] border-gray-800">
-                    <div className="flex flex-col h-full bg-gray-900">
+                <DialogContent className="w-full h-full sm:h-[92vh] sm:max-w-7xl sm:w-[95vw] p-0 overflow-hidden shadow-2xl transition-all duration-700 animate-in zoom-in-95 rounded-none sm:rounded-[2.5rem] border-gray-800 flex flex-col">
+                    <div className="flex flex-col h-full bg-gray-900 border-0">
                         {/* Custom Header */}
-                        <div className="bg-background px-4 py-4 md:px-8 md:py-6 flex items-center justify-between border-b border-gray-800 sticky top-0 z-50">
+                        <div className="bg-background px-4 py-4 md:px-8 md:py-6 flex items-center justify-between border-b border-gray-800 sticky top-0 z-[60]">
                             <div>
                                 <h3 className="text-xl sm:text-2xl font-black text-white">
                                     {editingProduct ? (language === 'ar' ? 'تعديل منتج' : 'Edit Product') : (language === 'ar' ? 'إضافة منتج جديد' : 'New Product')}
@@ -421,14 +421,14 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                         <div className="flex-1 overflow-y-auto">
                             <div className="grid grid-cols-1 md:grid-cols-12 h-full">
                                 {/* Media Section (Left/Top) */}
-                                <div className="md:col-span-4 bg-background p-4 md:p-8 border-l border-gray-800 flex flex-col gap-6 md:gap-8">
+                                <div className="md:col-span-4 bg-background p-5 md:p-8 border-b md:border-b-0 md:border-l border-gray-800 flex flex-col gap-8 md:gap-10">
                                     <div className="space-y-4">
-                                        <div className="flex items-center justify-between">
-                                            <h4 className="font-black text-white uppercase tracking-widest text-xs flex items-center gap-2">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <h4 className="font-black text-white uppercase tracking-widest text-[10px] sm:text-xs flex items-center gap-2 pt-1">
                                                 <ImageIcon className="w-4 h-4 text-purple-400" />
                                                 {language === 'ar' ? "صور المنتج" : "Media Library"}
                                             </h4>
-                                            <div className="h-6 px-2 bg-purple-900/30 text-[10px] font-black text-purple-400 rounded-full flex items-center">
+                                            <div className="h-7 px-3 bg-purple-900/40 text-[10px] font-black text-purple-300 rounded-full flex items-center shrink-0 border border-purple-800/50">
                                                 {images.length || editingProduct?.images?.length || 0} / 6
                                             </div>
                                         </div>
@@ -537,7 +537,7 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                                 </div>
 
                                 {/* Form Section (Right/Bottom) */}
-                                <div className="md:col-span-8 p-4 md:p-12 space-y-8 md:space-y-12 pb-24 md:pb-12">
+                                <div className="md:col-span-8 p-4 md:p-12 space-y-10 md:space-y-16 pb-40 md:pb-24">
                                     {/* Global Sections */}
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-12">
                                         {/* Basic Info */}
@@ -818,7 +818,7 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                         </div>
 
                         {/* Sticky Footer */}
-                        <div className="bg-white px-4 py-4 md:px-12 md:py-8 flex flex-col-reverse sm:flex-row items-center justify-between border-t border-slate-100 gap-4 sticky bottom-0 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                        <div className="bg-white px-4 py-5 md:px-12 md:py-8 flex flex-col-reverse sm:flex-row items-center justify-between border-t border-slate-100 gap-4 sticky bottom-0 z-[60] shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
                             <Button variant="ghost" onClick={handleCloseModal} className="w-full sm:w-auto h-12 md:h-14 px-8 rounded-full font-black text-slate-400 hover:bg-slate-50">
                                 {language === 'ar' ? "تجاهل" : "Discard"}
                             </Button>
