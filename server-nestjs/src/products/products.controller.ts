@@ -20,7 +20,7 @@ export class ProductsController {
     ) {
         console.log("📥 [Products Controller] Create Request Received");
         console.log("   - Body:", JSON.stringify(body, null, 2));
-        console.log("   - Files Count:", files?.length || 0);
+        console.log("   - Files Info:", files?.map(f => ({ fieldname: f.fieldname, name: f.originalname, size: f.size })));
         return this.productsService.create(body, files);
     }
 

@@ -13,135 +13,147 @@ export class ProductsService {
 
     async create(data: any, files: Express.Multer.File[]) {
         console.log("⚙️ [Products Service] Processing Create Product...");
-        const imageUrls: string[] = [];
+        try {
+            const imageUrls: string[] = [];
+            const vendorId = parseInt(data.vendorId);
+            const collectionId = data.collectionId ? parseInt(data.collectionId) : null;
 
-        const vendorId = parseInt(data.vendorId);
-        const collectionId = data.collectionId ? parseInt(data.collectionId) : null;
+            console.log(`⚙️ [Products Service] Params: Vendor=${vendorId}, Collection=${collectionId}`);
 
-        console.log(`⚙️ [Products Service] Processing Create Product for Vendor=${vendorId}, Collection=${collectionId}`);
+            if (isNaN(vendorId)) {
+                console.error("❌ [Products Service] Invalid Vendor ID:", data.vendorId);
+                throw new BadRequestException('Invalid vendor ID');
+            }
 
-        if (isNaN(vendorId)) {
-            console.error("❌ [Products Service] Invalid Vendor ID:", data.vendorId);
-            throw new BadRequestException('Invalid vendor ID');
-        }
+            if (!collectionId || isNaN(collectionId)) {
+                console.error("❌ [Products Service] Missing or Invalid Collection ID:", data.collectionId);
+                throw new BadRequestException('Product must belong to a valid collection');
+            }
 
-        if (!collectionId || isNaN(collectionId)) {
-            console.error("❌ [Products Service] Missing or Invalid Collection ID:", data.collectionId);
-            throw new BadRequestException('Product must belong to a valid collection');
-        }
-
-        // Verify collection and get categoryId
-        const collection = await this.databaseService.db.query.collections.findFirst({
-            where: and(eq(collections.id, collectionId), eq(collections.vendorId, vendorId)),
-        });
-
-        if (!collection) {
-            console.error(`❌ [Products Service] Collection not found or access denied: ID ${collectionId}, Vendor ${vendorId}`);
-            throw new BadRequestException('Invalid collection ID or access denied');
-        }
-
-        if (!collection.categoryId) {
-            console.warn("⚠️ [Products Service] Collection has no category ID. Using default category if available.");
-        }
-
-        // Upload main product images
-        const mainFiles = files?.filter(f => f.fieldname === 'images') || [];
-        if (mainFiles.length > 0) {
-            const uploadPromises = mainFiles.map(file => this.cloudinary.uploadFile(file));
-            const results = await Promise.all(uploadPromises);
-
-            results.forEach(result => {
-                if ('secure_url' in result) {
-                    imageUrls.push(result.secure_url);
-                }
+            // Verify collection and get categoryId
+            const collection = await this.databaseService.db.query.collections.findFirst({
+                where: and(eq(collections.id, collectionId), eq(collections.vendorId, vendorId)),
             });
-        }
 
-        // Upload AI-Ready Image
-        let aiQualifiedImageUrl: string | null = null;
-        const aiFile = files?.find(f => f.fieldname === 'aiQualifiedImage');
-        if (aiFile) {
-            const result = await this.cloudinary.uploadFile(aiFile);
-            if ('secure_url' in result) {
-                aiQualifiedImageUrl = result.secure_url;
+            if (!collection) {
+                console.error(`❌ [Products Service] Collection not found or access denied: ID ${collectionId}, Vendor ${vendorId}`);
+                throw new BadRequestException('Invalid collection ID or access denied');
             }
-        }
 
-        const slug = data.nameEn.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now();
-        const sizesArr = typeof data.sizes === 'string' ? JSON.parse(data.sizes) : data.sizes;
-        const tagsArr = typeof data.tags === 'string' ? JSON.parse(data.tags) : data.tags;
-        const colorVariantsArr = typeof data.colorVariants === 'string' ? JSON.parse(data.colorVariants) : data.colorVariants;
+            console.log("✅ [Products Service] Collection found:", collection.nameAr || collection.nameEn);
 
-        let totalStock = 0;
-        if (Array.isArray(sizesArr)) {
-            totalStock = sizesArr.reduce((sum, s) => sum + (parseInt(s.quantity) || 0), 0);
-        }
+            // Upload main product images
+            const mainFiles = files?.filter(f => f.fieldname === 'images') || [];
+            if (mainFiles.length > 0) {
+                console.log(`📸 [Products Service] Uploading ${mainFiles.length} main images...`);
+                const uploadPromises = mainFiles.map(file => this.cloudinary.uploadFile(file));
+                const results = await Promise.all(uploadPromises);
 
-        // Calculate Price with Commission
-        // Fetch Vendor to get commission rate
-        const vendor = await this.databaseService.db.query.vendors.findFirst({
-            where: eq(vendors.id, vendorId),
-        });
-
-        const commissionRate = vendor?.commissionRate || 10; // Default to 10 if not found (should be found)
-        const vendorPrice = parseFloat(data.price); // The price sent by vendor is the base price
-        const finalPrice = vendorPrice * (1 + commissionRate / 100);
-
-        return await this.databaseService.db.transaction(async (tx) => {
-            const [newProduct] = await tx.insert(products).values({
-                ...data,
-                sku: data.sku,
-                tags: tagsArr,
-                cutType: data.cutType,
-                bodyShape: data.bodyShape,
-                impression: data.impression,
-                occasion: data.occasion,
-                slug,
-                vendorId,
-                collectionId,
-                categoryId: collection.categoryId,
-                images: imageUrls,
-                aiQualifiedImage: aiQualifiedImageUrl,
-                discount: parseFloat(data.discount || '0'),
-                vendorPrice: vendorPrice, // Store vendor's base price
-                vendorOriginalPrice: parseFloat(data.originalPrice || vendorPrice.toString()), // Store vendor's base original price
-                price: finalPrice, // Store final customer price
-                originalPrice: parseFloat(data.originalPrice || vendorPrice.toString()) * (1 + commissionRate / 100), // Customer price including commission
-                stock: totalStock,
-                sizes: sizesArr,
-            }).returning();
-
-            // Handle Color Variants
-            if (Array.isArray(colorVariantsArr) && colorVariantsArr.length > 0) {
-                for (const variant of colorVariantsArr) {
-                    const variantImages: string[] = [];
-
-                    // Filter files belonging to this variant based on fieldname prefix
-                    if (variant.imageFieldPrefix) {
-                        const variantFiles = files.filter(f => f.fieldname.startsWith(variant.imageFieldPrefix));
-                        if (variantFiles.length > 0) {
-                            const uploadPromises = variantFiles.map(file => this.cloudinary.uploadFile(file));
-                            const results = await Promise.all(uploadPromises);
-
-                            results.forEach(result => {
-                                if ('secure_url' in result) {
-                                    variantImages.push(result.secure_url);
-                                }
-                            });
-                        }
+                results.forEach(result => {
+                    if ('secure_url' in result) {
+                        imageUrls.push(result.secure_url);
                     }
+                });
+            }
 
-                    await tx.insert(productColors).values({
-                        productId: newProduct.id,
-                        colorName: variant.colorName,
-                        colorCode: variant.colorCode,
-                        images: variantImages,
-                    });
+            // Upload AI-Ready Image
+            let aiQualifiedImageUrl: string | null = null;
+            const aiFile = files?.find(f => f.fieldname === 'aiQualifiedImage');
+            if (aiFile) {
+                console.log("✨ [Products Service] Uploading AI image...");
+                const result = await this.cloudinary.uploadFile(aiFile);
+                if ('secure_url' in result) {
+                    aiQualifiedImageUrl = result.secure_url;
                 }
             }
 
-            return newProduct;
-        });
+            const slug = data.nameEn.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now();
+
+            console.log("🧪 [Products Service] Parsing arrays...");
+            const sizesArr = typeof data.sizes === 'string' ? JSON.parse(data.sizes) : data.sizes;
+            const tagsArr = typeof data.tags === 'string' ? JSON.parse(data.tags) : data.tags;
+            const colorVariantsArr = typeof data.colorVariants === 'string' ? JSON.parse(data.colorVariants) : data.colorVariants;
+
+            let totalStock = 0;
+            if (Array.isArray(sizesArr)) {
+                totalStock = sizesArr.reduce((sum, s) => sum + (parseInt(s.quantity) || 0), 0);
+            }
+
+            // Calculate Price with Commission
+            const vendor = await this.databaseService.db.query.vendors.findFirst({
+                where: eq(vendors.id, vendorId),
+            });
+
+            const commissionRate = vendor?.commissionRate || 10;
+            const vendorPrice = parseFloat(data.price);
+            const finalPrice = vendorPrice * (1 + commissionRate / 100);
+
+            console.log("💰 [Products Service] Price Calculation:", { vendorPrice, commissionRate, finalPrice });
+
+            return await this.databaseService.db.transaction(async (tx) => {
+                console.log("🚀 [Products Service] Starting DB Transaction...");
+                const [newProduct] = await tx.insert(products).values({
+                    ...data,
+                    sku: data.sku,
+                    tags: tagsArr,
+                    cutType: data.cutType,
+                    bodyShape: data.bodyShape,
+                    impression: data.impression,
+                    occasion: data.occasion,
+                    slug,
+                    vendorId,
+                    collectionId,
+                    categoryId: collection.categoryId,
+                    images: imageUrls,
+                    aiQualifiedImage: aiQualifiedImageUrl,
+                    discount: parseFloat(data.discount || '0'),
+                    vendorPrice: vendorPrice,
+                    vendorOriginalPrice: parseFloat(data.originalPrice || vendorPrice.toString()),
+                    price: finalPrice,
+                    originalPrice: parseFloat(data.originalPrice || vendorPrice.toString()) * (1 + commissionRate / 100),
+                    stock: totalStock,
+                    sizes: sizesArr,
+                }).returning();
+
+                // Handle Color Variants
+                if (Array.isArray(colorVariantsArr) && colorVariantsArr.length > 0) {
+                    console.log(`🎨 [Products Service] Processing ${colorVariantsArr.length} color variants...`);
+                    for (const variant of colorVariantsArr) {
+                        const variantImages: string[] = [];
+
+                        if (variant.imageFieldPrefix) {
+                            const variantFiles = files.filter(f => f.fieldname.startsWith(variant.imageFieldPrefix));
+                            if (variantFiles.length > 0) {
+                                const uploadPromises = variantFiles.map(file => this.cloudinary.uploadFile(file));
+                                const results = await Promise.all(uploadPromises);
+
+                                results.forEach(result => {
+                                    if ('secure_url' in result) {
+                                        variantImages.push(result.secure_url);
+                                    }
+                                });
+                            }
+                        }
+
+                        await tx.insert(productColors).values({
+                            productId: newProduct.id,
+                            colorName: variant.colorName,
+                            colorCode: variant.colorCode,
+                            images: variantImages,
+                        });
+                    }
+                }
+
+                console.log("✅ [Products Service] Successfully created product with ID:", newProduct.id);
+                return newProduct;
+            });
+        } catch (error) {
+            console.error("🔥 [Products Service] Fatal Error during Create:", error);
+            if (error instanceof SyntaxError) {
+                console.error("   - JSON Parsing Error. Data received:", { sizes: data.sizes, tags: data.tags, variants: data.colorVariants });
+            }
+            throw error;
+        }
     }
 
     async findAll(query?: string, categoryId?: number, limit = 20, offset = 0, vendorId?: number, collectionId?: number) {

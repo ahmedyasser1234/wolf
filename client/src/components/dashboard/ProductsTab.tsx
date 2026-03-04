@@ -138,6 +138,18 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                     existingImages: v.existingImages || []
                 };
             });
+            // Log FormData content for debugging
+            console.log("📤 [Products Tab] Submitting Product...");
+            const logFormData: any = {};
+            formData.forEach((value, key) => {
+                if (value instanceof File) {
+                    logFormData[key] = `File: ${value.name} (${value.size} bytes)`;
+                } else {
+                    logFormData[key] = value;
+                }
+            });
+            console.log("   - FormData Payload:", logFormData);
+
             formData.append("colorVariants", JSON.stringify(processedVariants));
 
             if (editingProduct) {
