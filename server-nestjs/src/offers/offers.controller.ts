@@ -42,41 +42,53 @@ export class OffersController {
 
     @Get()
     async findAll(@Req() req: Request) {
-        console.log('🔍 [OffersController] Request:', req.url, 'Query:', req.query);
+        this.logger.log(`🔍 [OffersController] Request: ${req.url} | Query: ${JSON.stringify(req.query)}`);
 
         // 1. Try standard query param
         let vendorId = req.query.vendorId;
 
-        // 2. Fallback: Parse from URL manually if missing (e.g. if query parser failed)
+        // 2. Fallback: Parse from URL manually if missing
         if (!vendorId && req.url.includes('vendorId=')) {
-            console.log('⚠️ [OffersController] Query param missing, parsing URL manually...');
             const match = req.url.match(/vendorId=(\d+)/);
             if (match) vendorId = match[1];
         }
 
         if (vendorId) {
-            console.log(`✅ [OffersController] Public Access via vendorId=${vendorId}`);
+            this.logger.log(`✅ [OffersController] Public Access via vendorId=${vendorId}`);
             return this.offersService.findAll(Number(vendorId));
         }
 
-        // 3. Fallback: Dashboard (Auth required)
-        console.log('🔒 [OffersController] No vendorId param, checking Auth...');
-        const authHeader = req.headers.authorization || req.cookies?.[COOKIE_NAME];
-        if (!authHeader) throw new UnauthorizedException();
+        // 3. Optional Auth for Dashboard view
+        const token = req.headers.authorization?.startsWith('Bearer ')
+            ? req.headers.authorization.split(' ')[1]
+            : req.cookies?.[COOKIE_NAME];
 
-        const token = req.headers.authorization?.startsWith('Bearer ') ? req.headers.authorization.split(' ')[1] : req.cookies?.[COOKIE_NAME];
-        const payload = await this.authService.verifySession(token);
-        if (!payload) throw new UnauthorizedException();
+        if (token) {
+            try {
+                const payload = await this.authService.verifySession(token);
+                if (payload) {
+                    if (payload.role === 'admin') {
+                        this.logger.log('👑 [OffersController] Admin view - all offers');
+                        return this.offersService.findAll();
+                    }
 
-        if (payload.role === 'admin') {
-            return this.offersService.findAll(); // Admins see all
+                    const user = await this.authService.findUserByOpenId(payload.openId);
+                    if (user) {
+                        const vendor = await this.vendorsService.findByUserId(user.id);
+                        if (vendor) {
+                            this.logger.log(`🏪 [OffersController] Vendor view - vendorId=${vendor.id}`);
+                            return this.offersService.findAll(vendor.id);
+                        }
+                    }
+                }
+            } catch (e) {
+                this.logger.warn(`⚠️ [OffersController] Auth error: ${e.message}`);
+            }
         }
 
-        const user = await this.authService.findUserByOpenId(payload.openId);
-        const vendor = await this.vendorsService.findByUserId(user.id);
-        if (!vendor) throw new UnauthorizedException('Vendor not found');
-
-        return this.offersService.findAll(vendor.id);
+        // 4. Default: Public Global View (All offers)
+        this.logger.log('🌐 [OffersController] Public Global View');
+        return this.offersService.findAll();
     }
 
     @Get(':id')

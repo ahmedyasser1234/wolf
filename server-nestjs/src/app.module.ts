@@ -69,11 +69,11 @@ import { InstallmentsModule } from './installments/installments.module';
     ThrottlerModule.forRoot([{
       name: 'default',
       ttl: 60000,
-      limit: 1000, // Increased for dashboard and seeding stability
+      limit: 10000, // Significantly increased
     }, {
       name: 'auth',
       ttl: 60000,
-      limit: 10, // Stricter for auth
+      limit: 100, // Increased
     }]),
   ],
   controllers: [AppController],

@@ -368,6 +368,29 @@ function Navigation({ isChatHistoryOpen, setIsChatHistoryOpen, unreadCount, syst
                     </Link>
                   </div>
                 )}
+
+                {/* Mobile Language Switcher */}
+                <div className="pt-4 mt-4 border-t border-white/10">
+                  <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-2xl p-2">
+                    <span className="text-white/60 text-sm font-bold px-3">
+                      {language === 'ar' ? "اللغة" : "Language"}
+                    </span>
+                    <div className="flex bg-white/5 rounded-xl p-1">
+                      <button
+                        onClick={() => { setLanguage('en'); setMobileMenuOpen(false); }}
+                        className={`px-6 py-2 text-xs font-black rounded-lg transition-all ${language !== 'ar' ? 'bg-primary text-background' : 'text-white/60 hover:text-white'}`}
+                      >
+                        EN
+                      </button>
+                      <button
+                        onClick={() => { setLanguage('ar'); setMobileMenuOpen(false); }}
+                        className={`px-6 py-2 text-xs font-black rounded-lg transition-all ${language === 'ar' ? 'bg-primary text-background' : 'text-white/60 hover:text-white'}`}
+                      >
+                        AR
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}
@@ -684,7 +707,7 @@ function AppContent() {
         unreadCount={unreadCount}
         systemUnreadCount={systemUnreadCount}
       />
-      <main className={`flex-1 ${!HERO_PAGES.includes(location) ? 'pt-20' : ''}`}>
+      <main className={`flex-1 ${!HERO_PAGES.includes(location) ? (location.startsWith('/checkout') ? 'pt-0' : 'pt-24 md:pt-28') : ''}`}>
         <Router />
       </main>
       <Footer />

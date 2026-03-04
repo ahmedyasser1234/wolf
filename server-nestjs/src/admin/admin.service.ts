@@ -97,29 +97,50 @@ export class AdminService {
     }
 
     async getAllOrders() {
-        return await this.databaseService.db
+        const rows = await this.databaseService.db
             .select({
-                id: orders.id,
-                orderNumber: orders.orderNumber,
-                customerId: orders.customerId,
+                order: orders,
                 customer: {
                     name: users.name,
                     email: users.email,
                     phone: users.phone,
                 },
-                total: orders.total,
-                status: orders.status,
-                paymentStatus: orders.paymentStatus,
-                paymentMethod: orders.paymentMethod,
-                installmentPlanId: orders.installmentPlanId,
-                kycData: orders.kycData,
-                shippingAddress: orders.shippingAddress,
-                billingAddress: orders.billingAddress,
-                createdAt: orders.createdAt,
+                installmentPlan: installmentPlans,
             })
             .from(orders)
             .leftJoin(users, eq(orders.customerId, users.id))
+            .leftJoin(installmentPlans, eq(orders.installmentPlanId, installmentPlans.id))
             .orderBy(desc(orders.createdAt));
+
+        const orderIds = rows.map(r => r.order.id);
+        if (orderIds.length === 0) return [];
+
+        const allItems = await this.databaseService.db
+            .select({
+                item: orderItems,
+                product: {
+                    nameAr: products.nameAr,
+                    nameEn: products.nameEn,
+                    images: products.images,
+                },
+            })
+            .from(orderItems)
+            .leftJoin(products, eq(orderItems.productId, products.id))
+            .where(sql`${orderItems.orderId} IN ${orderIds}`);
+
+        return rows.map(r => ({
+            ...r.order,
+            customer: r.customer,
+            installmentPlan: r.installmentPlan,
+            items: allItems
+                .filter(i => i.item.orderId === r.order.id)
+                .map(i => ({
+                    ...i.item,
+                    productNameAr: i.product?.nameAr,
+                    productNameEn: i.product?.nameEn,
+                    productImage: (i.product?.images as string[])?.[0],
+                })),
+        }));
     }
 
     async getAllProducts(search?: string) {

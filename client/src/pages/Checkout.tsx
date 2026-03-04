@@ -309,12 +309,12 @@ export default function Checkout() {
   ].filter((v, i, a) => a.findIndex(t => t.id === v.id) === i); // dedupe
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-32 pt-0 md:pt-12 overflow-x-hidden w-full">
+    <div className="min-h-screen bg-gray-50 pb-32 pt-24 md:pt-40 overflow-x-hidden w-full">
       {/* Header */}
-      <div className="bg-white border-b border-gray-100 sticky top-[72px] md:top-[112px] z-40 pt-1 pb-3 md:py-6">
+      <div className="bg-white border-b border-gray-100 sticky top-16 md:top-24 z-40 pt-1 pb-3 md:py-6">
         <div className="container mx-auto px-2 md:px-4 max-w-7xl">
           <div className="flex flex-col md:flex-row justify-between items-center gap-1 md:gap-8">
-            <h1 className="text-xl md:text-4xl font-black text-gray-900 tracking-tighter uppercase font-arabic text-right">{language === 'ar' ? 'إتمام الدفع' : 'Checkout'}</h1>
+            <h1 className="text-xl md:text-4xl font-black text-gray-900 tracking-tighter uppercase font-arabic text-right">{t('checkoutReady')}</h1>
             <div className="flex items-center justify-end gap-2 md:gap-8 font-bold text-[10px] md:text-sm tracking-widest uppercase text-gray-400 font-arabic w-full md:w-auto">
               {formData.paymentMethod === 'installments' ? (
                 <>
@@ -322,32 +322,32 @@ export default function Checkout() {
                     <span className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm ${['kyc', 'shipping', 'review'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>1</span>
                     <span>{language === 'ar' ? 'التحقق' : 'KYC'}</span>
                   </div>
-                  <ChevronLeft size={16} />
+                  <ChevronLeft className={`w-4 h-4 text-gray-300 ${language === 'en' ? 'rotate-180' : ''}`} />
                   <div className={`flex items-center gap-2 ${['shipping', 'review'].includes(step) ? 'text-primary' : ''}`}>
                     <span className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm ${['shipping', 'review'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>2</span>
-                    <span>{language === 'ar' ? 'الشحن' : 'Shipping'}</span>
+                    <span>{t('shippingInfo')}</span>
                   </div>
-                  <ChevronLeft size={16} />
+                  <ChevronLeft className={`w-4 h-4 text-gray-300 ${language === 'en' ? 'rotate-180' : ''}`} />
                   <div className={`flex items-center gap-2 ${step === 'review' ? 'text-primary' : ''}`}>
                     <span className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm ${step === 'review' ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>3</span>
-                    <span>{language === 'ar' ? 'مراجعة' : 'Review'}</span>
+                    <span>{t('reviewOrder')}</span>
                   </div>
                 </>
               ) : (
                 <>
                   <div className={`flex items-center gap-2 ${['shipping', 'payment', 'review'].includes(step) ? 'text-primary' : ''}`}>
                     <span className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm ${['shipping', 'payment', 'review'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>1</span>
-                    <span>{language === 'ar' ? 'الشحن' : 'Shipping'}</span>
+                    <span>{t('shippingInfo')}</span>
                   </div>
-                  <ChevronLeft size={16} />
+                  <ChevronLeft className={`w-4 h-4 text-gray-300 ${language === 'en' ? 'rotate-180' : ''}`} />
                   <div className={`flex items-center gap-2 ${['payment', 'review'].includes(step) ? 'text-primary' : ''}`}>
                     <span className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm ${['payment', 'review'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>2</span>
-                    <span>{language === 'ar' ? 'الدفع' : 'Payment'}</span>
+                    <span>{t('paymentInfo')}</span>
                   </div>
-                  <ChevronLeft size={16} />
+                  <ChevronLeft className={`w-4 h-4 text-gray-300 ${language === 'en' ? 'rotate-180' : ''}`} />
                   <div className={`flex items-center gap-2 ${step === 'review' ? 'text-primary' : ''}`}>
                     <span className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm ${step === 'review' ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>3</span>
-                    <span>{language === 'ar' ? 'مراجعة' : 'Review'}</span>
+                    <span>{t('reviewOrder')}</span>
                   </div>
                 </>
               )}
@@ -362,40 +362,40 @@ export default function Checkout() {
             <AnimatePresence mode="wait">
               {step === "shipping" && (
                 <motion.div key="shipping" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-6">
-                  <div className="bg-white p-4 sm:p-8 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-gray-50 text-right font-arabic w-full">
-                    <h2 className="text-lg sm:text-2xl md:text-3xl font-black text-gray-900 mb-4 md:mb-8">{language === 'ar' ? 'عنوان الشحن' : 'Shipping Address'}</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-8">
-                      <div className="space-y-1">
-                        <label className="font-bold text-gray-700 text-xs md:text-sm">{language === 'ar' ? 'الاسم الأول' : 'First Name'}</label>
-                        <Input name="firstName" value={formData.firstName} onChange={handleInputChange} className="h-10 md:h-14 rounded-xl md:rounded-2xl bg-gray-50 border-none px-3 md:px-6 text-sm md:text-lg text-black font-bold w-full" />
+                  <div className="bg-white p-6 sm:p-10 rounded-[2.5rem] md:rounded-[3rem] shadow-xl border border-gray-50 text-right font-arabic w-full">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 mb-6 md:mb-10">{t('shippingInfo')}</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-8">
+                      <div className="space-y-2">
+                        <label className="font-bold text-gray-700 text-sm">{t('firstName')}</label>
+                        <Input name="firstName" value={formData.firstName} onChange={handleInputChange} className="h-12 md:h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold w-full focus-visible:ring-primary" />
                       </div>
-                      <div className="space-y-1">
-                        <label className="font-bold text-gray-700 text-xs md:text-sm">{language === 'ar' ? 'اسم العائلة' : 'Last Name'}</label>
-                        <Input name="lastName" value={formData.lastName} onChange={handleInputChange} className="h-10 md:h-14 rounded-xl md:rounded-2xl bg-gray-50 border-none px-3 md:px-6 text-sm md:text-lg text-black font-bold w-full" />
+                      <div className="space-y-2">
+                        <label className="font-bold text-gray-700 text-sm">{t('lastName')}</label>
+                        <Input name="lastName" value={formData.lastName} onChange={handleInputChange} className="h-12 md:h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold w-full focus-visible:ring-primary" />
                       </div>
-                      <div className="sm:col-span-2 space-y-1">
-                        <label className="font-bold text-gray-700 text-xs md:text-sm">{language === 'ar' ? 'العنوان' : 'Address'}</label>
-                        <Input name="address" value={formData.address} onChange={handleInputChange} className="h-10 md:h-14 rounded-xl md:rounded-2xl bg-gray-50 border-none px-3 md:px-6 text-sm md:text-lg text-black font-bold w-full" />
+                      <div className="sm:col-span-2 space-y-2">
+                        <label className="font-bold text-gray-700 text-sm">{t('address')}</label>
+                        <Input name="address" value={formData.address} onChange={handleInputChange} className="h-12 md:h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold w-full focus-visible:ring-primary" />
                       </div>
-                      <div className="space-y-1">
-                        <label className="font-bold text-gray-700 text-xs md:text-sm">{language === 'ar' ? 'المدينة' : 'City'}</label>
-                        <Input name="city" value={formData.city} onChange={handleInputChange} className="h-10 md:h-14 rounded-xl md:rounded-2xl bg-gray-50 border-none px-3 md:px-6 text-sm md:text-lg text-black font-bold w-full" />
+                      <div className="space-y-2">
+                        <label className="font-bold text-gray-700 text-sm">{t('city')}</label>
+                        <Input name="city" value={formData.city} onChange={handleInputChange} className="h-12 md:h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold w-full focus-visible:ring-primary" />
                       </div>
-                      <div className="space-y-1">
-                        <label className="font-bold text-gray-700 text-xs md:text-sm">الإمارات</label>
-                        <Input name="country" value={formData.country} readOnly className="h-10 md:h-14 rounded-xl md:rounded-2xl bg-gray-50 border-none px-3 md:px-6 text-sm md:text-lg text-gray-400 w-full" />
+                      <div className="space-y-2">
+                        <label className="font-bold text-gray-700 text-sm">{t('uae')}</label>
+                        <Input name="country" value={formData.country} readOnly className="h-12 md:h-14 rounded-2xl bg-gray-50 border-none px-6 text-gray-400 w-full" />
                       </div>
-                      <div className="sm:col-span-2 space-y-1">
-                        <label className="font-bold text-gray-700 text-xs md:text-sm">{language === 'ar' ? 'رقم الهاتف' : 'Phone Number'}</label>
-                        <Input name="phone" value={formData.phone} onChange={handleInputChange} className="h-10 md:h-14 rounded-xl md:rounded-2xl bg-gray-50 border-none px-3 md:px-6 text-sm md:text-lg text-black font-bold w-full" />
+                      <div className="sm:col-span-2 space-y-2">
+                        <label className="font-bold text-gray-700 text-sm">{t('phone')}</label>
+                        <Input name="phone" value={formData.phone} onChange={handleInputChange} className="h-12 md:h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold w-full focus-visible:ring-primary" />
                       </div>
                     </div>
                     <Button
                       onClick={() => setStep(formData.paymentMethod === 'installments' ? "review" : "payment")}
-                      className="w-full h-12 md:h-16 rounded-full mt-6 md:mt-12 bg-primary hover:bg-primary/90 text-base md:text-xl font-bold text-white shadow-xl shadow-primary/20 group uppercase"
+                      className="w-full h-14 md:h-16 rounded-full mt-8 md:mt-12 bg-primary hover:bg-primary/90 text-lg md:text-xl font-bold text-white shadow-xl shadow-primary/20 group"
                     >
-                      {language === 'ar' ? (formData.paymentMethod === 'installments' ? 'مراجعة الطلب' : 'متابعة للدفع') : (formData.paymentMethod === 'installments' ? 'Review Order' : 'Continue to Payment')}
-                      <ChevronLeft className="mr-2 group-hover:-translate-x-2 transition-transform" />
+                      {formData.paymentMethod === 'installments' ? t('reviewOrder') : t('continueToPayment')}
+                      <ChevronLeft className={`mr-2 group-hover:-translate-x-2 transition-transform ${language === 'en' ? 'rotate-180 group-hover:translate-x-2' : ''}`} />
                     </Button>
                   </div>
                 </motion.div>
@@ -403,9 +403,9 @@ export default function Checkout() {
 
               {step === "payment" && (
                 <motion.div key="payment" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-8 text-right">
-                  <div className="bg-white p-4 sm:p-8 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-gray-50 font-arabic">
-                    <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 mb-6 md:mb-8">{language === 'ar' ? 'طريقة الدفع' : 'Payment Method'}</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-8 md:mb-10">
+                  <div className="bg-white p-6 sm:p-10 rounded-[2.5rem] md:rounded-[3rem] shadow-xl border border-gray-50 font-arabic">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 mb-8 md:mb-10">{t('paymentInfo')}</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5 mb-10 md:mb-12">
                       {paymentMethods.map((method: any) => (
                         <button
                           key={method.id}
@@ -434,20 +434,20 @@ export default function Checkout() {
                           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                             <div className="grid md:grid-cols-2 gap-8">
                               <div className="md:col-span-2 space-y-2">
-                                <label className="font-bold text-gray-700 text-sm">الاسم على البطاقة</label>
-                                <Input name="cardName" value={formData.cardName} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold" />
+                                <label className="font-bold text-gray-700 text-sm">{t('cardName')}</label>
+                                <Input name="cardName" value={formData.cardName} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold focus-visible:ring-primary" />
                               </div>
                               <div className="md:col-span-2 space-y-2">
-                                <label className="font-bold text-gray-700 text-sm">رقم البطاقة</label>
-                                <Input name="cardNumber" value={formData.cardNumber} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold" placeholder="0000 0000 0000 0000" />
+                                <label className="font-bold text-gray-700 text-sm">{t('cardNumber')}</label>
+                                <Input name="cardNumber" value={formData.cardNumber} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold focus-visible:ring-primary" placeholder="0000 0000 0000 0000" />
                               </div>
                               <div className="space-y-2">
-                                <label className="font-bold text-gray-700 text-sm">تاريخ الانتهاء</label>
-                                <Input name="cardExpiry" value={formData.cardExpiry} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold" placeholder="MM / YY" />
+                                <label className="font-bold text-gray-700 text-sm">{t('cardExpiry')}</label>
+                                <Input name="cardExpiry" value={formData.cardExpiry} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold focus-visible:ring-primary" placeholder="MM / YY" />
                               </div>
                               <div className="space-y-2">
-                                <label className="font-bold text-gray-700 text-sm">CVV</label>
-                                <Input name="cardCVC" value={formData.cardCVC} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold" placeholder="***" type="password" maxLength={3} />
+                                <label className="font-bold text-gray-700 text-sm">{t('cardCVC')}</label>
+                                <Input name="cardCVC" value={formData.cardCVC} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold focus-visible:ring-primary" placeholder="***" type="password" maxLength={3} />
                               </div>
                             </div>
                           </motion.div>
@@ -464,18 +464,18 @@ export default function Checkout() {
                         <div className="space-y-5">
                           <div className={`rounded-[2rem] p-7 border-2 text-center ${isFull ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
                             <Wallet size={40} className={`mx-auto mb-3 ${isFull ? 'text-emerald-600' : 'text-amber-600'}`} />
-                            <p className="text-sm font-black text-gray-500 uppercase tracking-widest mb-1">رصيد المحفظة</p>
+                            <p className="text-sm font-black text-gray-500 uppercase tracking-widest mb-1">{t('walletBalance')}</p>
                             <p className={`text-4xl font-black mb-1 ${isFull ? 'text-emerald-600' : 'text-amber-600'}`}>{formatPrice(walletBal)}</p>
                             {isFull ? (
-                              <p className="text-emerald-700 font-bold text-sm">✓ رصيدك كافٍ</p>
+                              <p className="text-emerald-700 font-bold text-sm">✓ {t('sufficientBalance')}</p>
                             ) : (
-                              <p className="text-amber-700 font-bold text-sm">رصيدك غير كافٍ — ناقص {formatPrice(shortfall)}</p>
+                              <p className="text-amber-700 font-bold text-sm">{t('insufficientBalance').replace('{amount}', formatPrice(shortfall))}</p>
                             )}
                           </div>
                           {!isFull && (
                             <div className="grid grid-cols-2 gap-3 mt-4">
-                              <Button variant={formData.topUpMethod === 'card' ? 'default' : 'outline'} onClick={() => setFormData({ ...formData, topUpMethod: 'card' })} className={`h-12 rounded-xl border-gray-300 font-bold ${formData.topUpMethod !== 'card' ? 'text-gray-900 shadow-sm' : ''}`}>بطاقة بنكية</Button>
-                              <Button variant={formData.topUpMethod === 'cash' ? 'default' : 'outline'} onClick={() => setFormData({ ...formData, topUpMethod: 'cash' })} className={`h-12 rounded-xl border-gray-300 font-bold ${formData.topUpMethod !== 'cash' ? 'text-gray-900 shadow-sm' : ''}`}>دفع عند التسليم</Button>
+                              <Button variant={formData.topUpMethod === 'card' ? 'default' : 'outline'} onClick={() => setFormData({ ...formData, topUpMethod: 'card' })} className={`h-12 rounded-xl border-gray-300 font-bold ${formData.topUpMethod !== 'card' ? 'text-gray-900 shadow-sm' : ''}`}>{t('bankCard')}</Button>
+                              <Button variant={formData.topUpMethod === 'cash' ? 'default' : 'outline'} onClick={() => setFormData({ ...formData, topUpMethod: 'cash' })} className={`h-12 rounded-xl border-gray-300 font-bold ${formData.topUpMethod !== 'cash' ? 'text-gray-900 shadow-sm' : ''}`}>{t('cashOnDelivery')}</Button>
                             </div>
                           )}
                         </div>
@@ -550,7 +550,7 @@ export default function Checkout() {
                     )}
 
                     <div className="grid grid-cols-2 gap-4 mt-12 font-arabic">
-                      <Button onClick={() => setStep("shipping")} variant="outline" className="h-16 rounded-full border-2 text-xl font-bold text-gray-900 border-gray-300">العودة</Button>
+                      <Button onClick={() => setStep("shipping")} variant="outline" className="h-16 rounded-full border-2 text-xl font-bold text-gray-900 border-gray-300">{t('back')}</Button>
                       <Button
                         onClick={() => {
                           if (formData.paymentMethod === 'installments') {
@@ -574,9 +574,9 @@ export default function Checkout() {
                           }
                           setStep("review");
                         }}
-                        className="h-16 rounded-full bg-primary hover:bg-primary/90 text-xl font-bold group text-white"
+                        className="h-16 rounded-full bg-primary hover:bg-primary/90 text-xl font-bold group text-white shadow-xl shadow-primary/20"
                       >
-                        مراجعة الطلب <ChevronLeft className="mr-3 group-hover:-translate-x-2 transition-transform" />
+                        {t('reviewOrder')} <ChevronLeft className={`mr-3 group-hover:-translate-x-2 transition-transform ${language === 'en' ? 'rotate-180 group-hover:translate-x-2' : ''}`} />
                       </Button>
                     </div>
                   </div>
@@ -609,12 +609,12 @@ export default function Checkout() {
                 <motion.div key="review" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="space-y-8">
                   <div className="bg-white p-10 rounded-[3rem] shadow-xl border border-gray-50 text-right font-arabic">
                     <CheckCircle2 size={64} className="text-green-500 mx-auto mb-6" />
-                    <h2 className="text-3xl font-black text-gray-900 mb-2 text-center">مراجعة الطلب</h2>
-                    <p className="text-gray-500 text-center mb-12 text-lg">أنت على وشك اقتناء أفضل المنتجات التقنية</p>
+                    <h2 className="text-3xl font-black text-gray-900 mb-2 text-center">{t('reviewOrderTitle')}</h2>
+                    <p className="text-gray-500 text-center mb-12 text-lg">{t('reviewOrderDesc')}</p>
                     <div className="grid grid-cols-2 gap-4 mt-16">
-                      <Button onClick={() => setStep(formData.paymentMethod === 'installments' ? "shipping" : "payment")} variant="outline" className="h-16 rounded-full border-2 text-xl font-bold font-arabic text-gray-900 border-gray-300">العودة</Button>
+                      <Button onClick={() => setStep(formData.paymentMethod === 'installments' ? "shipping" : "payment")} variant="outline" className="h-16 rounded-full border-2 text-xl font-bold font-arabic text-gray-900 border-gray-300">{t('back')}</Button>
                       <Button onClick={handlePlaceOrder} disabled={placeOrderMutation.isPending} className="h-16 rounded-full bg-primary hover:bg-primary/90 text-xl font-bold text-white shadow-xl shadow-primary/20 font-arabic">
-                        {placeOrderMutation.isPending ? <Loader2 className="animate-spin" /> : 'تأكيد الطلب'}
+                        {placeOrderMutation.isPending ? <Loader2 className="animate-spin" /> : t('confirmOrder')}
                       </Button>
                     </div>
                   </div>
@@ -628,15 +628,19 @@ export default function Checkout() {
                       <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-6 shadow-inner shadow-blue-200">
                         <Loader2 size={40} className="text-blue-500 animate-spin" />
                       </div>
-                      <h2 className="text-4xl font-black text-gray-900 mb-4 tracking-tight">طلب التقسيط قيد المراجعة</h2>
-                      <p className="text-xl text-gray-500 font-bold mb-4">نشكرك على تقديم طلب التقسيط رقم <span className="text-primary tracking-widest text-2xl ml-2">#{orderResult.orderNumber}</span></p>
-                      <p className="text-md text-gray-400 font-bold mb-10 max-w-sm mx-auto">نقوم حالياً بمراجعة مستنداتك والموافقة على الطلب. سنقوم بإشعارك قريباً لدفع الدفعة الأولى.</p>
+                      <h2 className="text-4xl font-black text-gray-900 mb-4 tracking-tight">{language === 'ar' ? 'طلب التقسيط قيد المراجعة' : 'Installment Request Under Review'}</h2>
+                      <p className="text-xl text-gray-500 font-bold mb-4">{t('orderNumberLabel')} <span className="text-primary tracking-widest text-2xl ml-2">#{orderResult.orderNumber}</span></p>
+                      <p className="text-md text-gray-400 font-bold mb-10 max-w-sm mx-auto">
+                        {language === 'ar'
+                          ? 'نقوم حالياً بمراجعة مستنداتك والموافقة على الطلب. سنقوم بإشعارك قريباً لدفع الدفعة الأولى.'
+                          : 'We are currently reviewing your documents. We will notify you soon to pay the down payment.'}
+                      </p>
                     </>
                   ) : (
                     <>
                       <CheckCircle2 size={64} className="text-green-500 mx-auto mb-8" />
-                      <h2 className="text-4xl font-black text-gray-900 mb-4 tracking-tight">تهانينا! تم استلام طلبك</h2>
-                      <p className="text-xl text-gray-500 font-bold mb-10">رقم الطلب الخاص بك هو <span className="text-primary tracking-widest text-2xl ml-2">#{orderResult.orderNumber}</span></p>
+                      <h2 className="text-4xl font-black text-gray-900 mb-4 tracking-tight">{t('congratulations')}</h2>
+                      <p className="text-xl text-gray-500 font-bold mb-10">{t('orderNumberLabel')} <span className="text-primary tracking-widest text-2xl ml-2">#{orderResult.orderNumber}</span></p>
                     </>
                   )}
                   <Button onClick={() => {

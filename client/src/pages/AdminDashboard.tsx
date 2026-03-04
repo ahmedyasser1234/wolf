@@ -823,21 +823,18 @@ export default function AdminDashboard() {
         {
           activeTab === "orders" && (
             <div>
-              <h2 className="text-2xl font-black text-gray-900 mb-6 flex items-center gap-3">
-                <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center">
-                  <ShoppingCart className="w-6 h-6 text-orange-600" />
+              <h2 className="text-2xl font-black text-white mb-6 flex items-center gap-3">
+                <div className="w-10 h-10 bg-orange-900/30 rounded-xl flex items-center justify-center">
+                  <ShoppingCart className="w-6 h-6 text-orange-400" />
                 </div>
-                {t('adminPaidOrders')}
+                {t('orders')}
               </h2>
 
-              <Card className="border-0 shadow-sm overflow-hidden">
-                <div className="bg-orange-50 px-6 py-3 border-b border-orange-100">
-                  <p className="text-xs font-bold text-orange-600">{t('paidOrdersDesc')}</p>
-                </div>
+              <Card className="border border-gray-800 rounded-[2.5rem] bg-background shadow-none overflow-hidden">
                 <CardContent className="p-0">
                   {/* Mobile Order Cards */}
                   <div className="md:hidden space-y-4 p-4">
-                    {adminOrders?.filter((o: any) => o.paymentStatus === 'paid').map((order: any) => (
+                    {adminOrders?.map((order: any) => (
                       <Card key={order.id} className="border border-gray-100 shadow-sm rounded-2xl overflow-hidden bg-white">
                         <CardContent className="p-4 space-y-3">
                           <div className="flex justify-between items-start">
@@ -880,27 +877,52 @@ export default function AdminDashboard() {
                           <th className="py-4 px-6 font-black text-white text-start">{t('orderNumber')}</th>
                           <th className="py-4 px-6 font-black text-white text-start">{t('customer')}</th>
                           <th className="py-4 px-6 font-black text-white text-center">{t('amount')}</th>
+                          <th className="py-4 px-6 font-black text-white text-center">{language === 'ar' ? 'وسيلة الدفع' : 'Payment Method'}</th>
+                          <th className="py-4 px-6 font-black text-white text-center">{language === 'ar' ? 'حالة الدفع' : 'Payment Status'}</th>
                           <th className="py-4 px-6 font-black text-white text-center">{t('deliveryStatus')}</th>
                           <th className="py-4 px-6 font-black text-white text-end">{t('actions')}</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {adminOrders?.filter((o: any) => o.paymentStatus === 'paid').map((order: any) => (
+                        {adminOrders?.map((order: any) => (
                           <tr key={order.id} className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
                             <td className="py-4 px-6 font-bold text-white text-start">{order.orderNumber}</td>
-                            <td className="py-4 px-6 text-white font-medium text-start">{order.customerName || `${t('customer')} #${order.customerId}`}</td>
+                            <td className="py-4 px-6 text-white font-medium text-start">{order.customer?.name || order.shippingAddress?.name || `${t('customer')} #${order.customerId}`}</td>
                             <td className="py-4 px-6 font-black text-white text-center">{Number(order.total).toFixed(2)} {t('currency')}</td>
                             <td className="py-4 px-6 text-center">
-                              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${order.status === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                              <span className="px-3 py-1 bg-gray-800 text-gray-300 rounded-full text-[10px] font-black uppercase tracking-wider border border-gray-700">
+                                {order.paymentMethod === 'cod' || order.paymentMethod === 'cashOnDelivery' ? (language === 'ar' ? 'دفع عند الاستلام' : 'COD') :
+                                  order.paymentMethod === 'installments' ? (language === 'ar' ? 'تقسيط' : 'Installments') :
+                                    order.paymentMethod === 'wallet' ? (language === 'ar' ? 'محفظة' : 'Wallet') : (language === 'ar' ? 'بطاقة' : 'Card')}
+                              </span>
+                            </td>
+                            <td className="py-4 px-6 text-center">
+                              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${order.paymentStatus === 'paid' ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800/50' :
+                                  order.paymentStatus === 'failed' ? 'bg-red-900/40 text-red-400 border-red-800/50' :
+                                    order.paymentStatus === 'pending_kyc_review' ? 'bg-amber-900/40 text-amber-500 border-amber-800/50' :
+                                      'bg-blue-900/40 text-blue-400 border-blue-800/50'
                                 }`}>
-                                {order.status === 'delivered' ? t('delivered') : t('processing')}
+                                {order.paymentStatus === 'paid' ? (language === 'ar' ? 'مدفوع' : 'Paid') :
+                                  order.paymentStatus === 'pending_kyc_review' ? (language === 'ar' ? 'مراجعة أوراق' : 'Reviewing') :
+                                    order.paymentStatus === 'pending_payment' ? (language === 'ar' ? 'بانتظار المقدم' : 'Awaiting Downpayment') :
+                                      (language === 'ar' ? 'معلق' : 'Pending')}
+                              </span>
+                            </td>
+                            <td className="py-4 px-6 text-center">
+                              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${order.status === 'delivered' ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800/50' :
+                                  order.status === 'cancelled' ? 'bg-red-900/40 text-red-400 border-red-800/50' :
+                                    'bg-blue-900/40 text-blue-400 border-blue-800/50'
+                                }`}>
+                                {order.status === 'delivered' ? t('delivered') :
+                                  order.status === 'cancelled' ? (language === 'ar' ? 'ملغى' : 'Cancelled') :
+                                    t('processing')}
                               </span>
                             </td>
                             <td className="py-4 px-6 text-end">
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="text-purple-600 font-bold hover:bg-purple-50"
+                                className="text-purple-400 font-bold hover:bg-purple-900/30"
                                 onClick={() => {
                                   setSelectedOrder(order);
                                   setIsAdminOrderModalOpen(true);
