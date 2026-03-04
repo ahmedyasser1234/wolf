@@ -12,17 +12,31 @@ export class OrdersController {
     ) { }
 
     private async getUserId(req: Request): Promise<number> {
-        const token = req.headers.authorization?.startsWith('Bearer ')
-            ? req.headers.authorization.split(' ')[1]
-            : req.cookies?.[COOKIE_NAME];
+        const authHeader = req.headers.authorization;
+        const cookieToken = req.cookies?.[COOKIE_NAME];
 
-        if (!token) throw new UnauthorizedException();
+        console.log(`🔑 [OrdersController] Auth Check - Header: ${!!authHeader}, Cookie: ${!!cookieToken}`);
+
+        const token = authHeader?.startsWith('Bearer ')
+            ? authHeader.split(' ')[1]
+            : cookieToken;
+
+        if (!token) {
+            console.log('❌ [OrdersController] No token found in request');
+            throw new UnauthorizedException();
+        }
 
         const payload = await this.authService.verifySession(token);
-        if (!payload) throw new UnauthorizedException();
+        if (!payload) {
+            console.log('❌ [OrdersController] Invalid or expired token');
+            throw new UnauthorizedException();
+        }
 
         const user = await this.authService.findUserByOpenId(payload.openId);
-        if (!user) throw new UnauthorizedException('User not found');
+        if (!user) {
+            console.log(`❌ [OrdersController] User not found for openId: ${payload.openId}`);
+            throw new UnauthorizedException('User not found');
+        }
 
         return user.id;
     }
@@ -41,6 +55,7 @@ export class OrdersController {
     @Post()
     async create(
         @Req() req: Request,
+        @Body() fullBody: any,
         @Body('shippingAddress') shippingAddress: any,
         @Body('paymentMethod') paymentMethod?: string,
         @Body('couponCode') couponCode?: string,
@@ -48,8 +63,18 @@ export class OrdersController {
         @Body('installmentPlanId') installmentPlanId?: number,
         @Body('kycData') kycData?: any,
     ) {
+        console.log('📩 [OrdersController] POST /api/orders RECEIVED');
         const userId = await this.getUserId(req);
-        console.log('📦 Creating order with couponCode:', couponCode, 'WalletUsed:', walletAmountUsed, 'Installment:', installmentPlanId);
+        console.log(`📦 [OrdersController] Creating order for User: ${userId}`);
+        console.log('   - Payload Summary:', {
+            paymentMethod,
+            couponCode,
+            walletAmountUsed,
+            installmentPlanId,
+            hasKyc: !!kycData,
+            hasAddress: !!shippingAddress
+        });
+
         return this.ordersService.create(userId, shippingAddress, paymentMethod, couponCode, walletAmountUsed || 0, installmentPlanId, kycData);
     }
 

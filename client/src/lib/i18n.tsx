@@ -12,13 +12,13 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-    // Initialize from localStorage or default to Arabic
+    // Initialize from localStorage or default to English
     const [language, setLanguageState] = useState<Language>(() => {
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('language');
-            return (saved === 'ar' || saved === 'en') ? (saved as Language) : 'ar';
+            return (saved === 'ar' || saved === 'en') ? (saved as Language) : 'en';
         }
-        return 'ar';
+        return 'en';
     });
 
     useEffect(() => {
