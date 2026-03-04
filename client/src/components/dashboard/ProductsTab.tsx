@@ -561,28 +561,28 @@ export default function ProductsTab({ collectionId, onProductClick, onPreview, s
                                                 <h4 className="font-black text-white uppercase tracking-widest text-xs">{language === 'ar' ? "التسعير والكمية" : "Pricing & Stock"}</h4>
                                             </div>
 
-                                            <div className="bg-gray-900 p-4 sm:p-6 rounded-2xl md:rounded-[32px] border border-gray-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative overflow-visible">
+                                            <div className="bg-gray-900 p-4 sm:p-6 rounded-2xl md:rounded-[32px] border border-gray-800 grid grid-cols-1 md:grid-cols-2 gap-6 relative overflow-visible">
                                                 <div className="space-y-2">
-                                                    <label className="text-[10px] sm:text-[11px] font-black text-gray-400 block">{language === 'ar' ? "السعر الأصلي" : "BASE PRICE"}</label>
+                                                    <label className="text-xs sm:text-sm font-black text-gray-400 block">{language === 'ar' ? "السعر الأصلي" : "BASE PRICE"}</label>
                                                     <div className="relative">
-                                                        <Input type="number" value={price} onChange={e => setPrice(e.target.value)} className="h-14 rounded-2xl border-gray-700 bg-gray-800 shadow-sm font-black text-white text-lg px-4 rtl:pl-12 ltr:pr-12 focus:ring-2 focus:ring-pink-500/50" />
-                                                        <span className="absolute rtl:left-4 ltr:right-4 top-1/2 -translate-y-1/2 text-sm font-black text-gray-500 pointer-events-none">{t('currency')}</span>
+                                                        <Input type="number" value={price} onChange={e => setPrice(e.target.value)} className="h-16 rounded-2xl border-gray-700 bg-gray-800 shadow-sm font-black text-white text-xl px-4 rtl:pl-14 ltr:pr-14 focus:ring-2 focus:ring-pink-500/50" />
+                                                        <span className="absolute rtl:left-5 ltr:right-5 top-1/2 -translate-y-1/2 text-sm font-black text-gray-500 pointer-events-none">{t('currency')}</span>
                                                     </div>
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-[10px] sm:text-[11px] font-black text-gray-400 block">{language === 'ar' ? "الخصم %" : "DISCOUNT %"}</label>
+                                                    <label className="text-xs sm:text-sm font-black text-gray-400 block">{language === 'ar' ? "الخصم %" : "DISCOUNT %"}</label>
                                                     <div className="relative">
-                                                        <Input type="number" value={discount} onChange={e => setDiscount(e.target.value)} className="h-14 rounded-2xl border-gray-700 bg-gray-800 shadow-sm font-black text-white text-lg px-4 rtl:pl-12 ltr:pr-12 focus:ring-2 focus:ring-pink-500/50" />
-                                                        <span className="absolute rtl:left-4 ltr:right-4 top-1/2 -translate-y-1/2 text-sm font-black text-gray-500 pointer-events-none">%</span>
+                                                        <Input type="number" value={discount} onChange={e => setDiscount(e.target.value)} className="h-16 rounded-2xl border-gray-700 bg-gray-800 shadow-sm font-black text-white text-xl px-4 rtl:pl-14 ltr:pr-14 focus:ring-2 focus:ring-pink-500/50" />
+                                                        <span className="absolute rtl:left-5 ltr:right-5 top-1/2 -translate-y-1/2 text-lg font-black text-gray-500 pointer-events-none">%</span>
                                                     </div>
                                                 </div>
-                                                <div className="space-y-2 sm:col-span-2 lg:col-span-1">
-                                                    <label className="text-[10px] sm:text-[11px] font-black text-gray-400 block">{language === 'ar' ? "الكمية الإجمالية" : "TOTAL STOCK"}</label>
-                                                    <Input type="number" value={stock} onChange={e => setStock(e.target.value)} className="h-14 rounded-2xl border-gray-700 bg-gray-800 shadow-sm font-black text-white text-lg px-4 focus:ring-2 focus:ring-pink-500/50" />
+                                                <div className="space-y-2 md:col-span-2">
+                                                    <label className="text-xs sm:text-sm font-black text-gray-400 block">{language === 'ar' ? "الكمية الإجمالية" : "TOTAL STOCK"}</label>
+                                                    <Input type="number" value={stock} onChange={e => setStock(e.target.value)} className="h-16 rounded-2xl border-gray-700 bg-gray-800 shadow-sm font-black text-white text-xl px-4 focus:ring-2 focus:ring-pink-500/50" />
                                                 </div>
-                                                <div className="col-span-1 sm:col-span-2 lg:col-span-3 mt-4 pt-6 border-t border-gray-800/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
-                                                    <span className="text-xs sm:text-sm font-black text-gray-500">{language === 'ar' ? "السعر النهائي للمشتري:" : "Final Listing Price:"}</span>
-                                                    <span className="text-xl sm:text-3xl font-black text-[#e91e63] self-end sm:self-auto">{calculateFinalPrice()} <span className="text-xs">{t('currency')}</span></span>
+                                                <div className="col-span-1 md:col-span-2 mt-4 pt-6 border-t border-gray-800/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+                                                    <span className="text-sm sm:text-base font-black text-gray-500">{language === 'ar' ? "السعر النهائي للمشتري:" : "Final Listing Price:"}</span>
+                                                    <span className="text-2xl sm:text-4xl font-black text-[#e91e63] self-end sm:self-auto">{calculateFinalPrice()} <span className="text-sm">{t('currency')}</span></span>
                                                 </div>
                                             </div>
                                         </div>
