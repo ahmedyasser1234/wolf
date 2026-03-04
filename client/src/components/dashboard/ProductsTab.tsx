@@ -589,9 +589,9 @@ export default function ProductsTab({ collectionId, onProductClick, onPreview, s
                                                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-gray-700 pointer-events-none">%</span>
                                                     </div>
                                                 </div>
-                                                <div className="col-span-2 mt-4 pt-6 border-t border-gray-800/50 flex items-center justify-between">
+                                                <div className="col-span-1 sm:col-span-2 mt-4 pt-6 border-t border-gray-800/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
                                                     <span className="text-xs sm:text-sm font-black text-gray-500">{language === 'ar' ? "السعر النهائي للمشتري:" : "Final Listing Price:"}</span>
-                                                    <span className="text-xl sm:text-3xl font-black text-[#e91e63]">{calculateFinalPrice()} <span className="text-xs">{t('currency')}</span></span>
+                                                    <span className="text-xl sm:text-3xl font-black text-[#e91e63] self-end sm:self-auto">{calculateFinalPrice()} <span className="text-xs">{t('currency')}</span></span>
                                                 </div>
                                             </div>
                                         </div>
