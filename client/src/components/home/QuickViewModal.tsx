@@ -24,7 +24,6 @@ export function QuickViewModal({ initialProduct, isOpen, onClose }: QuickViewMod
     const queryClient = useQueryClient();
     const addToCartMutation = useAddToCart();
     const [selectedImage, setSelectedImage] = useState(0);
-    const [selectedSize, setSelectedSize] = useState<string | null>(null);
     const [selectedColor, setSelectedColor] = useState<string | null>(null);
 
     // Fetch full product details when modal is open
@@ -117,29 +116,7 @@ export function QuickViewModal({ initialProduct, isOpen, onClose }: QuickViewMod
                             {description}
                         </p>
 
-                        {/* Sizes */}
-                        {sizes.length > 0 && (
-                            <div className="mb-6">
-                                <span className="text-sm font-bold text-gray-900 mb-3 block">{t('size')}</span>
-                                <div className="flex flex-wrap gap-2">
-                                    {sizes.map((sizeItem: any) => {
-                                        const sizeName = typeof sizeItem === 'string' ? sizeItem : sizeItem.size;
-                                        return (
-                                            <button
-                                                key={sizeName}
-                                                onClick={() => setSelectedSize(sizeName)}
-                                                className={`h-10 min-w-[2.5rem] px-3 rounded-lg border-2 font-bold text-sm transition-all ${selectedSize === sizeName
-                                                    ? 'border-gray-900 bg-gray-900 text-white'
-                                                    : 'border-gray-200 text-gray-600 hover:border-gray-900'
-                                                    }`}
-                                            >
-                                                {sizeName}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        )}
+
 
                         {/* Colors */}
                         {colors.length > 0 && (
@@ -175,7 +152,6 @@ export function QuickViewModal({ initialProduct, isOpen, onClose }: QuickViewMod
                                         addToCartMutation.mutate({
                                             productId: product.id,
                                             quantity: 1,
-                                            size: selectedSize || undefined,
                                             color: selectedColor || undefined,
                                             product: {
                                                 id: product.id,

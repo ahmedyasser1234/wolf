@@ -165,14 +165,10 @@ export default function ProductPreviewView({ productId, onBack }: ProductPreview
                             <span className="px-4 py-1 bg-white/10 rounded-full text-xs font-black uppercase tracking-widest">Live Inventory</span>
                         </div>
 
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 relative z-10">
-                            {product.sizes?.map((s: any, i: number) => (
-                                <div key={i} className="bg-white/5 border border-white/10 p-4 rounded-2xl text-center">
-                                    <p className="text-[10px] font-black text-white/40 mb-1">{language === 'ar' ? "مقاس" : "SIZE"} {s.size}</p>
-                                    <p className="text-2xl font-black">{s.quantity}</p>
-                                    <p className="text-[10px] font-bold text-white/30 uppercase">{language === 'ar' ? "قطعة" : "PCS"}</p>
-                                </div>
-                            ))}
+                        <div className="bg-white/5 border border-white/10 p-4 rounded-2xl text-center">
+                            <p className="text-[10px] font-black text-white/40 mb-1">{language === 'ar' ? "الكمية" : "QTY"}</p>
+                            <p className="text-2xl font-black">{product.stock || 0}</p>
+                            <p className="text-[10px] font-bold text-white/30 uppercase">{language === 'ar' ? "متاحة" : "AVAIL"}</p>
                         </div>
                         <Package className="absolute -left-12 -bottom-12 w-48 h-48 text-white/5 rotate-12" />
                     </Card>

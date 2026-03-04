@@ -181,6 +181,7 @@ export const productColors = pgTable(
         colorName: text("colorName").notNull(),
         colorCode: text("colorCode").notNull(), // Hex code like "#FF0000"
         images: jsonb("images").$type<string[]>(),
+        quantity: integer("quantity").notNull().default(0), // Quantity specific to this color
         createdAt: timestamp("createdAt").defaultNow().notNull(),
     },
     (table) => ({

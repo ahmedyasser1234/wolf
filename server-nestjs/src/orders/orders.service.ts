@@ -248,22 +248,73 @@ export class OrdersService {
 
                 // Handle Installments if selected
                 let requiresInstallmentReview = false;
+                let actualAmountToPayOnline = remainingToPay;
 
-                if (remainingToPay > 0 && paymentMethod !== 'cash_on_delivery' && !requiresInstallmentReview) {
-                    console.log(`  - [Stripe/Gateway] Creating session for remaining: ${remainingToPay}`);
+                if (installmentPlanId && createdOrders.length > 0) {
+                    console.log(`  - [Installments] Processing installment request for plan ${installmentPlanId}`);
+                    const totalItems = cart.reduce((sum, i) => sum + i.quantity, 0);
+                    const baseTotalToFinance = createdOrders.reduce((sum, o) => sum + Number(o.total), 0) - (walletAmountUsed || 0);
+
+                    if (baseTotalToFinance > 0) {
+                        const [plan] = await tx.select().from(installmentPlans).where(eq(installmentPlans.id, installmentPlanId)).limit(1);
+                        if (plan) {
+                            console.log(`  - [Installments] Plan found, validating thresholds`);
+                            // Validation: Min Amount (base)
+                            if (baseTotalToFinance < Number(plan.minAmount)) {
+                                console.error(`  - [Installments] Base total ${baseTotalToFinance} below min ${plan.minAmount}`);
+                                throw new BadRequestException(`الحد الأدنى للتقسيط هو ${plan.minAmount}`);
+                            }
+
+                            // Validation: Quantity Range
+                            const minQ = plan.minQuantity || 1;
+                            const maxQ = plan.maxQuantity || 0;
+                            if (totalItems < minQ || (maxQ > 0 && totalItems > maxQ)) {
+                                console.error(`  - [Installments] Quantity ${totalItems} out of range [${minQ}, ${maxQ}]`);
+                                throw new BadRequestException(`هذا النظام متاح فقط لعدد منتجات بين ${minQ} و ${maxQ > 0 ? maxQ : '∞'}`);
+                            }
+
+                            const interestAmount = baseTotalToFinance * (plan.interestRate || 0) / 100;
+                            const totalWithInterest = baseTotalToFinance + interestAmount;
+                            const dpPct = plan.downPaymentPercentage || 0;
+
+                            // Calculate the Down Payment that must be paid NOW
+                            const downPayment = totalWithInterest * dpPct / 100;
+                            const financedAmount = totalWithInterest - downPayment;
+
+                            actualAmountToPayOnline = downPayment; // Only charge down payment online right now
+
+                            requiresInstallmentReview = true; // Indicates it is an installment order, but we STILL charge `actualAmountToPayOnline`
+
+                            console.log(`  - [Installments] Recording installment record, financed: ${financedAmount}, downPaymentToPayNow: ${downPayment}`);
+                            await tx.insert(installments).values({
+                                orderId: createdOrders[0].id,
+                                totalAmount: financedAmount,
+                                remainingAmount: financedAmount,
+                                installmentsCount: plan.months,
+                                status: 'pending_approval',
+                                nextPaymentDate: null,
+                                createdAt: new Date(),
+                                updatedAt: new Date(),
+                            });
+                        }
+                    }
+                }
+
+                if (actualAmountToPayOnline > 0 && paymentMethod !== 'cash_on_delivery') {
+                    console.log(`  - [Stripe/Gateway] Creating session for amount: ${actualAmountToPayOnline}`);
                     const [customer] = await tx.select().from(users).where(eq(users.id, customerId)).limit(1);
 
-                    // If paymentMethod is 'card' or empty, default to 'stripe' for backward compatibility
-                    const gateway = (paymentMethod === 'card' || !paymentMethod) ? 'stripe' : paymentMethod;
+                    // If paymentMethod is 'card' or empty or 'installments', default to 'stripe' for backward compatibility
+                    const gateway = (paymentMethod === 'card' || !paymentMethod || paymentMethod === 'installments') ? 'stripe' : paymentMethod;
 
                     const session = await this.paymentsService.createCheckoutSession(
                         gateway,
                         createdOrders[0].id,
-                        remainingToPay,
+                        actualAmountToPayOnline,
                         customer.email!
                     );
                     stripeCheckoutUrl = session.url;
-                } else if (remainingToPay <= 0 && !requiresInstallmentReview) {
+                } else if (actualAmountToPayOnline <= 0 && !requiresInstallmentReview) {
                     console.log(`  - [Payment] Fully paid by wallet, marking as confirmed`);
                     // Fully paid by wallet
                     for (const order of createdOrders) {
@@ -532,8 +583,27 @@ export class OrdersService {
                 }
             }
 
+            // Re-calculate the down payment paid and refund it to wallet
+            if (order.installmentPlanId) {
+                const [plan] = await this.databaseService.db.select().from(installmentPlans).where(eq(installmentPlans.id, order.installmentPlanId)).limit(1);
+                if (plan) {
+                    const interestAmount = Number(order.total) * (plan.interestRate || 0) / 100;
+                    const totalWithInterest = Number(order.total) + interestAmount;
+                    const dpPct = plan.downPaymentPercentage || 0;
+                    const downPaymentPaid = totalWithInterest * dpPct / 100;
+
+                    if (downPaymentPaid > 0) {
+                        await this.walletsService.topUpBalance(
+                            order.customerId,
+                            downPaymentPaid,
+                            `استرجاع مقدم الدفع لرفض طلب التقسيط #${order.orderNumber}`
+                        );
+                    }
+                }
+            }
+
             // Notify Customer
-            const message = reason ? `نعتذر، تم رفض طلب التقسيط للطلب رقم #${order.orderNumber}: ${reason}` : `نعتذر، تم رفض طلب التقسيط للطلب رقم #${order.orderNumber}.`;
+            const message = reason ? `نعتذر، تم رفض طلب التقسيط للطلب رقم #${order.orderNumber}: ${reason}. تم استرجاع مبلغ المقدم إلى محفظتك.` : `نعتذر، تم رفض طلب التقسيط للطلب رقم #${order.orderNumber}. تم استرجاع مبلغ المقدم إلى محفظتك.`;
             await this.notificationsService.notify(
                 order.customerId,
                 'kyc_rejected',

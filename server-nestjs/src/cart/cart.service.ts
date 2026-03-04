@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { cartItems, products } from '../database/schema';
+import { cartItems, products, productColors } from '../database/schema';
 import { eq, and, isNull } from 'drizzle-orm';
 
 @Injectable()
@@ -37,12 +37,19 @@ export class CartService {
         const prod = product[0];
 
         // Stock Validation
-        if (size) {
-            const sizes = prod.sizes as { size: string; quantity: number }[] | null;
-            const sizeObj = sizes?.find(s => s.size === size);
+        if (color) {
+            const colorVariant = await this.databaseService.db
+                .select()
+                .from(productColors)
+                .where(and(eq(productColors.productId, productId), eq(productColors.colorName, color)))
+                .limit(1);
 
-            if (!sizeObj || sizeObj.quantity < quantity) {
-                throw new BadRequestException(sizeObj ? 'الكمية غير متوفرة لهذا المقاس' : 'المقاس غير متوفر');
+            if (colorVariant.length === 0) {
+                throw new BadRequestException('اللون غير متوفر');
+            }
+
+            if (colorVariant[0].quantity < quantity) {
+                throw new BadRequestException('الكمية غير متوفرة لهذا اللون');
             }
         } else {
             if ((prod.stock || 0) < quantity) {

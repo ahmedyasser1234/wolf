@@ -142,10 +142,6 @@ export default function ProductDetail() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedColor, setSelectedColor] = useState<any>(null);
 
-  // Multi-size quantity state: { "M": 2, "L": 1 }
-  const [sizeQuantities, setSizeQuantities] = useState<Record<string, number>>({});
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
-
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const [activeTab, setActiveTab] = useState<"details" | "reviews">("details");
@@ -238,70 +234,27 @@ export default function ProductDetail() {
     };
   }, [navData, productId]);
 
-  const handleSizeQtyChange = (size: string, delta: number) => {
-    setSizeQuantities(prev => {
-      const current = prev[size] || 0;
-      const maxStock = product.sizes?.find((s: any) => s.size === size)?.quantity || 0;
-      const next = Math.max(0, Math.min(maxStock, current + delta));
-      return { ...prev, [size]: next };
-    });
-  };
-
-  const totalSelectedItems = Object.values(sizeQuantities).reduce((a, b) => a + b, 0);
-
-  const handleAddToCartMulti = async () => {
+  const handleAddToCart = () => {
     // Check if user is admin
     if (user && user.role === 'admin') {
       toast.error(language === 'ar' ? "لا يمكن للمسؤول إضافة منتجات للسلة" : "Admins cannot add items to cart");
       return;
     }
 
-    if (product.sizes && product.sizes.length > 0) {
-      if (totalSelectedItems === 0) {
-        toast.error(language === 'ar' ? "الرجاء اختيار الكمية والمقاس" : "Please select quantity and size");
-        return;
+    addToCartMutation.mutate({
+      productId,
+      quantity,
+      color: selectedColor?.colorName,
+      product: {
+        id: product.id,
+        nameAr: product.nameAr,
+        nameEn: product.nameEn,
+        price: product.price,
+        images: product.images,
+        discount: product.discount,
+        category: product.category
       }
-
-      const promises = Object.entries(sizeQuantities).map(async ([size, qty]) => {
-        if (qty > 0) {
-          return addToCartMutation.mutateAsync({
-            productId,
-            quantity: qty,
-            size,
-            color: selectedColor?.colorName,
-            product: {
-              id: product.id,
-              nameAr: product.nameAr,
-              nameEn: product.nameEn,
-              price: product.price,
-              images: product.images,
-              discount: product.discount,
-              category: product.category
-            }
-          });
-        }
-      });
-
-      await Promise.all(promises);
-      setSizeQuantities({});
-      setSelectedSize(null);
-    } else {
-      addToCartMutation.mutate({
-        productId,
-        quantity,
-        size: undefined,
-        color: selectedColor?.colorName,
-        product: {
-          id: product.id,
-          nameAr: product.nameAr,
-          nameEn: product.nameEn,
-          price: product.price,
-          images: product.images,
-          discount: product.discount,
-          category: product.category
-        }
-      });
-    }
+    });
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -973,60 +926,23 @@ export default function ProductDetail() {
                   </div>
                 )}
 
-                {product.sizes && Array.isArray(product.sizes) && product.sizes.length > 0 && (
-                  <div className="mb-6 md:mb-10 relative z-10" dir="rtl">
-                    <p className="text-base md:text-lg font-black text-gray-900 mb-3 md:mb-5">{language === 'ar' ? "المقاس:" : "Size:"}</p>
-                    <div className="flex flex-wrap gap-2 md:gap-3">
-                      {product.sizes.map((sizeObj: any, idx: number) => {
-                        const qty = sizeQuantities[sizeObj.size] || 0;
-                        const isSelected = selectedSize === sizeObj.size;
-                        return (
-                          <div key={idx} className="relative">
-                            <button
-                              onClick={() => setSelectedSize(sizeObj.size)}
-                              className={`min-w-12 h-12 md:min-w-14 md:h-14 px-3 md:px-4 rounded-xl font-black text-base md:text-lg transition-all border-2 ${isSelected ? "-primary -white/5 -primary" : "bg-white text-gray-500 border-gray-100 hover:border-gray-200"}`}
-                            >
-                              {sizeObj.size}
-                            </button>
-                            {qty > 0 && (
-                              <div className="absolute -top-1.5 -right-1.5 md:-top-2 md:-right-2 bg-gray-900 text-white text-[10px] font-black w-5 h-5 md:w-6 md:h-6 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                                {qty}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
                 {user?.role !== 'admin' && (
                   <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 md:gap-6 mb-0 md:mb-12" dir="rtl">
                     <div className="flex items-center justify-between bg-gray-50 rounded-2xl p-1 border border-gray-100 h-14 md:h-16">
                       <button
                         onClick={() => {
-                          if (product.sizes?.length > 0) {
-                            if (selectedSize) handleSizeQtyChange(selectedSize, -1);
-                            else toast.error(language === 'ar' ? "اختر المقاس أولاً" : "Select size first");
-                          } else {
-                            setQuantity(q => Math.max(1, q - 1));
-                          }
+                          setQuantity(q => Math.max(1, q - 1));
                         }}
                         className="w-12 h-full flex items-center justify-center text-gray-400 hover:text-primary transition-colors"
                       >
                         <Minus size={18} strokeWidth={3} />
                       </button>
                       <span className="flex-1 w-10 text-center font-black text-xl text-gray-900">
-                        {product.sizes?.length > 0 ? (selectedSize ? (sizeQuantities[selectedSize as string] || 0) : 0) : quantity}
+                        {quantity}
                       </span>
                       <button
                         onClick={() => {
-                          if (product.sizes?.length > 0) {
-                            if (selectedSize) handleSizeQtyChange(selectedSize, 1);
-                            else toast.error(language === 'ar' ? "اختر المقاس أولاً" : "Select size first");
-                          } else {
-                            setQuantity(q => q + 1);
-                          }
+                          setQuantity(q => q + 1);
                         }}
                         className="w-12 h-full flex items-center justify-center text-gray-400 hover:text-primary transition-colors"
                       >
@@ -1035,7 +951,7 @@ export default function ProductDetail() {
                     </div>
                     <div className="flex gap-4">
                       <Button
-                        onClick={handleAddToCartMulti}
+                        onClick={handleAddToCart}
                         disabled={addToCartMutation.isPending}
                         className="flex-1 h-14 md:h-16 rounded-[2rem] md:rounded-[4rem] bg-gray-800 hover:bg-black text-white text-lg md:text-xl font-black shadow-xl shadow-gray-200 gap-3 md:gap-4 w-full md:w-auto"
                       >

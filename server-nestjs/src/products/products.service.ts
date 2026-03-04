@@ -73,9 +73,11 @@ export class ProductsService {
             const tagsArr = typeof data.tags === 'string' ? JSON.parse(data.tags) : data.tags;
             const colorVariantsArr = typeof data.colorVariants === 'string' ? JSON.parse(data.colorVariants) : data.colorVariants;
 
-            let totalStock = 0;
-            if (Array.isArray(sizesArr)) {
-                totalStock = sizesArr.reduce((sum, s) => sum + (parseInt(s.quantity) || 0), 0);
+            let totalStock = parseInt(data.stock) || 0;
+            // If colors have specific quantities, the total stock is the sum
+            if (Array.isArray(colorVariantsArr) && colorVariantsArr.length > 0) {
+                const colorsStock = colorVariantsArr.reduce((sum, c) => sum + (parseInt(c.quantity) || 0), 0);
+                if (colorsStock > 0) totalStock = colorsStock;
             }
 
             // Price is exactly what the admin sets
@@ -130,6 +132,7 @@ export class ProductsService {
                             productId: newProduct.id,
                             colorName: variant.colorName,
                             colorCode: variant.colorCode,
+                            quantity: parseInt(variant.quantity) || 0,
                             images: variantImages,
                         });
                     }
@@ -308,10 +311,12 @@ export class ProductsService {
 
         const sizesArr = typeof data.sizes === 'string' ? JSON.parse(data.sizes) : data.sizes;
         const tagsArr = typeof data.tags === 'string' ? JSON.parse(data.tags) : data.tags;
+        const colorVariantsArr = typeof data.colorVariants === 'string' ? JSON.parse(data.colorVariants) : data.colorVariants;
 
-        let totalStock = product.stock;
-        if (Array.isArray(sizesArr)) {
-            totalStock = sizesArr.reduce((sum, s) => sum + (parseInt(s.quantity) || 0), 0);
+        let totalStock = parseInt(data.stock) || product.stock;
+        if (Array.isArray(colorVariantsArr) && colorVariantsArr.length > 0) {
+            const colorsStock = colorVariantsArr.reduce((sum, c) => sum + (parseInt(c.quantity) || 0), 0);
+            if (colorsStock > 0) totalStock = colorsStock;
         }
 
         if (data.collectionId) {
@@ -391,6 +396,7 @@ export class ProductsService {
                             .set({
                                 colorName: variant.colorName,
                                 colorCode: variant.colorCode,
+                                quantity: parseInt(variant.quantity) || 0,
                                 images: variantImages,
                             })
                             .where(eq(productColors.id, variant.id));
@@ -400,6 +406,7 @@ export class ProductsService {
                             productId: id,
                             colorName: variant.colorName,
                             colorCode: variant.colorCode,
+                            quantity: parseInt(variant.quantity) || 0,
                             images: variantImages,
                         });
                     }

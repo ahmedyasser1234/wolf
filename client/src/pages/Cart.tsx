@@ -333,9 +333,9 @@ export default function Cart() {
                             ? (item.product?.category?.nameAr || 'تصميم حصري')
                             : (item.product?.category?.nameEn || 'Exclusive Design')}
                         </span>
-                        {item.size && (
+                        {item.color && (
                           <span className="bg-gray-100 px-3 py-1 rounded-lg text-sm font-bold text-gray-700 border border-gray-200">
-                            {language === 'ar' ? 'المقاس' : 'Size'}: {item.size}
+                            {language === 'ar' ? 'اللون' : 'Color'}: {item.color}
                           </span>
                         )}
                       </div>

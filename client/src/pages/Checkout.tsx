@@ -632,8 +632,8 @@ export default function Checkout() {
                       <p className="text-xl text-gray-500 font-bold mb-4">{t('orderNumberLabel')} <span className="text-primary tracking-widest text-2xl ml-2">#{orderResult.orderNumber}</span></p>
                       <p className="text-md text-gray-400 font-bold mb-10 max-w-sm mx-auto">
                         {language === 'ar'
-                          ? 'نقوم حالياً بمراجعة مستنداتك والموافقة على الطلب. سنقوم بإشعارك قريباً لدفع الدفعة الأولى.'
-                          : 'We are currently reviewing your documents. We will notify you soon to pay the down payment.'}
+                          ? 'تم استلام الدفعة الأولى بنجاح! نقوم حالياً بمراجعة مستنداتك للموافقة النهائية على الطلب.'
+                          : 'Down payment received successfully! We are currently reviewing your documents for final approval.'}
                       </p>
                     </>
                   ) : (
