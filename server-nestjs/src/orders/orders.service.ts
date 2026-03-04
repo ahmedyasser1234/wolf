@@ -302,6 +302,20 @@ export class OrdersService {
             await tx.delete(cartItems).where(eq(cartItems.customerId, customerId));
         });
 
+        // Notify Admins of new order(s)
+        for (const order of createdOrders) {
+            try {
+                await this.notificationsService.notifyAdmins(
+                    'new_order',
+                    '🛒 طلب جديد',
+                    `تم استلام طلب جديد رقم #${order.orderNumber} بقيمة ${order.total}`,
+                    order.id
+                );
+            } catch (e) {
+                console.error('Failed to notify admin of new order:', e.message);
+            }
+        }
+
         return { orders: createdOrders, checkoutUrl: stripeCheckoutUrl };
     }
 
