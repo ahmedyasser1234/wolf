@@ -223,12 +223,12 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
     };
 
     return (
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
-            <div className="bg-white p-4 sm:p-8 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-gray-50 text-right overflow-hidden">
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 mb-3 flex items-center justify-end gap-3 font-arabic flex-wrap">
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4 md:space-y-8">
+            <div className="bg-white p-3 sm:p-8 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-gray-50 text-right overflow-hidden">
+                <h2 className="text-lg sm:text-2xl md:text-3xl font-black text-gray-900 mb-2 flex items-center justify-end gap-3 font-arabic flex-wrap">
                     التحقق من الهوية (KYC) <UserCheck className="text-primary" />
                 </h2>
-                <p className="text-gray-500 font-bold mb-8 leading-relaxed font-arabic text-sm">
+                <p className="text-gray-500 font-bold mb-4 md:mb-8 leading-relaxed font-arabic text-xs md:text-sm">
                     لإكمال عملية التقسيط، التقط صورة لوجهك ثم صوّر وثائق الإقامة وجواز السفر.
                 </p>
 

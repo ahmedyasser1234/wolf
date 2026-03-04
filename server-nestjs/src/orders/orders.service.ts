@@ -136,187 +136,220 @@ export class OrdersService {
         const createdOrders: any[] = [];
         let stripeCheckoutUrl = null;
 
-        await this.databaseService.db.transaction(async (tx) => {
-            // Check Wallet Balance if used
-            if (walletAmountUsed > 0) {
-                const [wallet] = await tx.select().from(customerWallets).where(eq(customerWallets.userId, customerId)).limit(1);
-                if (!wallet || Number(wallet.balance) < walletAmountUsed) {
-                    throw new BadRequestException('رصيد المحفظة غير كافٍ');
+        try {
+            console.log(`📦 [OrdersService] START create for customerId: ${customerId}, Method: ${paymentMethod}, InstallmentPlan: ${installmentPlanId}`);
+
+            await this.databaseService.db.transaction(async (tx) => {
+                console.log(`  - [Transaction] Starting transaction for customerId: ${customerId}`);
+
+                // Check Wallet Balance if used
+                if (walletAmountUsed > 0) {
+                    console.log(`  - [Wallet] Checking balance for deduction: ${walletAmountUsed}`);
+                    const [wallet] = await tx.select().from(customerWallets).where(eq(customerWallets.userId, customerId)).limit(1);
+                    if (!wallet || Number(wallet.balance) < walletAmountUsed) {
+                        console.error(`  - [Wallet] Insufficient balance. Available: ${wallet?.balance}, Needed: ${walletAmountUsed}`);
+                        throw new BadRequestException('رصيد المحفظة غير كافٍ');
+                    }
                 }
-            }
 
-            for (const [vendorId, group] of vendorGroups) {
-                // Stock Check
-                for (const item of group.items) {
-                    const [prod] = await tx.select().from(products).where(eq(products.id, item.productId)).limit(1);
-                    if (!prod) throw new BadRequestException('Product not found');
+                console.log(`  - [VendorGroups] Processing ${vendorGroups.size} vendor groups`);
+                for (const [vendorId, group] of vendorGroups) {
+                    console.log(`    - [Vendor ${vendorId}] Processing group with ${group.items.length} items`);
 
-                    if (item.size) {
-                        const sizes = prod.sizes as { size: string; quantity: number }[] | null;
-                        const sizeObj = sizes?.find(s => s.size === item.size);
-                        if (!sizeObj || sizeObj.quantity < item.quantity) {
+                    // Stock Check
+                    for (const item of group.items) {
+                        const [prod] = await tx.select().from(products).where(eq(products.id, item.productId)).limit(1);
+                        if (!prod) {
+                            console.error(`    - [Stock] Product ${item.productId} not found`);
+                            throw new BadRequestException('Product not found');
+                        }
+
+                        if (item.size) {
+                            const sizes = prod.sizes as { size: string; quantity: number }[] | null;
+                            const sizeObj = sizes?.find(s => s.size === item.size);
+                            if (!sizeObj || sizeObj.quantity < item.quantity) {
+                                console.error(`    - [Stock] Size ${item.size} unavailable for product ${prod.id}. Available: ${sizeObj?.quantity}, Requested: ${item.quantity}`);
+                                throw new BadRequestException(`الكمية غير متوفرة لـ ${prod.nameAr}`);
+                            }
+                        } else if ((prod.stock || 0) < item.quantity) {
+                            console.error(`    - [Stock] Insufficient stock for product ${prod.id}. Available: ${prod.stock}, Requested: ${item.quantity}`);
                             throw new BadRequestException(`الكمية غير متوفرة لـ ${prod.nameAr}`);
                         }
-                    } else if ((prod.stock || 0) < item.quantity) {
-                        throw new BadRequestException(`الكمية غير متوفرة لـ ${prod.nameAr}`);
                     }
-                }
 
-                // Discounts & Shipping
-                let totalDiscount = 0; // Simplified for now, can re-add complex logic later
-                if (coupon && coupon.vendorId === vendorId) {
-                    totalDiscount = (group.subtotal * coupon.discountPercent) / 100;
-                }
-
-                const [vendor] = await tx.select().from(vendors).where(eq(vendors.id, vendorId)).limit(1);
-                const shippingCost = vendor?.shippingCost || 0;
-                const commissionRate = vendor?.commissionRate || 10;
-
-                const finalSubtotal = group.subtotal - totalDiscount;
-                const orderTotal = finalSubtotal + shippingCost;
-                const commission = (finalSubtotal * commissionRate) / 100;
-
-                const orderNumber = `ORD-${Date.now()}-${vendorId}`;
-
-                const [newOrder] = await tx
-                    .insert(orders)
-                    .values({
-                        orderNumber,
-                        customerId,
-                        vendorId,
-                        status: 'pending',
-                        paymentStatus: installmentPlanId ? 'pending_kyc_review' : 'pending',
-                        subtotal: group.subtotal,
-                        discount: totalDiscount,
-                        shippingCost,
-                        commission,
-                        total: orderTotal,
-                        shippingAddress,
-                        paymentMethod,
-                        installmentPlanId,
-                        kycData,
-                        createdAt: new Date(),
-                        updatedAt: new Date(),
-                    })
-                    .returning();
-
-                const itemsWithOrderId = group.items.map(item => ({ ...item, orderId: newOrder.id }));
-                await tx.insert(orderItems).values(itemsWithOrderId);
-
-                // Update stock
-                for (const item of group.items) {
-                    const [prod] = await tx.select().from(products).where(eq(products.id, item.productId)).limit(1);
-                    const newStock = Math.max(0, (prod.stock || 0) - item.quantity);
-                    let newSizes = prod.sizes;
-                    if (item.size && prod.sizes) {
-                        newSizes = (prod.sizes as any[]).map(s => s.size === item.size ? { ...s, quantity: Math.max(0, s.quantity - item.quantity) } : s);
+                    // Discounts & Shipping
+                    let totalDiscount = 0;
+                    if (coupon && coupon.vendorId === vendorId) {
+                        totalDiscount = (group.subtotal * coupon.discountPercent) / 100;
                     }
-                    await tx.update(products).set({ stock: newStock, sizes: newSizes }).where(eq(products.id, item.productId));
-                }
 
-                createdOrders.push(newOrder);
-            }
+                    const [vendor] = await tx.select().from(vendors).where(eq(vendors.id, vendorId)).limit(1);
+                    const shippingCost = vendor?.shippingCost || 0;
+                    const commissionRate = vendor?.commissionRate || 10;
 
-            // Handle Payments (Wallet + Stripe)
-            let remainingToPay = createdOrders.reduce((sum, o) => sum + Number(o.total), 0);
+                    const finalSubtotal = group.subtotal - totalDiscount;
+                    const orderTotal = finalSubtotal + shippingCost;
+                    const commission = (finalSubtotal * commissionRate) / 100;
 
-            if (walletAmountUsed > 0) {
-                const amountToDeduct = Math.min(walletAmountUsed, remainingToPay);
-                await this.walletsService.deductBalance(customerId, amountToDeduct, `Order Payment (Split)`);
-                remainingToPay -= amountToDeduct;
-            }
+                    const orderNumber = `ORD-${Date.now()}-${vendorId}`;
 
-            // Handle Installments if selected
-            let requiresInstallmentReview = false;
-
-            if (remainingToPay > 0 && paymentMethod !== 'cash_on_delivery' && !requiresInstallmentReview) {
-                const [customer] = await tx.select().from(users).where(eq(users.id, customerId)).limit(1);
-
-                // If paymentMethod is 'card' or empty, default to 'stripe' for backward compatibility
-                const gateway = (paymentMethod === 'card' || !paymentMethod) ? 'stripe' : paymentMethod;
-
-                const session = await this.paymentsService.createCheckoutSession(
-                    gateway,
-                    createdOrders[0].id, // Link to first order for metadata
-                    remainingToPay,
-                    customer.email!
-                );
-                stripeCheckoutUrl = session.url;
-            } else if (remainingToPay <= 0 && !requiresInstallmentReview) {
-                // Fully paid by wallet
-                for (const order of createdOrders) {
-                    await tx.update(orders).set({ paymentStatus: 'paid', status: 'confirmed' }).where(eq(orders.id, order.id));
-                }
-            }
-
-            if (installmentPlanId && createdOrders.length > 0) {
-                const totalItems = cart.reduce((sum, i) => sum + i.quantity, 0);
-                const baseTotalToFinance = createdOrders.reduce((sum, o) => sum + Number(o.total), 0) - (walletAmountUsed || 0);
-
-                if (baseTotalToFinance > 0) {
-                    const [plan] = await tx.select().from(installmentPlans).where(eq(installmentPlans.id, installmentPlanId)).limit(1);
-                    if (plan) {
-                        // Validation: Min Amount (base)
-                        if (baseTotalToFinance < Number(plan.minAmount)) {
-                            throw new BadRequestException(`الحد الأدنى للتقسيط هو ${plan.minAmount}`);
-                        }
-
-                        // Validation: Quantity Range
-                        const minQ = plan.minQuantity || 1;
-                        const maxQ = plan.maxQuantity || 0;
-                        if (totalItems < minQ || (maxQ > 0 && totalItems > maxQ)) {
-                            throw new BadRequestException(`هذا النظام متاح فقط لعدد منتجات بين ${minQ} و ${maxQ > 0 ? maxQ : '∞'}`);
-                        }
-
-                        const interestAmount = baseTotalToFinance * (plan.interestRate || 0) / 100;
-                        const totalWithInterest = baseTotalToFinance + interestAmount;
-                        const dpPct = plan.downPaymentPercentage || 0;
-                        const downPayment = totalWithInterest * dpPct / 100;
-                        const financedAmount = totalWithInterest - downPayment;
-
-                        // CRITICAL: We DO NOT charge the down payment yet. We wait for Admin approval.
-                        // We record the installment request as 'pending_approval'
-                        requiresInstallmentReview = true;
-
-                        await tx.insert(installments).values({
-                            orderId: createdOrders[0].id,
-                            totalAmount: financedAmount,
-                            remainingAmount: financedAmount,
-                            installmentsCount: plan.months,
-                            status: 'pending_approval',
-                            nextPaymentDate: null, // Will be set after down payment is paid
+                    console.log(`    - [Order] Inserting order metadata for vendor ${vendorId}`);
+                    const [newOrder] = await tx
+                        .insert(orders)
+                        .values({
+                            orderNumber,
+                            customerId,
+                            vendorId,
+                            status: 'pending',
+                            paymentStatus: installmentPlanId ? 'pending_kyc_review' : 'pending',
+                            subtotal: group.subtotal,
+                            discount: totalDiscount,
+                            shippingCost,
+                            commission,
+                            total: orderTotal,
+                            shippingAddress,
+                            paymentMethod,
+                            installmentPlanId,
+                            kycData,
                             createdAt: new Date(),
                             updatedAt: new Date(),
-                        });
+                        })
+                        .returning();
 
+                    console.log(`    - [OrderItems] Inserting ${group.items.length} items for order ${newOrder.id}`);
+                    const itemsWithOrderId = group.items.map(item => ({ ...item, orderId: newOrder.id }));
+                    await tx.insert(orderItems).values(itemsWithOrderId);
+
+                    // Update stock
+                    console.log(`    - [StockUpdate] Updating stock and sizes for items`);
+                    for (const item of group.items) {
+                        const [prod] = await tx.select().from(products).where(eq(products.id, item.productId)).limit(1);
+                        const newStock = Math.max(0, (prod.stock || 0) - item.quantity);
+                        let newSizes = prod.sizes;
+                        if (item.size && prod.sizes) {
+                            newSizes = (prod.sizes as any[]).map(s => s.size === item.size ? { ...s, quantity: Math.max(0, s.quantity - item.quantity) } : s);
+                        }
+                        await tx.update(products).set({ stock: newStock, sizes: newSizes }).where(eq(products.id, item.productId));
                     }
+
+                    createdOrders.push(newOrder);
+                }
+
+                // Handle Payments (Wallet + Stripe)
+                let remainingToPay = createdOrders.reduce((sum, o) => sum + Number(o.total), 0);
+                console.log(`  - [Payment] Total to pay: ${remainingToPay}`);
+
+                if (walletAmountUsed > 0) {
+                    const amountToDeduct = Math.min(walletAmountUsed, remainingToPay);
+                    console.log(`  - [Wallet] Deducting balance: ${amountToDeduct}`);
+                    await this.walletsService.deductBalance(customerId, amountToDeduct, `Order Payment (Split)`);
+                    remainingToPay -= amountToDeduct;
+                }
+
+                // Handle Installments if selected
+                let requiresInstallmentReview = false;
+
+                if (remainingToPay > 0 && paymentMethod !== 'cash_on_delivery' && !requiresInstallmentReview) {
+                    console.log(`  - [Stripe/Gateway] Creating session for remaining: ${remainingToPay}`);
+                    const [customer] = await tx.select().from(users).where(eq(users.id, customerId)).limit(1);
+
+                    // If paymentMethod is 'card' or empty, default to 'stripe' for backward compatibility
+                    const gateway = (paymentMethod === 'card' || !paymentMethod) ? 'stripe' : paymentMethod;
+
+                    const session = await this.paymentsService.createCheckoutSession(
+                        gateway,
+                        createdOrders[0].id,
+                        remainingToPay,
+                        customer.email!
+                    );
+                    stripeCheckoutUrl = session.url;
+                } else if (remainingToPay <= 0 && !requiresInstallmentReview) {
+                    console.log(`  - [Payment] Fully paid by wallet, marking as confirmed`);
+                    // Fully paid by wallet
+                    for (const order of createdOrders) {
+                        await tx.update(orders).set({ paymentStatus: 'paid', status: 'confirmed' }).where(eq(orders.id, order.id));
+                    }
+                }
+
+                if (installmentPlanId && createdOrders.length > 0) {
+                    console.log(`  - [Installments] Processing installment request for plan ${installmentPlanId}`);
+                    const totalItems = cart.reduce((sum, i) => sum + i.quantity, 0);
+                    const baseTotalToFinance = createdOrders.reduce((sum, o) => sum + Number(o.total), 0) - (walletAmountUsed || 0);
+
+                    if (baseTotalToFinance > 0) {
+                        const [plan] = await tx.select().from(installmentPlans).where(eq(installmentPlans.id, installmentPlanId)).limit(1);
+                        if (plan) {
+                            console.log(`  - [Installments] Plan found, validating thresholds`);
+                            // Validation: Min Amount (base)
+                            if (baseTotalToFinance < Number(plan.minAmount)) {
+                                console.error(`  - [Installments] Base total ${baseTotalToFinance} below min ${plan.minAmount}`);
+                                throw new BadRequestException(`الحد الأدنى للتقسيط هو ${plan.minAmount}`);
+                            }
+
+                            // Validation: Quantity Range
+                            const minQ = plan.minQuantity || 1;
+                            const maxQ = plan.maxQuantity || 0;
+                            if (totalItems < minQ || (maxQ > 0 && totalItems > maxQ)) {
+                                console.error(`  - [Installments] Quantity ${totalItems} out of range [${minQ}, ${maxQ}]`);
+                                throw new BadRequestException(`هذا النظام متاح فقط لعدد منتجات بين ${minQ} و ${maxQ > 0 ? maxQ : '∞'}`);
+                            }
+
+                            const interestAmount = baseTotalToFinance * (plan.interestRate || 0) / 100;
+                            const totalWithInterest = baseTotalToFinance + interestAmount;
+                            const dpPct = plan.downPaymentPercentage || 0;
+                            const downPayment = totalWithInterest * dpPct / 100;
+                            const financedAmount = totalWithInterest - downPayment;
+
+                            requiresInstallmentReview = true;
+
+                            console.log(`  - [Installments] Recording installment record, financed: ${financedAmount}`);
+                            await tx.insert(installments).values({
+                                orderId: createdOrders[0].id,
+                                totalAmount: financedAmount,
+                                remainingAmount: financedAmount,
+                                installmentsCount: plan.months,
+                                status: 'pending_approval',
+                                nextPaymentDate: null,
+                                createdAt: new Date(),
+                                updatedAt: new Date(),
+                            });
+                        }
+                    }
+                }
+
+                // Award Points (1 AED = 1 Point)
+                const totalPurchaseAmount = createdOrders.reduce((sum, o) => sum + Number(o.total), 0);
+                if (totalPurchaseAmount > 0) {
+                    console.log(`  - [Points] Awarding ${totalPurchaseAmount} points to customer ${customerId}`);
+                    await this.pointsService.earnPoints(customerId, totalPurchaseAmount, createdOrders[0].id);
+                }
+
+                console.log(`  - [CartCleanup] Deleting cart items for customer ${customerId}`);
+                await tx.delete(cartItems).where(eq(cartItems.customerId, customerId));
+            });
+
+            // Notify Admins of new order(s)
+            console.log(`  - [Notifications] Notifying admins for ${createdOrders.length} orders`);
+            for (const order of createdOrders) {
+                try {
+                    await this.notificationsService.notifyAdmins(
+                        'new_order',
+                        '🛒 طلب جديد',
+                        `تم استلام طلب جديد رقم #${order.orderNumber} بقيمة ${order.total}`,
+                        order.id
+                    );
+                } catch (e) {
+                    console.error('Failed to notify admin of new order:', e.message);
                 }
             }
 
-            // Award Points (1 AED = 1 Point)
-            const totalPurchaseAmount = createdOrders.reduce((sum, o) => sum + Number(o.total), 0);
-            if (totalPurchaseAmount > 0) {
-                await this.pointsService.earnPoints(customerId, totalPurchaseAmount, createdOrders[0].id);
-            }
-
-            await tx.delete(cartItems).where(eq(cartItems.customerId, customerId));
-        });
-
-        // Notify Admins of new order(s)
-        for (const order of createdOrders) {
-            try {
-                await this.notificationsService.notifyAdmins(
-                    'new_order',
-                    '🛒 طلب جديد',
-                    `تم استلام طلب جديد رقم #${order.orderNumber} بقيمة ${order.total}`,
-                    order.id
-                );
-            } catch (e) {
-                console.error('Failed to notify admin of new order:', e.message);
-            }
+            console.log(`📦 [OrdersService] SUCCESS create for customerId: ${customerId}`);
+            return { orders: createdOrders, checkoutUrl: stripeCheckoutUrl };
+        } catch (error) {
+            console.error(`❌ [OrdersService] FATAL ERROR in create for customerId: ${customerId}:`, error);
+            if (error.stack) console.error(error.stack);
+            throw error;
         }
-
-        return { orders: createdOrders, checkoutUrl: stripeCheckoutUrl };
     }
 
     async updateStatus(orderId: number, status: string, userId?: number) {
