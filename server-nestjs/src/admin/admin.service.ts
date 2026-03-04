@@ -524,17 +524,18 @@ export class AdminService {
     }
 
     // --- Payment Gateways Logic ---
-    async seedTechCatalog() {
+    async seedProductsCatalog() {
         // 1. Create Categories
-        const techCategories = [
-            { nameAr: 'هواتف ذكية', nameEn: 'Smartphones', slug: 'smartphones' },
-            { nameAr: 'لابتوبات', nameEn: 'Laptops', slug: 'laptops' },
-            { nameAr: 'ساعات ذكية', nameEn: 'Smart Watches', slug: 'watches' },
-            { nameAr: 'إكسسوارات', nameEn: 'Accessories', slug: 'accessories' },
+        const categoriesData = [
+            { nameAr: 'إلكترونيات', nameEn: 'Electronics', slug: 'electronics' },
+            { nameAr: 'عطور ومكياج', nameEn: 'Perfumes & Beauty', slug: 'beauty' },
+            { nameAr: 'أجهزة منزلية', nameEn: 'Home Appliances', slug: 'home-appliances' },
+            { nameAr: 'ساعات', nameEn: 'Watches', slug: 'watches' },
+            { nameAr: 'أزياء وإكسسوارات', nameEn: 'Fashion & Accessories', slug: 'fashion' },
         ];
 
         const insertedCategories = [];
-        for (const cat of techCategories) {
+        for (const cat of categoriesData) {
             const [existing] = await this.databaseService.db.select().from(categories).where(eq(categories.slug, cat.slug)).limit(1);
             if (!existing) {
                 const [newCat] = await this.databaseService.db.insert(categories).values({ ...cat, isActive: true }).returning();
@@ -549,18 +550,17 @@ export class AdminService {
 
         if (!vendor) {
             console.log('[AdminService] No vendor found, creating a default one...');
-            // Find the first admin user to own the vendor account
             const [adminUser] = await this.databaseService.db.select().from(users).where(eq(users.role, 'admin')).limit(1);
             if (!adminUser) throw new BadRequestException('يجب وجود مسؤول (Admin) واحد على الأقل لإنشاء التاجر التلقائي');
 
             [vendor] = await this.databaseService.db.insert(vendors).values({
                 userId: adminUser.id,
-                storeNameAr: 'متجر ولف تكنو',
-                storeNameEn: 'Wolf Techno Store',
-                storeSlug: 'wolf-techno-store',
+                storeNameAr: 'متجر درهمي بلس',
+                storeNameEn: 'Dirhami Plus Store',
+                storeSlug: 'dirhami-plus-store',
                 email: adminUser.email || 'admin@wolftechno.com',
-                descriptionAr: 'المتجر الرسمي للأجهزة التقنية',
-                descriptionEn: 'The official store for tech devices',
+                descriptionAr: 'المتجر الشامل لكل ما تحتاجه',
+                descriptionEn: 'The comprehensive store for everything you need',
                 status: 'approved',
                 isActive: true,
                 isVerified: true,
@@ -571,9 +571,11 @@ export class AdminService {
         const brands = [
             { nameAr: 'آبل', nameEn: 'Apple', slug: 'apple' },
             { nameAr: 'سامسونج', nameEn: 'Samsung', slug: 'samsung' },
-            { nameAr: 'ديل', nameEn: 'Dell', slug: 'dell' },
-            { nameAr: 'إتش بي', nameEn: 'HP', slug: 'hp' },
+            { nameAr: 'دايسون', nameEn: 'Dyson', slug: 'dyson' },
+            { nameAr: 'ديور', nameEn: 'Dior', slug: 'dior' },
             { nameAr: 'سوني', nameEn: 'Sony', slug: 'sony' },
+            { nameAr: 'نسبريسو', nameEn: 'Nespresso', slug: 'nespresso' },
+            { nameAr: 'عناية وجمال', nameEn: 'Beauty Care', slug: 'beauty-care' },
         ];
 
         const insertedBrands = [];
@@ -587,67 +589,67 @@ export class AdminService {
             }
         }
 
-        // 4. Create Products
+        // 4. Create Products (Dirhami Inspired)
         const productsList = [
             {
-                nameAr: 'آيفون 15 برو ماكس',
-                nameEn: 'iPhone 15 Pro Max',
+                nameAr: 'مصفف الشعر دايسون إير راب',
+                nameEn: 'Dyson Airwrap Multi-Styler',
+                slug: 'dyson-airwrap',
+                price: 2200,
+                stock: 30,
+                brand: 'dyson',
+                category: 'beauty',
+                images: ['https://images.unsplash.com/photo-1599305090598-fe179d501227?q=80&w=1000&auto=format&fit=crop'],
+                descAr: 'مصفف الشعر الشهير من دايسون متعدد الاستخدامات',
+                descEn: 'The famous Dyson Airwrap multi-styler.'
+            },
+            {
+                nameAr: 'عطر ديور سوفاج 100 مل',
+                nameEn: 'Dior Sauvage Eau de Parfum 100ml',
+                slug: 'dior-sauvage',
+                price: 550,
+                stock: 100,
+                brand: 'dior',
+                category: 'beauty',
+                images: ['https://images.unsplash.com/photo-1582211594533-268f4f1edcb9?q=80&w=1000&auto=format&fit=crop'],
+                descAr: 'عطر ديور سوفاج الرجالي الأصلي طويل الأمد',
+                descEn: 'Original long-lasting Dior Sauvage perfume for men.'
+            },
+            {
+                nameAr: 'آلة قهوة نسبريسو فيرتو',
+                nameEn: 'Nespresso Vertuo Coffee Machine',
+                slug: 'nespresso-vertuo',
+                price: 950,
+                stock: 45,
+                brand: 'nespresso',
+                category: 'home-appliances',
+                images: ['https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=1000&auto=format&fit=crop'],
+                descAr: 'أفضل آلة لصنع القهوة من نسبريسو بالكبسولات',
+                descEn: 'Top coffee machine from Nespresso with capsules.'
+            },
+            {
+                nameAr: 'آيفون 15 برو ماكس تيتانيوم',
+                nameEn: 'iPhone 15 Pro Max Titanium',
                 slug: 'iphone-15-pro-max',
                 price: 4500,
                 stock: 50,
                 brand: 'apple',
-                category: 'smartphones',
+                category: 'electronics',
                 images: ['https://images.unsplash.com/photo-1696446701796-da61225697cc?q=80&w=1000&auto=format&fit=crop'],
                 descAr: 'أحدث هاتف من آبل مع كاميرا تيتانيوم',
                 descEn: 'The latest iPhone from Apple with titanium camera and A17 Pro chip.'
             },
             {
-                nameAr: 'سامسونج S24 ألترا',
-                nameEn: 'Samsung S24 Ultra',
-                slug: 'samsung-s24-ultra',
-                price: 4200,
-                stock: 40,
-                brand: 'samsung',
-                category: 'smartphones',
-                images: ['https://images.unsplash.com/photo-1707248554228-21d3df74d9e0?q=80&w=1000&auto=format&fit=crop'],
-                descAr: 'هاتف سامسونج الرائد مع ميزات الذكاء الاصطناعي',
-                descEn: 'Samsung flagship phone with Galaxy AI features and S Pen.'
-            },
-            {
-                nameAr: 'ماك بوك إير M3',
-                nameEn: 'MacBook Air M3',
-                slug: 'macbook-air-m3',
-                price: 5500,
+                nameAr: 'بلايستيشن 5 مع ذراع التحكم',
+                nameEn: 'PlayStation 5 Console with Controller',
+                slug: 'playstation-5',
+                price: 1950,
                 stock: 20,
-                brand: 'apple',
-                category: 'laptops',
-                images: ['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=1000&auto=format&fit=crop'],
-                descAr: 'لابتوب آبل النحيف والقوي بمعالج M3',
-                descEn: 'The thin and powerful Apple laptop with M3 chip.'
-            },
-            {
-                nameAr: 'ديل XPS 13',
-                nameEn: 'Dell XPS 13',
-                slug: 'dell-xps-13',
-                price: 4800,
-                stock: 15,
-                brand: 'dell',
-                category: 'laptops',
-                images: ['https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?q=80&w=1000&auto=format&fit=crop'],
-                descAr: 'لابتوب ديل الرائد بشاشة إنفينيتي',
-                descEn: 'Dell flagship laptop with InfinityEdge display.'
-            },
-            {
-                nameAr: 'آيباد إير M2',
-                nameEn: 'iPad Air M2',
-                slug: 'ipad-air-m2',
-                price: 2800,
-                stock: 30,
-                brand: 'apple',
-                category: 'accessories',
-                images: ['https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&w=1000&auto=format&fit=crop'],
-                descAr: 'جهاز آيباد إير الجديد كلياً بمعالج M2',
-                descEn: 'The all-new iPad Air powered by the M2 chip.'
+                brand: 'sony',
+                category: 'electronics',
+                images: ['https://images.unsplash.com/photo-1606144042857-e9de62e63577?q=80&w=1000&auto=format&fit=crop'],
+                descAr: 'جهاز ألعاب سوني بلايستيشن 5 الإصدار الأحدث',
+                descEn: 'Sony PlayStation 5 console latest edition.'
             },
             {
                 nameAr: 'ساعة آبل ألترا 2',
@@ -662,27 +664,28 @@ export class AdminService {
                 descEn: 'The most rugged and capable Apple Watch for harsh environments.'
             },
             {
-                nameAr: 'ساعة سامسونج ووتش 6',
-                nameEn: 'Samsung Watch 6',
-                slug: 'samsung-watch-6',
-                price: 1200,
-                stock: 45,
-                brand: 'samsung',
-                category: 'watches',
-                images: ['https://images.unsplash.com/photo-1617042375876-a13e36732a04?q=80&w=1000&auto=format&fit=crop'],
-                descAr: 'ساعة سامسونج الذكية لمتابعة الصحة والنشاط',
-                descEn: 'Samsung smart watch for health and fitness tracking.'
+                nameAr: 'حقيبة يد جلدية فاخرة',
+                nameEn: 'Luxury Leather Handbag',
+                slug: 'luxury-leather-bag',
+                price: 850,
+                stock: 15,
+                brand: 'beauty-care',
+                category: 'fashion',
+                images: ['https://images.unsplash.com/photo-1584916201218-f4242ceb4809?q=80&w=1000&auto=format&fit=crop'],
+                descAr: 'حقيبة يد نسائية مصنوعة من الجلد الفاخر',
+                descEn: 'Women luxury leather handbag.'
             },
             {
-                nameAr: 'سماعة سوني XM5',
-                nameEn: 'Sony WH-1000XM5',
-                slug: 'sony-wh-1000xm5',
-                price: 1400,
-                stock: 60,
-                brand: 'sony',
-                category: 'accessories',
-                images: ['https://images.unsplash.com/photo-1675243336718-4509772ee9a0?q=80&w=1000&auto=format&fit=crop'],
-                descAr: 'أفضل سماعة عازلة للضوضاء من سوني',
+                nameAr: 'سامسونج S24 ألترا',
+                nameEn: 'Samsung S24 Ultra',
+                slug: 'samsung-s24-ultra',
+                price: 4200,
+                stock: 40,
+                brand: 'samsung',
+                category: 'electronics',
+                images: ['https://images.unsplash.com/photo-1707248554228-21d3df74d9e0?q=80&w=1000&auto=format&fit=crop'],
+                descAr: 'هاتف سامسونج الرائد مع ميزات الذكاء الاصطناعي',
+                descEn: 'Samsung flagship phone with Galaxy AI features and S Pen.'
             }
         ];
 
@@ -965,9 +968,9 @@ export class AdminService {
 
         // Seed products
         try {
-            await this.seedTechCatalog();
+            await this.seedProductsCatalog();
         } catch (e) {
-            console.error('Seeding tech catalog failed during forceSetup', e);
+            console.error('Seeding catalog failed during forceSetup', e);
         }
 
         return {

@@ -193,7 +193,7 @@ export class AdminController {
     @Get('catalog/seed-tech')
     async seedTechCatalog(@Req() req: Request) {
         await this.checkAdmin(req);
-        return this.adminService.seedTechCatalog();
+        return this.adminService.seedProductsCatalog();
     }
 
     @Get('force-setup')
