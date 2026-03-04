@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { endpoints } from "@/lib/api";
@@ -406,29 +406,31 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                 <DialogContent className="w-full h-full sm:h-[92vh] sm:max-w-7xl sm:w-[95vw] p-0 overflow-hidden shadow-2xl transition-all duration-700 animate-in zoom-in-95 rounded-none sm:rounded-[2.5rem] border-gray-800 flex flex-col">
                     <div className="flex flex-col h-full bg-gray-900 border-0">
                         {/* Custom Header */}
-                        <div className="bg-background px-4 py-4 md:px-8 md:py-6 flex items-center justify-between border-b border-gray-800 sticky top-0 z-[60]">
-                            <div>
-                                <h3 className="text-xl sm:text-2xl font-black text-white">
+                        <DialogHeader className="bg-background px-4 py-4 md:px-8 md:py-6 flex flex-row items-center justify-between border-b border-gray-800 space-y-0 text-start">
+                            <div className="flex flex-col gap-1">
+                                <DialogTitle className="text-lg sm:text-2xl font-black text-white">
                                     {editingProduct ? (language === 'ar' ? 'تعديل منتج' : 'Edit Product') : (language === 'ar' ? 'إضافة منتج جديد' : 'New Product')}
-                                </h3>
-                                <p className="text-xs sm:text-sm font-bold text-gray-500">{language === 'ar' ? "املأ البيانات التالية لعرض منتجك في المتجر" : "Fill in the details to list your product in the store"}</p>
+                                </DialogTitle>
+                                <DialogDescription className="text-[10px] sm:text-sm font-bold text-gray-500">
+                                    {language === 'ar' ? "املأ البيانات التالية لعرض منتجك في المتجر" : "Fill in the details to list your product in the store"}
+                                </DialogDescription>
                             </div>
-                            <Button variant="ghost" size="icon" onClick={handleCloseModal} className="rounded-2xl hover:bg-gray-800 h-12 w-12 transition-all">
-                                <X className="w-6 h-6 text-gray-500" />
+                            <Button variant="ghost" size="icon" onClick={handleCloseModal} className="rounded-2xl hover:bg-gray-800 h-10 w-10 sm:h-12 sm:w-12 transition-all shrink-0">
+                                <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
                             </Button>
-                        </div>
+                        </DialogHeader>
 
                         <div className="flex-1 overflow-y-auto">
                             <div className="grid grid-cols-1 md:grid-cols-12 h-full">
                                 {/* Media Section (Left/Top) */}
                                 <div className="md:col-span-4 bg-background p-5 md:p-8 border-b md:border-b-0 md:border-l border-gray-800 flex flex-col gap-8 md:gap-10">
                                     <div className="space-y-4">
-                                        <div className="flex items-start justify-between gap-4">
-                                            <h4 className="font-black text-white uppercase tracking-widest text-[10px] sm:text-xs flex items-center gap-2 pt-1">
-                                                <ImageIcon className="w-4 h-4 text-purple-400" />
+                                        <div className="flex items-center justify-between gap-2">
+                                            <h4 className="font-black text-white uppercase tracking-widest text-[10px] sm:text-xs flex items-center gap-2 pt-1 border-r-2 border-purple-500/50 pr-2">
+                                                <ImageIcon className="w-3 h-3 sm:w-4 sm:h-4 text-purple-400" />
                                                 {language === 'ar' ? "صور المنتج" : "Media Library"}
                                             </h4>
-                                            <div className="h-7 px-3 bg-purple-900/40 text-[10px] font-black text-purple-300 rounded-full flex items-center shrink-0 border border-purple-800/50">
+                                            <div className="h-6 px-2 bg-purple-900/40 text-[9px] font-black text-purple-300 rounded-full flex items-center shrink-0 border border-purple-800/50">
                                                 {images.length || editingProduct?.images?.length || 0} / 6
                                             </div>
                                         </div>
@@ -537,7 +539,7 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                                 </div>
 
                                 {/* Form Section (Right/Bottom) */}
-                                <div className="md:col-span-8 p-4 md:p-12 space-y-10 md:space-y-16 pb-40 md:pb-24">
+                                <div className="md:col-span-8 p-4 md:p-12 space-y-8 md:space-y-16 pb-12 md:pb-24">
                                     {/* Global Sections */}
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-12">
                                         {/* Basic Info */}
@@ -574,9 +576,9 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                                                 <h4 className="font-black text-white uppercase tracking-widest text-xs">{language === 'ar' ? "التسعير والخصم" : "Pricing System"}</h4>
                                             </div>
 
-                                            <div className="bg-gray-900 p-6 rounded-[32px] border border-gray-800 grid grid-cols-2 gap-6 relative overflow-hidden">
-                                                <div className="space-y-2 relative z-10">
-                                                    <label className="text-[10px] font-black text-gray-500">{language === 'ar' ? "السعر الأصلي" : "BASE PRICE"}</label>
+                                            <div className="bg-gray-900 p-4 sm:p-6 rounded-2xl md:rounded-[32px] border border-gray-800 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 relative overflow-hidden">
+                                                <div className="space-y-1 sm:space-y-2 relative z-10">
+                                                    <label className="text-[9px] sm:text-[10px] font-black text-gray-500">{language === 'ar' ? "السعر الأصلي" : "BASE PRICE"}</label>
                                                     <div className="relative">
                                                         <Input type="number" value={price} onChange={e => setPrice(e.target.value)} className="h-14 rounded-2xl border-gray-800 bg-gray-800 shadow-sm font-black text-xl px-6 pr-14 focus:ring-4 focus:ring-pink-900/20 text-white text-base" />
                                                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-gray-700 pointer-events-none">{t('currency')}</span>
@@ -800,7 +802,7 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                                     <div className="space-y-6">
                                         <div className="flex items-center gap-3">
                                             <div className="h-2 w-8 bg-emerald-600 rounded-full" />
-                                            <h4 className="font-black text-slate-900 uppercase tracking-widest text-xs">{language === 'ar' ? "التفاصيل والوصف" : "Copywriting"}</h4>
+                                            <h4 className="font-black text-white uppercase tracking-widest text-xs">{language === 'ar' ? "التفاصيل والوصف" : "Copywriting"}</h4>
                                         </div>
                                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                             <div className="space-y-2 text-start">
@@ -818,24 +820,25 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                         </div>
 
                         {/* Sticky Footer */}
-                        <div className="bg-white px-4 py-5 md:px-12 md:py-8 flex flex-col-reverse sm:flex-row items-center justify-between border-t border-slate-100 gap-4 sticky bottom-0 z-[60] shadow-[0_-10px_30px_rgba(0,0,0,0.1)]">
-                            <Button variant="ghost" onClick={handleCloseModal} className="w-full sm:w-auto h-12 md:h-14 px-8 rounded-full font-black text-slate-400 hover:bg-slate-50">
+                        {/* Improved Footer */}
+                        <div className="bg-gray-900 px-4 py-6 md:px-12 md:py-8 flex flex-col sm:flex-row items-center justify-between border-t border-gray-800 gap-6 mt-auto">
+                            <Button variant="ghost" onClick={handleCloseModal} className="w-full sm:w-auto h-12 md:h-14 px-8 rounded-full font-black text-gray-500 hover:bg-gray-800">
                                 {language === 'ar' ? "تجاهل" : "Discard"}
                             </Button>
                             <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-                                <div className="text-center sm:text-right hidden sm:block">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{language === 'ar' ? "حالة المنتج" : "Visibility"}</p>
-                                    <p className="text-sm font-black text-emerald-500">{language === 'ar' ? "متاح للعرض فوراً" : "Ready for Listing"}</p>
+                                <div className={`text-center hidden sm:block ${language === 'ar' ? 'sm:text-right' : 'sm:text-left'}`}>
+                                    <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">{language === 'ar' ? "حالة المنتج" : "Visibility"}</p>
+                                    <p className="text-xs font-black text-emerald-500/80">{language === 'ar' ? "متاح للعرض فوراً" : "Ready for Listing"}</p>
                                 </div>
                                 <Button
                                     onClick={() => {
-                                        if (!nameAr) return toast.error("يرجى إدخال الاسم بالعربية");
-                                        if (!price || parseFloat(price) <= 0) return toast.error("يرجى إدخال سعر صحيح");
+                                        if (!nameAr) return toast.error(language === 'ar' ? "يرجى إدخال الاسم بالعربية" : "Please enter AR name");
+                                        if (!price || parseFloat(price) <= 0) return toast.error(language === 'ar' ? "يرجى إدخال سعر صحيح" : "Please enter a valid price");
                                         if (!collectionIdState) return toast.error(language === 'ar' ? "يرجى اختيار مجموعة" : "Please select a collection");
                                         submitMutation.mutate();
                                     }}
                                     disabled={submitMutation.isPending}
-                                    className="bg-slate-900 hover:bg-black w-full sm:w-auto h-14 md:h-16 px-8 md:px-16 rounded-[20px] md:rounded-[28px] text-base md:text-lg font-black text-white shadow-2xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+                                    className="bg-purple-600 hover:bg-purple-700 w-full sm:w-auto h-14 md:h-16 px-8 md:px-16 rounded-2xl md:rounded-[28px] text-base md:text-lg font-black text-white shadow-xl shadow-purple-900/10 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
                                 >
                                     {submitMutation.isPending ? (
                                         <div className="flex items-center gap-3 justify-center">

@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Star, X, Check, Heart, Minimize2 } from "lucide-react";
@@ -86,8 +86,10 @@ export function QuickViewModal({ initialProduct, isOpen, onClose }: QuickViewMod
                     {/* Details Section */}
                     <div className="p-6 md:p-10 flex flex-col h-full overflow-y-auto custom-scrollbar">
                         <div className="flex justify-between items-start mb-4">
-                            <div>
-                                <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-2 leading-tight">{name}</h2>
+                            <DialogHeader className="text-start">
+                                <DialogTitle className="text-2xl md:text-3xl font-black text-gray-900 mb-2 leading-tight">
+                                    {name}
+                                </DialogTitle>
                                 <div className="flex items-center gap-2 mb-4">
                                     <div className="flex text-yellow-400">
                                         {Array(5).fill(0).map((_, i) => (
@@ -96,7 +98,7 @@ export function QuickViewModal({ initialProduct, isOpen, onClose }: QuickViewMod
                                     </div>
                                     <span className="text-sm text-gray-400 font-bold">({product.reviewsCount || 12} {language === 'ar' ? 'تقييم' : 'reviews'})</span>
                                 </div>
-                            </div>
+                            </DialogHeader>
                             <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                                 <X className="text-gray-400 hover:text-gray-600" />
                             </button>
@@ -209,6 +211,6 @@ export function QuickViewModal({ initialProduct, isOpen, onClose }: QuickViewMod
                     </div>
                 </div>
             </DialogContent>
-        </Dialog>
+        </Dialog >
     );
 }

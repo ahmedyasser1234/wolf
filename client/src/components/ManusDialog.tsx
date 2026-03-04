@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -64,11 +65,9 @@ export function ManusDialog({
           ) : null}
 
           {/* Title and subtitle */}
-          {title ? (
-            <DialogTitle className="text-xl font-semibold text-[#34322d] leading-[26px] tracking-[-0.44px]">
-              {title}
-            </DialogTitle>
-          ) : null}
+          <DialogTitle className={cn("text-xl font-semibold text-[#34322d] leading-[26px] tracking-[-0.44px]", !title && "sr-only")}>
+            {title || "Authentication Required"}
+          </DialogTitle>
           <DialogDescription className="text-sm text-[#858481] leading-5 tracking-[-0.154px]">
             Please login with Manus to continue
           </DialogDescription>

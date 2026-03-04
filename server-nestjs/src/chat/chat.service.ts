@@ -29,7 +29,7 @@ export class ChatService {
             const [supportVendor] = await this.databaseService.db
                 .select()
                 .from(vendors)
-                .where(eq(vendors.storeNameEn, 'Fustan Support'))
+                .where(eq(vendors.userId, userId))
                 .limit(1);
 
             const supportId = supportVendor?.id;
@@ -171,7 +171,7 @@ export class ChatService {
                     let [supportVendor] = await this.databaseService.db
                         .select()
                         .from(vendors)
-                        .where(eq(vendors.storeNameEn, 'Fustan Support'))
+                        .where(eq(vendors.userId, senderId))
                         .limit(1);
 
                     if (!supportVendor) {
@@ -286,7 +286,8 @@ export class ChatService {
                 senderRole: senderRole,
                 content: content,
                 createdAt: new Date(),
-                isRead: false
+                isRead: false,
+                status: 'sent'
             })
             .returning();
 
@@ -378,14 +379,27 @@ export class ChatService {
         return Number(result?.count || 0);
     }
 
+    async updateMessageStatus(messageId: number, status: string) {
+        return await this.databaseService.db
+            .update(messages)
+            .set({ status })
+            .where(eq(messages.id, messageId));
+    }
+
     async markAsRead(conversationId: number, userId: number, role: string) {
         return await this.databaseService.db
             .update(messages)
-            .set({ isRead: true })
+            .set({
+                isRead: true,
+                status: 'read'
+            })
             .where(and(
                 eq(messages.conversationId, conversationId),
                 sql`${messages.senderId} != ${userId}`, // Not sent by me
-                eq(messages.isRead, false)
+                or(
+                    eq(messages.status, 'sent'),
+                    eq(messages.status, 'delivered')
+                )
             ));
     }
 }

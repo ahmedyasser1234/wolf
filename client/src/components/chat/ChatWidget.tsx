@@ -18,6 +18,7 @@ interface Message {
     senderRole: 'customer' | 'vendor' | 'admin';
     createdAt: string;
     isRead: boolean;
+    status: 'sent' | 'delivered' | 'read';
 }
 
 interface ChatWidgetProps {
@@ -79,19 +80,31 @@ export function ChatWidget({ recipientId: explicitRecipientId, name, logo, isMin
         const handleReceiveMessage = (message: Message) => {
             // If message belongs to this conversation
             if (message.conversationId === conversationIdRef.current) {
-                setMessages((prev) => [...prev, message]);
-                // If window/input is focused, we could mark as read here automatically?
-                // For now relying on focus event.
+                setMessages((prev) => {
+                    if (prev.some(m => m.id === message.id)) return prev;
+                    return [...prev, message];
+                });
+
+                // Ack delivery if widget is open
+                if (!isMinimized) {
+                    socket.emit('messageDelivered', {
+                        messageId: message.id,
+                        recipientId: message.senderId,
+                        conversationId: message.conversationId
+                    });
+                }
             } else if (conversationIdRef.current === null) {
-                // Possible first message of a new conversation
-                // Determine if it belongs to this widget context (vendor/recipient match)
-                // This is checking if the message sender is the person we are chatting with
                 if (message.senderId === presenceUserId) {
                     setMessages((prev) => [...prev, message]);
-                    // Optionally set conversationId if we can infer it
-                    // message.conversationId would be the new ID
                     if (message.conversationId) {
                         setConversationId(message.conversationId);
+                    }
+                    if (!isMinimized) {
+                        socket.emit('messageDelivered', {
+                            messageId: message.id,
+                            recipientId: message.senderId,
+                            conversationId: message.conversationId
+                        });
                     }
                 }
             }
@@ -99,12 +112,26 @@ export function ChatWidget({ recipientId: explicitRecipientId, name, logo, isMin
 
         const handleMessagesRead = ({ conversationId: readConvId }: { conversationId: number }) => {
             if (readConvId === conversationIdRef.current) {
-                setMessages(prev => prev.map(m => ({ ...m, isRead: true })));
+                setMessages(prev => prev.map(m => ({ ...m, isRead: true, status: 'read' as const })));
+            }
+        };
+
+        const handleStatusUpdate = (payload: { messageId: number, status: 'sent' | 'delivered' | 'read', conversationId: number }) => {
+            if (payload.conversationId === conversationIdRef.current) {
+                setMessages(prev => prev.map(m => m.id === payload.messageId ? { ...m, status: payload.status } : m));
+            }
+        };
+
+        const handleUserTyping = (payload: { conversationId: number, userId: number, isTyping: boolean }) => {
+            if (payload.conversationId === conversationIdRef.current && payload.userId === presenceUserId) {
+                setCounterpartIsTyping(payload.isTyping);
             }
         };
 
         socket.on("receiveMessage", handleReceiveMessage);
         socket.on("messagesRead", handleMessagesRead);
+        socket.on("messageStatusUpdate", handleStatusUpdate);
+        socket.on("userTyping", handleUserTyping);
 
         // Initial check is done via global presence state in context
         if (presenceUserId) {
@@ -114,8 +141,10 @@ export function ChatWidget({ recipientId: explicitRecipientId, name, logo, isMin
         return () => {
             socket.off("receiveMessage", handleReceiveMessage);
             socket.off("messagesRead", handleMessagesRead);
+            socket.off("messageStatusUpdate", handleStatusUpdate);
+            socket.off("userTyping", handleUserTyping);
         };
-    }, [socket, user, presenceUserId, checkOnlineStatus]);
+    }, [socket, user, presenceUserId, checkOnlineStatus, isMinimized]);
 
     // Fetch conversations and history
     const { data: conversations } = useQuery({
@@ -140,12 +169,51 @@ export function ChatWidget({ recipientId: explicitRecipientId, name, logo, isMin
         }
     }, [conversations, explicitRecipientId, presenceUserId]);
 
+    const [isTyping, setIsTyping] = useState(false);
+    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const [counterpartIsTyping, setCounterpartIsTyping] = useState(false);
+
+    const handleTyping = () => {
+        if (!socket || !conversationId) return;
+
+        if (!isTyping) {
+            setIsTyping(true);
+            socket.emit('typing', { conversationId, recipientId: presenceUserId, isTyping: true });
+        }
+
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = setTimeout(() => {
+            setIsTyping(false);
+            socket.emit('typing', { conversationId, recipientId: presenceUserId, isTyping: false });
+        }, 3000);
+    };
+
     const handleSend = async () => {
         if (!inputValue.trim()) return;
 
         console.log('📤 Debug: handleSend triggered');
         const content = inputValue;
         setInputValue("");
+
+        // Stop typing immediately
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        setIsTyping(false);
+        socket?.emit('typing', { conversationId, recipientId: presenceUserId, isTyping: false });
+
+        // Optimistic UI Update
+        const tempId = Date.now();
+        const tempMsg: Message = {
+            id: tempId,
+            conversationId: conversationId || 0,
+            senderId: user?.id || 0,
+            content,
+            senderRole: user?.role as any,
+            createdAt: new Date().toISOString(),
+            isRead: false,
+            status: 'sent'
+        };
+
+        setMessages((prev) => [...prev, tempMsg]);
 
         if (socket && socket.connected) {
             console.log('📤 Debug: Emit sendMessage', {
@@ -161,14 +229,15 @@ export function ChatWidget({ recipientId: explicitRecipientId, name, logo, isMin
                 console.log('✅ Debug: sendMessage Ack/Response:', response);
                 if (response && response.message) {
                     setMessages((prev) => {
-                        if (prev.some(m => m.id === response.message.id)) return prev;
-                        return [...prev, response.message];
+                        // Replace temp message with actual message from server
+                        return prev.map(m => m.id === tempId ? response.message : m);
                     });
                     if (!conversationIdRef.current && response.conversationId) {
                         setConversationId(response.conversationId);
                     }
                 } else {
                     console.error('❌ Debug: sendMessage Ack returned no message!', response);
+                    // Optionally mark temp message as failed
                 }
             });
         } else {
@@ -183,8 +252,7 @@ export function ChatWidget({ recipientId: explicitRecipientId, name, logo, isMin
                 console.log('✅ Debug: sendMessage API Response:', response);
                 if (response && response.message) {
                     setMessages((prev) => {
-                        if (prev.some(m => m.id === response.message.id)) return prev;
-                        return [...prev, response.message];
+                        return prev.map(m => m.id === tempId ? response.message : m);
                     });
                     if (!conversationIdRef.current && response.conversationId) {
                         setConversationId(response.conversationId);
@@ -262,10 +330,18 @@ export function ChatWidget({ recipientId: explicitRecipientId, name, logo, isMin
                                 {name}
                             </span>
                             <div className="flex items-center gap-1.5">
-                                <span className={`w-2 h-2 rounded-full ${isRecipientOnline ? 'bg-green-500 animate-pulse' : 'bg-slate-300'}`}></span>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                    {isRecipientOnline ? (language === 'ar' ? 'متصل الآن' : 'Online Now') : (language === 'ar' ? 'غير متصل' : 'Offline')}
-                                </span>
+                                {counterpartIsTyping ? (
+                                    <span className="text-[10px] font-bold text-primary animate-pulse uppercase tracking-wider">
+                                        {language === 'ar' ? 'يكتب الآن...' : 'Typing...'}
+                                    </span>
+                                ) : (
+                                    <>
+                                        <span className={`w-2 h-2 rounded-full ${isRecipientOnline ? 'bg-green-500 animate-pulse' : 'bg-slate-300'}`}></span>
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                            {isRecipientOnline ? (language === 'ar' ? 'متصل الآن' : 'Online Now') : (language === 'ar' ? 'غير متصل' : 'Offline')}
+                                        </span>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -297,12 +373,24 @@ export function ChatWidget({ recipientId: explicitRecipientId, name, logo, isMin
                                     : "bg-white text-gray-800 border border-gray-100 rounded-bl-none"
                                     }`}>
                                     <p className="leading-relaxed">{msg.content}</p>
-                                    <div className={`text-[10px] mt-1 flex items-center gap-1 ${isMe ? "text-white/70" : "text-gray-400"}`}>
-                                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    <div className={`text-[10px] mt-1 flex items-center justify-between gap-2 ${isMe ? "text-white/80" : "text-gray-400"}`}>
+                                        <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                         {isMe && (
-                                            <span className="font-bold">
-                                                {msg.isRead ? "✓✓" : "✓"}
-                                            </span>
+                                            <div className="flex items-center">
+                                                {msg.status === 'read' ? (
+                                                    <span className="text-blue-200 flex -space-x-1.5">
+                                                        <span className="inline-block transform translate-x-0.5">✓</span>
+                                                        <span className="inline-block">✓</span>
+                                                    </span>
+                                                ) : msg.status === 'delivered' ? (
+                                                    <span className="text-white/60 flex -space-x-1.5">
+                                                        <span className="inline-block transform translate-x-0.5">✓</span>
+                                                        <span className="inline-block">✓</span>
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-white/60">✓</span>
+                                                )}
+                                            </div>
                                         )}
                                     </div>
                                 </div>
@@ -317,14 +405,17 @@ export function ChatWidget({ recipientId: explicitRecipientId, name, logo, isMin
                 <div className="relative shadow-lg rounded-full bg-white ring-1 ring-gray-100 flex items-center p-1 pl-2">
                     <Input
                         value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
+                        onChange={(e) => {
+                            setInputValue(e.target.value);
+                            handleTyping();
+                        }}
                         onKeyDown={(e) => {
                             if (e.key === 'Enter') handleSend();
                             markAsRead(); // Mark read when typing
                         }}
                         onFocus={markAsRead} // Mark read when focused
                         placeholder="اكتب..."
-                        className="flex-1 h-10 border-none shadow-none focus-visible:ring-0 bg-transparent text-sm px-4"
+                        className="flex-1 h-10 border-none shadow-none focus-visible:ring-0 bg-transparent text-sm px-4 text-slate-900 font-medium"
                     />
                     <Button
                         size="icon"

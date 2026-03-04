@@ -503,6 +503,7 @@ export const messages = pgTable(
         senderRole: text("senderRole").notNull(), // 'customer' or 'vendor'
         content: text("content").notNull(),
         isRead: boolean("isRead").default(false),
+        status: text("status").default("sent").notNull(), // 'sent', 'delivered', 'read'
         createdAt: timestamp("createdAt").defaultNow().notNull(),
     },
     (table) => ({

@@ -203,6 +203,39 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
     }
 
+    @SubscribeMessage('messageDelivered')
+    async handleMessageDelivered(@ConnectedSocket() client: Socket, @MessageBody() payload: { messageId: number; recipientId: number; conversationId: number }) {
+        const user = client.data.user;
+        if (!user) return;
+
+        await this.chatService.updateMessageStatus(payload.messageId, 'delivered');
+
+        // Notify the sender that their message was delivered
+        if (payload.recipientId) {
+            const senderRoom = `user_${payload.recipientId}`;
+            this.server.to(senderRoom).emit('messageStatusUpdate', {
+                messageId: payload.messageId,
+                status: 'delivered',
+                conversationId: payload.conversationId
+            });
+        }
+    }
+
+    @SubscribeMessage('typing')
+    handleTyping(@ConnectedSocket() client: Socket, @MessageBody() payload: { conversationId: number; recipientId: number; isTyping: boolean }) {
+        const user = client.data.user;
+        if (!user) return;
+
+        if (payload.recipientId) {
+            const recipientRoom = `user_${payload.recipientId}`;
+            this.server.to(recipientRoom).emit('userTyping', {
+                conversationId: payload.conversationId,
+                userId: user.id,
+                isTyping: payload.isTyping
+            });
+        }
+    }
+
     @SubscribeMessage('checkUserStatus')
     handleCheckUserStatus(@MessageBody() userId: number) {
         const uid = Number(userId);
