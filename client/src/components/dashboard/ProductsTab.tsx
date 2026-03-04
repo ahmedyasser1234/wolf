@@ -15,7 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 interface ProductsTabProps {
-    vendorId: number;
+    vendorId?: number;
     collectionId?: number | null;
     onProductClick: (id: number) => void;
     onPreview?: (id: number) => void;
@@ -53,15 +53,13 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
 
     // Queries
     const { data: products, isLoading } = useQuery({
-        queryKey: ['vendor', 'products', vendorId, collectionId],
-        queryFn: async () => await endpoints.products.list({ vendorId, collectionId: collectionId || undefined }),
-        enabled: !!vendorId,
+        queryKey: ['products', vendorId, collectionId],
+        queryFn: async () => await endpoints.products.list({ vendorId: vendorId || undefined, collectionId: collectionId || undefined }),
     });
 
     const { data: collections } = useQuery({
-        queryKey: ['vendor', 'collections', vendorId],
-        queryFn: async () => await endpoints.collections.list(vendorId),
-        enabled: !!vendorId,
+        queryKey: ['collections', vendorId],
+        queryFn: async () => await endpoints.collections.list(vendorId || undefined),
     });
 
     const { data: categories } = useQuery({
@@ -83,7 +81,7 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
         mutationFn: async (id: number) => await endpoints.products.delete(id),
         onSuccess: () => {
             toast.success(language === 'ar' ? "تم حذف المنتج بنجاح" : "Product deleted successfully");
-            queryClient.invalidateQueries({ queryKey: ['vendor', 'products', vendorId] });
+            queryClient.invalidateQueries({ queryKey: ['products', vendorId] });
         },
     });
 
@@ -95,7 +93,7 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
             }
 
             const formData = new FormData();
-            formData.append("vendorId", vendorId.toString());
+            if (vendorId) formData.append("vendorId", vendorId.toString());
             formData.append("nameAr", nameAr);
             formData.append("nameEn", nameEn);
             formData.append("descriptionAr", descriptionAr);
@@ -163,7 +161,7 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                 (language === 'ar' ? "تم إضافة المنتج بنجاح" : "Product added successfully")
             );
             handleCloseModal();
-            queryClient.invalidateQueries({ queryKey: ['vendor', 'products', vendorId] });
+            queryClient.invalidateQueries({ queryKey: ['products', vendorId] });
         },
         onError: (err) => {
             console.error(err);
