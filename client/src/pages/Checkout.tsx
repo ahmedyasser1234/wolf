@@ -291,13 +291,13 @@ export default function Checkout() {
   ].filter((v, i, a) => a.findIndex(t => t.id === v.id) === i); // dedupe
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-32 pt-8 md:pt-12">
+    <div className="min-h-screen bg-gray-50 pb-32 pt-8 md:pt-12 overflow-x-hidden w-full">
       {/* Header */}
-      <div className="bg-white border-b border-gray-100 sticky top-[80px] md:top-[112px] z-40 py-6">
+      <div className="bg-white border-b border-gray-100 sticky top-[80px] md:top-[112px] z-40 py-3 md:py-6">
         <div className="container mx-auto px-4 max-w-7xl">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-            <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase font-arabic">{language === 'ar' ? 'إتمام الدفع' : 'Checkout'}</h1>
-            <div className="flex items-center gap-8 font-bold text-sm tracking-widest uppercase text-gray-400 font-arabic">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-8">
+            <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tighter uppercase font-arabic">{language === 'ar' ? 'إتمام الدفع' : 'Checkout'}</h1>
+            <div className="flex items-center gap-3 md:gap-8 font-bold text-xs md:text-sm tracking-widest uppercase text-gray-400 font-arabic">
               {formData.paymentMethod === 'installments' ? (
                 <>
                   <div className={`flex items-center gap-2 ${['kyc', 'shipping', 'review'].includes(step) ? 'text-primary' : ''}`}>
@@ -338,15 +338,15 @@ export default function Checkout() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 max-w-7xl mt-12">
-        <div className="grid lg:grid-cols-12 gap-12">
+      <div className="container mx-auto px-4 max-w-7xl mt-8 w-full overflow-x-hidden">
+        <div className="grid lg:grid-cols-12 gap-6 md:gap-12">
           <div className="lg:col-span-8">
             <AnimatePresence mode="wait">
               {step === "shipping" && (
                 <motion.div key="shipping" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-8">
-                  <div className="bg-white p-10 rounded-[3rem] shadow-xl border border-gray-50 text-right font-arabic">
-                    <h2 className="text-3xl font-black text-gray-900 mb-8">{language === 'ar' ? 'عنوان الشحن' : 'Shipping Address'}</h2>
-                    <div className="grid md:grid-cols-2 gap-8">
+                  <div className="bg-white p-4 sm:p-8 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-gray-50 text-right font-arabic w-full">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 mb-6 md:mb-8">{language === 'ar' ? 'عنوان الشحن' : 'Shipping Address'}</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-8">
                       <div className="space-y-2">
                         <label className="font-bold text-gray-700 text-sm">{language === 'ar' ? 'الاسم الأول' : 'First Name'}</label>
                         <Input name="firstName" value={formData.firstName} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-lg text-black font-bold" />
@@ -385,9 +385,9 @@ export default function Checkout() {
 
               {step === "payment" && (
                 <motion.div key="payment" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-8 text-right">
-                  <div className="bg-white p-10 rounded-[3rem] shadow-xl border border-gray-50 font-arabic">
-                    <h2 className="text-3xl font-black text-gray-900 mb-8">{language === 'ar' ? 'طريقة الدفع' : 'Payment Method'}</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10">
+                  <div className="bg-white p-4 sm:p-8 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-gray-50 font-arabic">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 mb-6 md:mb-8">{language === 'ar' ? 'طريقة الدفع' : 'Payment Method'}</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-8 md:mb-10">
                       {paymentMethods.map((method: any) => (
                         <button
                           key={method.id}
