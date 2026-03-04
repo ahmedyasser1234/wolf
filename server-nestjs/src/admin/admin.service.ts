@@ -1,7 +1,7 @@
 import { scrypt, randomBytes } from 'node:crypto';
 import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { vendors, users, orders, products, categories, conversations, messages, cartItems, wishlist, notifications, productColors, reviews, shipping, offerItems, collections, coupons, offers, vendorReviews, vendorPayouts, vendorWallets, paymentGateways } from '../database/schema';
+import { vendors, users, orders, products, categories, conversations, messages, cartItems, wishlist, notifications, productColors, reviews, shipping, offerItems, collections, coupons, offers, vendorReviews, vendorPayouts, vendorWallets, paymentGateways, installmentPlans, orderItems } from '../database/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import * as xlsx from 'xlsx';
 
