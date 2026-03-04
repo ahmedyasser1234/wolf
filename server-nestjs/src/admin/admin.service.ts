@@ -3,6 +3,7 @@ import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/
 import { DatabaseService } from '../database/database.service';
 import { vendors, users, orders, products, categories, conversations, messages, cartItems, wishlist, notifications, productColors, reviews, shipping, offerItems, collections, coupons, offers, vendorReviews, vendorPayouts, vendorWallets, paymentGateways } from '../database/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
+import * as xlsx from 'xlsx';
 
 import { NotificationsService } from '../notifications/notifications.service';
 
@@ -882,10 +883,33 @@ export class AdminService {
 
     // --- Excel Export/Import Logic ---
     async exportCustomers() {
-        return await this.databaseService.db
+        const customersList = await this.databaseService.db
             .select()
             .from(users)
-            .where(eq(users.role, 'customer'));
+            .where(eq(users.role, 'customer'))
+            .orderBy(desc(users.createdAt));
+
+        const formattedData = customersList.map(c => ({
+            'Name (الاسم)': c.name || '',
+            'Email (البريد الإلكتروني)': c.email || '',
+            'Phone (رقم الهاتف)': c.phone || '',
+            'Join Date (تاريخ التسجيل)': new Date(c.createdAt).toLocaleDateString('en-AE')
+        }));
+
+        const worksheet = xlsx.utils.json_to_sheet(formattedData);
+        // Adjust column widths
+        worksheet['!cols'] = [
+            { wch: 30 }, // Name
+            { wch: 35 }, // Email
+            { wch: 20 }, // Phone
+            { wch: 25 }, // Join Date
+        ];
+
+        const workbook = xlsx.utils.book_new();
+        xlsx.utils.book_append_sheet(workbook, worksheet, 'Customers');
+
+        const buffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+        return buffer;
     }
 
     async importCustomers(data: any[]) {
@@ -906,6 +930,50 @@ export class AdminService {
                 }
             }
         });
+    }
+
+    async forceSetup() {
+        const adminCountResult = await this.databaseService.db
+            .select({ count: sql<number>`count(*)` })
+            .from(users)
+            .where(eq(users.role, 'admin'));
+
+        const count = Number(adminCountResult[0].count);
+        if (count > 0) {
+            return { success: false, message: 'Admin already exists. Setup skipped.' };
+        }
+
+        const hashPassword = (password: string): Promise<string> => {
+            return new Promise((resolve, reject) => {
+                const salt = randomBytes(16).toString('hex');
+                scrypt(password, salt, 64, (err, derivedKey) => {
+                    if (err) reject(err);
+                    resolve(`${salt}:${derivedKey.toString('hex')}`);
+                });
+            });
+        };
+
+        const hashedPassword = await hashPassword('wolf1234');
+        await this.databaseService.db.insert(users).values({
+            openId: `admin_${Date.now()}`,
+            email: 'admin@wolf.com',
+            name: 'WOLF ADMIN',
+            password: hashedPassword,
+            role: 'admin',
+            loginMethod: 'email',
+        });
+
+        // Seed products
+        try {
+            await this.seedTechCatalog();
+        } catch (e) {
+            console.error('Seeding tech catalog failed during forceSetup', e);
+        }
+
+        return {
+            success: true,
+            message: 'Admin account created (admin@wolf.com / wolf1234) and tech products seeded!'
+        };
     }
 
     async exportShipping() {

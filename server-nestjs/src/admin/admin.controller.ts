@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Req, UnauthorizedException, Param, Body, Patch, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Req, Res, UnauthorizedException, Param, Body, Patch, Delete, Query } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { AuthService } from '../auth/auth.service';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 import { COOKIE_NAME } from '../common/constants';
 
 @Controller('admin')
@@ -170,9 +170,12 @@ export class AdminController {
 
     // --- Excel Export/Import Routes ---
     @Get('export/customers')
-    async exportCustomers(@Req() req: Request) {
+    async exportCustomers(@Req() req: Request, @Res() res: Response) {
         await this.checkAdmin(req);
-        return this.adminService.exportCustomers();
+        const buffer = await this.adminService.exportCustomers();
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', 'attachment; filename=customers.xlsx');
+        res.send(buffer);
     }
 
     @Post('import/customers')
@@ -191,5 +194,10 @@ export class AdminController {
     async seedTechCatalog(@Req() req: Request) {
         await this.checkAdmin(req);
         return this.adminService.seedTechCatalog();
+    }
+
+    @Get('force-setup')
+    async forceSetup() {
+        return this.adminService.forceSetup();
     }
 }

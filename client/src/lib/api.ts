@@ -136,11 +136,11 @@ export const endpoints = {
         getOrders: () => api.get('/admin/orders').then(res => res.data),
         getProducts: (search?: string) => api.get('/admin/products', { params: { search } }).then(res => res.data),
         globalSearch: (q: string) => api.get('/admin/search', { params: { q } }).then(res => res.data),
-        exportCustomers: () => api.get('/admin/customers/export', { responseType: 'blob' }).then(res => res.data),
+        exportCustomers: () => api.get('/admin/export/customers', { responseType: 'blob' }).then(res => res.data),
         importCustomers: (file: File) => {
             const formData = new FormData();
             formData.append('file', file);
-            return api.post('/admin/customers/import', formData).then(res => res.data);
+            return api.post('/admin/import/customers', formData).then(res => res.data);
         },
         reports: {
             getCommissions: () => api.get('/admin/reports/commissions').then(res => res.data),
