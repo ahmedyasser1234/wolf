@@ -224,8 +224,8 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
 
     return (
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
-            <div className="bg-white p-8 md:p-10 rounded-[3rem] shadow-xl border border-gray-50 text-right">
-                <h2 className="text-3xl font-black text-gray-900 mb-3 flex items-center justify-end gap-3 font-arabic">
+            <div className="bg-white p-4 sm:p-8 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-gray-50 text-right overflow-hidden">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 mb-3 flex items-center justify-end gap-3 font-arabic flex-wrap">
                     التحقق من الهوية (KYC) <UserCheck className="text-primary" />
                 </h2>
                 <p className="text-gray-500 font-bold mb-8 leading-relaxed font-arabic text-sm">
@@ -234,9 +234,9 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
 
                 <canvas ref={canvasRef} className="hidden" />
 
-                <div className="space-y-8">
+                <div className="space-y-6">
                     <DocCard docKey="faceId" />
-                    <div className="grid md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                         <DocCard docKey="residency" />
                         <DocCard docKey="passport" />
                     </div>
