@@ -57,8 +57,8 @@ export default function ContentTab() {
         <div className="space-y-6">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="space-y-1">
-                    <h2 className="text-xl md:text-2xl font-bold text-white">{t('manageInstagramContent')}</h2>
+                <div className="space-y-1 text-start">
+                    <h2 className="text-lg sm:text-2xl font-bold text-white">{t('manageInstagramContent')}</h2>
                     <p className="text-sm text-gray-400 leading-relaxed max-w-2xl">{t('instagramContentDesc')}</p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
@@ -125,7 +125,7 @@ export default function ContentTab() {
             {/* Content Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
                 {socialFeed?.map((item: any) => (
-                    <Card key={item.id} className="overflow-hidden border-0 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full rounded-2xl bg-background border border-gray-800">
+                    <Card key={item.id} className="overflow-hidden border-0 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col h-full rounded-[1.5rem] md:rounded-2xl bg-background border border-gray-800">
                         <div className="aspect-square relative bg-gray-900 group border-b border-gray-800">
                             {item.data.imageUrl ? (
                                 <img
@@ -159,7 +159,7 @@ export default function ContentTab() {
                                             handleUpdate(item.id, item.data, 'imageUrl', e.target.value);
                                         }
                                     }}
-                                    className="text-left ltr h-9 md:h-10 text-xs md:text-sm bg-gray-900/50 focus:bg-gray-800 transition-colors border-gray-800"
+                                    className="text-left ltr h-12 md:h-10 text-base md:text-sm bg-gray-900/50 focus:bg-gray-800 transition-colors border-gray-800 rounded-xl"
                                     placeholder="https://example.com/image.jpg"
                                 />
                             </div>
@@ -172,7 +172,7 @@ export default function ContentTab() {
                                             handleUpdate(item.id, item.data, 'link', e.target.value);
                                         }
                                     }}
-                                    className="text-left ltr h-9 md:h-10 text-xs md:text-sm bg-gray-900/50 focus:bg-gray-800 transition-colors border-gray-800"
+                                    className="text-left ltr h-12 md:h-10 text-base md:text-sm bg-gray-900/50 focus:bg-gray-800 transition-colors border-gray-800 rounded-xl"
                                     placeholder="https://instagram.com/..."
                                 />
                             </div>

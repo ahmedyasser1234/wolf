@@ -250,7 +250,7 @@ function GatewayCard({ gw }: { gw: Gateway }) {
 
     return (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="h-full">
-            <Card className={`h-full overflow-hidden border transition-all duration-300 flex flex-col ${gw.isActive ? 'bg-gray-900 border-gray-700' : 'bg-gray-900/50 border-gray-800'}`}>
+            <Card className={`h-full overflow-hidden border transition-all duration-300 flex flex-col rounded-[1.5rem] md:rounded-[1.5rem] ${gw.isActive ? 'bg-gray-900 border-gray-700' : 'bg-gray-900/50 border-gray-800'}`}>
                 <div className="h-1.5 w-full shrink-0" style={{ background: config.color }} />
 
                 <CardContent className="p-5 flex-1 flex flex-col">
@@ -285,7 +285,7 @@ function GatewayCard({ gw }: { gw: Gateway }) {
                                         value={fields[f.key] || ""}
                                         onChange={e => setFields(prev => ({ ...prev, [f.key]: e.target.value }))}
                                         placeholder={f.placeholder || '...'}
-                                        className="h-9 bg-gray-800 border-gray-800 text-white text-xs rounded-xl pr-9 placeholder:text-gray-600 focus-visible:ring-0 focus:border-gray-500"
+                                        className="h-10 sm:h-9 bg-gray-800 border-gray-800 text-white text-base md:text-xs rounded-xl pr-9 placeholder:text-gray-600 focus-visible:ring-0 focus:border-gray-500"
                                         dir="ltr"
                                     />
                                     {f.isSecret && (
@@ -304,7 +304,7 @@ function GatewayCard({ gw }: { gw: Gateway }) {
                         <button
                             onClick={handleSave}
                             disabled={credMutation.isPending || !hasChanges}
-                            className={`w-full h-8 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all
+                            className={`w-full h-10 sm:h-8 rounded-xl text-sm md:text-xs font-black flex items-center justify-center gap-1.5 transition-all
                 ${hasChanges
                                     ? 'bg-blue-600 hover:bg-blue-500 text-white cursor-pointer shadow-lg shadow-blue-900/40'
                                     : 'bg-gray-800 text-gray-600 cursor-not-allowed'
@@ -327,7 +327,7 @@ function GatewayCard({ gw }: { gw: Gateway }) {
                         <button
                             onClick={() => toggleMutation.mutate({ id: gw.id, isEnabled: true })}
                             disabled={gw.isActive || toggleMutation.isPending}
-                            className={`h-9 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all
+                            className={`h-10 sm:h-9 rounded-xl text-sm md:text-xs font-black flex items-center justify-center gap-1.5 transition-all
                 ${gw.isActive
                                     ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 cursor-not-allowed'
                                     : 'bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer'
@@ -340,7 +340,7 @@ function GatewayCard({ gw }: { gw: Gateway }) {
                         <button
                             onClick={() => toggleMutation.mutate({ id: gw.id, isEnabled: false })}
                             disabled={!gw.isActive || toggleMutation.isPending}
-                            className={`h-9 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all
+                            className={`h-10 sm:h-9 rounded-xl text-sm md:text-xs font-black flex items-center justify-center gap-1.5 transition-all
                 ${!gw.isActive
                                     ? 'bg-red-500/10 text-red-400 border border-red-500/30 cursor-not-allowed'
                                     : 'bg-red-700 hover:bg-red-600 text-white cursor-pointer'
@@ -397,14 +397,14 @@ export default function AdminPaymentGatewaysTab() {
         <div className="space-y-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
             {/* Header */}
             <div className="flex items-center justify-between flex-wrap gap-4">
-                <div>
-                    <h2 className="text-3xl font-black text-white flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center">
-                            <Globe className="w-5 h-5 text-white" />
+                <div className="min-w-0">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white flex items-center gap-3">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shrink-0">
+                            <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                         </div>
                         {language === 'ar' ? 'بوابات الدفع' : 'Payment Gateways'}
                     </h2>
-                    <p className="text-gray-400 mt-1 text-sm font-bold">
+                    <p className="text-gray-400 mt-1 text-xs sm:text-sm font-bold">
                         {language === 'ar' ? `${enabled} من ${total} بوابة مفعّلة` : `${enabled} of ${total} enabled`}
                     </p>
                 </div>

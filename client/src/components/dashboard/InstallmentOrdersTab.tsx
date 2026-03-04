@@ -72,8 +72,8 @@ export default function InstallmentOrdersTab() {
             {/* Header */}
             <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-3xl font-black text-white mb-1">{language === 'ar' ? 'طلبات التقسيط' : 'Installment Requests'}</h2>
-                    <p className="text-gray-400 font-bold text-sm">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white mb-1">{language === 'ar' ? 'طلبات التقسيط' : 'Installment Requests'}</h2>
+                    <p className="text-gray-400 font-bold text-xs sm:text-sm">
                         {language === 'ar' ? `${pendingCount} طلب بانتظار المراجعة` : `${pendingCount} request(s) awaiting review`}
                     </p>
                 </div>
@@ -120,7 +120,7 @@ export default function InstallmentOrdersTab() {
             ) : (
                 <div className="space-y-5">
                     {filteredOrders.map((order: any) => (
-                        <Card key={order.id} className="bg-background border border-gray-800 rounded-[2rem] overflow-hidden hover:border-gray-600 transition-all group">
+                        <Card key={order.id} className="bg-background border border-gray-800 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden hover:border-gray-600 transition-all group">
                             <CardContent className="p-0">
                                 {/* KYC Pending Alert Banner */}
                                 {order.paymentStatus === 'pending_kyc_review' && (
@@ -132,7 +132,7 @@ export default function InstallmentOrdersTab() {
                                     </div>
                                 )}
 
-                                <div className="p-6 flex flex-wrap items-center justify-between gap-5">
+                                <div className="p-4 sm:p-6 flex flex-wrap items-center justify-between gap-5">
                                     {/* Left: Order Info */}
                                     <div className="flex-1 min-w-0">
                                         <div className="flex flex-wrap items-center gap-3 mb-3">
@@ -189,8 +189,8 @@ export default function InstallmentOrdersTab() {
 
             {/* KYC Review Modal */}
             {kycModalOrder && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.88)' }}>
-                    <div className="bg-gray-950 border border-gray-800 rounded-[2.5rem] p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4" style={{ background: 'rgba(0,0,0,0.88)' }}>
+                    <div className="bg-gray-950 border border-gray-800 rounded-[1.5rem] md:rounded-[2.5rem] p-5 sm:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl" dir={language === 'ar' ? 'rtl' : 'ltr'}>
 
                         {/* Modal Header */}
                         <div className="flex items-center justify-between mb-8">

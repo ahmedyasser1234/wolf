@@ -62,42 +62,42 @@ export default function OrderDetailsView({ orderId, onClose }: OrderDetailsViewP
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-[32px] shadow-2xl bg-white border-0 flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-3 sm:p-4 animate-in fade-in duration-200">
+            <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-[1.5rem] md:rounded-[32px] shadow-2xl bg-white border-0 flex flex-col">
                 {/* Header */}
-                <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
-                    <div className="flex items-center gap-4">
+                <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4 bg-white shrink-0">
+                    <div className="flex items-center gap-3 sm:gap-4">
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={onClose}
-                            className="rounded-full hover:bg-slate-100 print:hidden"
+                            className="rounded-full hover:bg-slate-100 print:hidden shrink-0"
                         >
                             <X className="w-6 h-6 text-slate-500" />
                         </Button>
-                        <div>
-                            <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
+                        <div className="min-w-0">
+                            <h2 className="text-xl sm:text-2xl font-black text-slate-900 flex flex-wrap items-center gap-2">
                                 {language === 'ar' ? "تفاصيل الطلب" : "Order Details"}
-                                <span className="text-lg text-slate-400 font-bold">#{order.orderNumber}</span>
+                                <span className="text-base sm:text-lg text-slate-400 font-bold">#{order.orderNumber}</span>
                             </h2>
-                            <p className="text-slate-500 text-sm font-bold flex items-center gap-2 mt-1">
-                                <Calendar className="w-4 h-4" />
+                            <p className="text-slate-500 text-[10px] sm:text-sm font-bold flex items-center gap-2 mt-0.5">
+                                <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
                                 {format(new Date(order.createdAt), "dd MMMM yyyy, h:mm a", { locale: language === 'ar' ? ar : undefined })}
                             </p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <Badge className={cn("px-4 py-1.5 text-sm font-black rounded-xl", STATUS_COLORS[order.status] || "bg-slate-100 text-slate-700")}>
+                    <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
+                        <Badge className={cn("px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-black rounded-xl", STATUS_COLORS[order.status] || "bg-slate-100 text-slate-700")}>
                             {STATUS_LABELS[order.status] || order.status}
                         </Badge>
-                        <Button onClick={handlePrint} className="bg-slate-900 text-white rounded-xl gap-2 font-bold hover:bg-slate-800 print:hidden">
+                        <Button onClick={handlePrint} variant="outline" size="sm" className="sm:h-10 border-slate-200 text-slate-900 rounded-xl gap-2 font-bold hover:bg-slate-50 print:hidden">
                             <Printer className="w-4 h-4" />
-                            {language === 'ar' ? "طباعة الفاتورة" : "Print Invoice"}
+                            <span className="hidden sm:inline">{language === 'ar' ? "طباعة الفاتورة" : "Print Invoice"}</span>
                         </Button>
                     </div>
                 </div>
 
-                <ScrollArea className="flex-1 overflow-y-auto bg-slate-50/50 p-6">
+                <ScrollArea className="flex-1 overflow-y-auto bg-slate-50/50 p-4 sm:p-6">
                     <div className="space-y-6 max-w-5xl mx-auto print:p-0">
                         {/* Customer & Shipping Info */}
                         <div className="grid md:grid-cols-2 gap-6">

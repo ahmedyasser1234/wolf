@@ -42,8 +42,8 @@ export default function WalletTab() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-3xl font-black text-white mb-2 flex items-center gap-3">
-                        <div className="w-2 h-8 bg-emerald-500 rounded-full" />
+                    <h2 className="text-2xl sm:text-3xl font-black text-white mb-2 flex items-center gap-3">
+                        <div className="w-1.5 h-6 sm:w-2 h-8 bg-emerald-500 rounded-full" />
                         {language === 'ar' ? 'المحفظة المالية' : 'Financial Wallet'}
                     </h2>
                     <p className="text-gray-400 font-bold">
@@ -60,7 +60,7 @@ export default function WalletTab() {
 
             {/* Balance Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="rounded-[32px] border-emerald-800 bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-none overflow-hidden relative group">
+                <Card className="rounded-[1.5rem] md:rounded-[32px] border-emerald-800 bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-none overflow-hidden relative group">
                     <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-500" />
                     <CardContent className="p-8 relative z-10">
                         <div className="flex items-center justify-between mb-6">
@@ -72,7 +72,7 @@ export default function WalletTab() {
                         <p className="text-emerald-100 font-bold text-sm mb-1 uppercase tracking-widest">
                             {language === 'ar' ? 'الرصيد المتاح للسحب' : 'Available Balance'}
                         </p>
-                        <h3 className="text-4xl font-black mb-4 tabular-nums">
+                        <h3 className="text-3xl sm:text-4xl font-black mb-4 tabular-nums">
                             {formatPrice(wallet?.availableBalance || 0)}
                         </h3>
                         <div className="flex gap-3">
@@ -83,7 +83,7 @@ export default function WalletTab() {
                     </CardContent>
                 </Card>
 
-                <Card className="rounded-[32px] border-gray-800 bg-background shadow-none overflow-hidden relative group">
+                <Card className="rounded-[1.5rem] md:rounded-[32px] border-gray-800 bg-background shadow-none overflow-hidden relative group">
                     <CardContent className="p-8 relative z-10">
                         <div className="flex items-center justify-between mb-6">
                             <div className="w-14 h-14 bg-blue-900/30 rounded-2xl flex items-center justify-center">
@@ -94,7 +94,7 @@ export default function WalletTab() {
                         <p className="text-gray-500 font-bold text-sm mb-1 uppercase tracking-widest">
                             {language === 'ar' ? 'أرباح معلقة (تحت المراجعة)' : 'Pending Balance'}
                         </p>
-                        <h3 className="text-4xl font-black text-white tabular-nums">
+                        <h3 className="text-3xl sm:text-4xl font-black text-white tabular-nums">
                             {formatPrice(wallet?.pendingBalance || 0)}
                         </h3>
                         <p className="text-xs text-gray-500 font-bold mt-4 flex items-center gap-2">
@@ -106,7 +106,7 @@ export default function WalletTab() {
             </div>
 
             {/* Transactions History */}
-            <Card className="rounded-[24px] md:rounded-[40px] border-gray-800 bg-background/80 backdrop-blur-xl shadow-none overflow-hidden">
+            <Card className="rounded-[1.5rem] md:rounded-[40px] border-gray-800 bg-background/80 backdrop-blur-xl shadow-none overflow-hidden">
                 <div className="p-6 md:p-8 border-b border-gray-800 flex items-center justify-between">
                     <h3 className="text-lg md:text-xl font-black text-white flex items-center gap-3">
                         <div className="w-1.5 h-6 bg-white rounded-full" />

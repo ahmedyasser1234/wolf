@@ -114,21 +114,21 @@ export default function AdminOffersTab({
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-black text-white">{language === 'ar' ? 'إدارة العروض' : 'Manage Offers'}</h2>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+                <h2 className="text-xl sm:text-2xl font-black text-white">{language === 'ar' ? 'إدارة العروض' : 'Manage Offers'}</h2>
                 <Button
                     onClick={() => {
                         resetForm();
                         setIsModalOpen(true);
                     }}
-                    className="bg-purple-600 hover:bg-purple-700"
+                    className="bg-purple-600 hover:bg-purple-700 rounded-xl"
                 >
                     <Plus size={18} className="mr-2" />
                     {language === 'ar' ? 'إضافة عرض جديد' : 'Add New Offer'}
                 </Button>
             </div>
 
-            <Card className="border-0 shadow-none overflow-hidden bg-background border border-gray-800">
+            <Card className="border border-gray-800 rounded-[1.5rem] md:rounded-[2.5rem] bg-background shadow-none overflow-hidden">
                 <CardContent className="p-0">
                     <div className="p-6 border-b border-gray-800">
                         <div className="relative w-full md:w-64 text-start">
@@ -136,7 +136,7 @@ export default function AdminOffersTab({
                             <Input
                                 type="text"
                                 placeholder={language === 'ar' ? 'بحث عن عرض...' : 'Search offer...'}
-                                className={`${language === 'ar' ? 'pr-10' : 'pl-10'} bg-gray-900 border-gray-800 text-white`}
+                                className={`${language === 'ar' ? 'pr-10' : 'pl-10'} bg-gray-900 border-gray-800 text-white font-bold h-11 sm:h-12 rounded-xl text-base`}
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                             />
@@ -217,10 +217,10 @@ export default function AdminOffersTab({
 
             {/* Offer Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-background rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-800 text-start">
-                        <div className="p-6 border-b border-gray-800">
-                            <h3 className="text-xl font-bold text-white text-start">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3 sm:p-4">
+                    <div className="bg-background rounded-[1.5rem] md:rounded-[2.5rem] max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-800 text-start shadow-2xl">
+                        <div className="p-5 sm:p-6 border-b border-gray-800">
+                            <h3 className="text-lg sm:text-xl font-bold text-white text-start">
                                 {editingOffer ? (language === 'ar' ? 'تعديل العرض' : 'Edit Offer') : (language === 'ar' ? 'إضافة عرض جديد' : 'Add New Offer')}
                             </h3>
                         </div>
@@ -229,11 +229,11 @@ export default function AdminOffersTab({
                             <div className="grid md:grid-cols-2 gap-4">
                                 <div className="space-y-2 text-start">
                                     <label className="text-sm font-bold text-gray-300">{language === 'ar' ? 'اسم العرض (عربي)' : 'Offer Name (Arabic)'}</label>
-                                    <Input value={nameAr} onChange={(e) => setNameAr(e.target.value)} placeholder={language === 'ar' ? 'مثال: خصم الصيف' : 'e.g. Summer Sale'} className="bg-gray-900 border-gray-800 text-white" />
+                                    <Input value={nameAr} onChange={(e) => setNameAr(e.target.value)} placeholder={language === 'ar' ? 'مثال: خصم الصيف' : 'e.g. Summer Sale'} className="bg-gray-900 border-gray-800 text-white text-base md:text-sm" />
                                 </div>
                                 <div className="space-y-2 text-start">
                                     <label className="text-sm font-bold text-gray-300">{language === 'ar' ? 'اسم العرض (انجليزي)' : 'Offer Name (English)'}</label>
-                                    <Input value={nameEn} onChange={(e) => setNameEn(e.target.value)} placeholder={language === 'ar' ? 'مثال: خصم الصيف' : 'e.g. Summer Sale'} className="text-left bg-gray-900 border-gray-800 text-white" />
+                                    <Input value={nameEn} onChange={(e) => setNameEn(e.target.value)} placeholder={language === 'ar' ? 'مثال: خصم الصيف' : 'e.g. Summer Sale'} className="text-left bg-gray-900 border-gray-800 text-white text-base md:text-sm" />
                                 </div>
                             </div>
 
@@ -241,7 +241,7 @@ export default function AdminOffersTab({
                                 <label className="text-sm font-bold text-gray-300">{language === 'ar' ? 'نسبة الخصم (%)' : 'Discount Percentage (%)'}</label>
                                 <div className="relative">
                                     <Percent className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                    <Input type="number" value={discountPercent} onChange={(e) => setDiscountPercent(e.target.value)} placeholder="10" className="pl-10 text-left bg-gray-900 border-gray-800 text-white" />
+                                    <Input type="number" value={discountPercent} onChange={(e) => setDiscountPercent(e.target.value)} placeholder="10" className="pl-10 text-left bg-gray-900 border-gray-800 text-white text-base md:text-sm" />
                                 </div>
                             </div>
 

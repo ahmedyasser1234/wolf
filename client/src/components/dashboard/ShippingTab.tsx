@@ -153,9 +153,9 @@ export default function ShippingTab({ vendorId }: ShippingTabProps) {
                                     step="0.01"
                                     value={shippingCost}
                                     onChange={(e) => setShippingCost(e.target.value)}
-                                    className="pl-16 h-12 text-lg font-bold rounded-xl border-gray-800 bg-gray-900 text-white focus:ring-blue-500"
+                                    className="pl-16 h-12 text-base md:text-lg font-bold rounded-xl border-gray-800 bg-gray-900 text-white focus:ring-blue-500"
                                 />
-                                <div className="absolute top-0 left-0 h-full flex items-center px-4 text-white font-bold border-r border-gray-800">
+                                <div className="absolute top-0 left-0 h-full flex items-center px-4 text-xs md:text-sm text-white font-bold border-r border-gray-800">
                                     {t('sar')}
                                 </div>
                             </div>
@@ -205,10 +205,10 @@ export default function ShippingTab({ vendorId }: ShippingTabProps) {
                                         step="1"
                                         value={freeShippingThreshold}
                                         onChange={(e) => setFreeShippingThreshold(e.target.value)}
-                                        className="pl-16 h-12 text-lg font-bold rounded-xl border-gray-800 bg-gray-900 text-white"
+                                        className="pl-16 h-12 text-base md:text-lg font-bold rounded-xl border-gray-800 bg-gray-900 text-white"
                                         placeholder="1000"
                                     />
-                                    <div className="absolute top-0 left-0 h-full flex items-center px-4 text-white font-bold border-r border-gray-800">
+                                    <div className="absolute top-0 left-0 h-full flex items-center px-4 text-xs md:text-sm text-white font-bold border-r border-gray-800">
                                         {t('sar')}
                                     </div>
                                 </div>
@@ -230,7 +230,7 @@ export default function ShippingTab({ vendorId }: ShippingTabProps) {
             </div>
 
             {/* Bottom Actions and Excel Integration */}
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-background border border-gray-800 p-6 rounded-[2rem] shadow-xl uppercase tracking-tight">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-background border border-gray-800 p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] shadow-xl uppercase tracking-tight">
                 <div className="flex flex-wrap items-center gap-3">
                     <Button
                         variant="outline"

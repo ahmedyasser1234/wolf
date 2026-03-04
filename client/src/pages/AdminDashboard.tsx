@@ -194,11 +194,11 @@ function SettingsTab() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <Card className="border-0 shadow-sm overflow-hidden text-start bg-background border border-gray-800" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+      <Card className="border-0 shadow-sm overflow-hidden text-start bg-background border border-gray-800 rounded-[1.5rem] md:rounded-[2rem]" dir={language === 'ar' ? 'rtl' : 'ltr'}>
         <CardHeader>
           <CardTitle>{language === 'ar' ? "إعدادات الحساب" : "Account Settings"}</CardTitle>
         </CardHeader>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="flex flex-col items-center gap-4 mb-6">
               <div
@@ -235,7 +235,7 @@ function SettingsTab() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder={language === 'ar' ? "ادخل اسمك" : "Enter your name"}
-                  className="w-full"
+                  className="w-full text-base"
                   required
                 />
               </div>
@@ -249,7 +249,7 @@ function SettingsTab() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="example@fustan.com"
-                  className="w-full text-left"
+                  className="w-full text-left text-base"
                   required
                 />
               </div>
@@ -264,7 +264,7 @@ function SettingsTab() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full text-left pr-12"
+                    className="w-full text-left pr-12 text-base"
                   />
                   <button
                     type="button"
@@ -603,14 +603,14 @@ export default function AdminDashboard() {
 
       {/* Navigation Tabs */}
       <div className="bg-background border-b border-gray-800 relative">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-2 px-2 lg:flex-wrap lg:overflow-visible lg:pb-0">
+        <div className="container mx-auto px-4 py-4 md:py-6">
+          <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-2 px-2 lg:flex-wrap lg:overflow-visible lg:pb-0">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`group h-10 md:h-12 px-4 md:px-6 rounded-xl md:rounded-2xl font-bold text-xs md:text-sm flex items-center gap-2 transition-all duration-300 relative overflow-hidden whitespace-nowrap min-w-fit ${activeTab === tab.id
-                  ? `bg-gradient-to-r ${tab.color} text-white shadow-lg scale-105`
+                className={`group h-11 md:h-14 px-5 md:px-8 rounded-xl md:rounded-2xl font-bold text-xs md:text-sm flex items-center gap-2.5 transition-all duration-300 relative overflow-hidden whitespace-nowrap min-w-fit shadow-sm ${activeTab === tab.id
+                  ? `bg-gradient-to-r ${tab.color} text-white shadow-lg scale-105 z-10`
                   : "bg-gray-800 text-white hover:bg-gray-700 hover:text-white border border-transparent hover:border-gray-600 hover:shadow-md"
                   }`}
               >
@@ -628,63 +628,69 @@ export default function AdminDashboard() {
       </div>
 
       {/* Content */}
-      <main className="flex-1 overflow-auto p-8">
+      <main className="flex-1 overflow-auto p-4 sm:p-8">
         {/* Overview Tab */}
         {activeTab === "overview" && (
           <div className="space-y-8">
             {/* Stats Cards */}
             <div className="grid lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-2 gap-6">
-              <Card className="border-0 shadow-sm border-r-4 border-r-blue-500 rounded-3xl bg-background border border-gray-800">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <header className="h-6 mb-1">
-                        <p className="text-xs text-white font-bold uppercase tracking-widest">{t('totalCustomers')}</p>
+              <Card className="border-0 shadow-sm border-r-4 border-r-blue-500 rounded-3xl bg-background border border-gray-800 h-full">
+                <CardContent className="p-5 md:p-6">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <header className="h-4 md:h-6 flex items-center">
+                        <p className="text-[10px] md:text-xs text-white font-black uppercase tracking-widest opacity-70">{t('totalCustomers')}</p>
                       </header>
-                      <p className="text-3xl font-black text-white">{customers?.length || 0}</p>
+                      <p className="text-2xl md:text-3xl font-black text-white">{customers?.length || 0}</p>
                     </div>
-                    <Users className="w-12 h-12 text-blue-400" />
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-900/20 rounded-2xl flex items-center justify-center shrink-0">
+                      <Users className="w-5 h-5 md:w-6 md:h-6 text-blue-400" />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-0 shadow-sm border-r-4 border-r-yellow-500 bg-background border border-gray-800">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-white mb-1">{t('totalProducts')}</p>
-                      <p className="text-3xl font-black text-white">{products?.length || 0}</p>
+              <Card className="border-0 shadow-sm border-r-4 border-r-yellow-500 bg-background border border-gray-800 h-full">
+                <CardContent className="p-5 md:p-6">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <p className="text-[10px] md:text-xs text-white font-black uppercase tracking-widest opacity-70">{t('totalProducts')}</p>
+                      <p className="text-2xl md:text-3xl font-black text-white">{products?.length || 0}</p>
                     </div>
-                    <Package className="w-12 h-12 text-yellow-400" />
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-yellow-900/20 rounded-2xl flex items-center justify-center shrink-0">
+                      <Package className="w-5 h-5 md:w-6 md:h-6 text-yellow-400" />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-0 shadow-sm border-r-4 border-primary/20 bg-background border border-gray-800">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-white mb-1">{t('paidOrders')}</p>
-                      <p className="text-3xl font-black text-white">{adminOrders?.length || 0}</p>
+              <Card className="border-0 shadow-sm border-r-4 border-primary/20 bg-background border border-gray-800 h-full">
+                <CardContent className="p-5 md:p-6">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <p className="text-[10px] md:text-xs text-white font-black uppercase tracking-widest opacity-70">{t('paidOrders')}</p>
+                      <p className="text-2xl md:text-3xl font-black text-white">{adminOrders?.length || 0}</p>
                     </div>
-                    <ShoppingCart className="w-12 h-12 text-primary/40" />
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-primary/10 rounded-2xl flex items-center justify-center shrink-0">
+                      <ShoppingCart className="w-5 h-5 md:w-6 md:h-6 text-primary" />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-0 shadow-sm border-r-4 border-r-emerald-500 bg-background border border-gray-800">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-bold text-emerald-400 mb-1">{t('totalRevenue')}</p>
-                      <p className="text-2xl font-black text-white">{totalRevenue.toFixed(2)} {t('currency')}</p>
-                      <div className="mt-2 flex items-center gap-1 text-[10px] text-emerald-600 font-bold">
+              <Card className="border-0 shadow-sm border-r-4 border-r-emerald-500 bg-background border border-gray-800 h-full">
+                <CardContent className="p-5 md:p-6">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <p className="text-[10px] md:text-xs text-emerald-400 font-black uppercase tracking-widest">{t('totalRevenue')}</p>
+                      <p className="text-xl md:text-2xl font-black text-white">{totalRevenue.toFixed(2)} {t('currency')}</p>
+                      <div className="mt-1 flex items-center gap-1 text-[10px] text-emerald-600 font-bold">
                         <TrendingUp size={10} />
                         <span>{t('fromPaidOrders')}</span>
                       </div>
                     </div>
-                    <div className="w-12 h-12 bg-emerald-900/30 rounded-2xl flex items-center justify-center">
-                      <TrendingUp className="w-6 h-6 text-emerald-600" />
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-900/30 rounded-2xl flex items-center justify-center shrink-0">
+                      <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-emerald-600" />
                     </div>
                   </div>
                 </CardContent>
@@ -823,7 +829,7 @@ export default function AdminDashboard() {
         {
           activeTab === "orders" && (
             <div>
-              <h2 className="text-2xl font-black text-white mb-6 flex items-center gap-3">
+              <h2 className="text-xl sm:text-2xl font-black text-white mb-6 flex items-center gap-3">
                 <div className="w-10 h-10 bg-orange-900/30 rounded-xl flex items-center justify-center">
                   <ShoppingCart className="w-6 h-6 text-orange-400" />
                 </div>
@@ -898,9 +904,9 @@ export default function AdminDashboard() {
                             </td>
                             <td className="py-4 px-6 text-center">
                               <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${order.paymentStatus === 'paid' ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800/50' :
-                                  order.paymentStatus === 'failed' ? 'bg-red-900/40 text-red-400 border-red-800/50' :
-                                    order.paymentStatus === 'pending_kyc_review' ? 'bg-amber-900/40 text-amber-500 border-amber-800/50' :
-                                      'bg-blue-900/40 text-blue-400 border-blue-800/50'
+                                order.paymentStatus === 'failed' ? 'bg-red-900/40 text-red-400 border-red-800/50' :
+                                  order.paymentStatus === 'pending_kyc_review' ? 'bg-amber-900/40 text-amber-500 border-amber-800/50' :
+                                    'bg-blue-900/40 text-blue-400 border-blue-800/50'
                                 }`}>
                                 {order.paymentStatus === 'paid' ? (language === 'ar' ? 'مدفوع' : 'Paid') :
                                   order.paymentStatus === 'pending_kyc_review' ? (language === 'ar' ? 'مراجعة أوراق' : 'Reviewing') :
@@ -910,8 +916,8 @@ export default function AdminDashboard() {
                             </td>
                             <td className="py-4 px-6 text-center">
                               <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${order.status === 'delivered' ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800/50' :
-                                  order.status === 'cancelled' ? 'bg-red-900/40 text-red-400 border-red-800/50' :
-                                    'bg-blue-900/40 text-blue-400 border-blue-800/50'
+                                order.status === 'cancelled' ? 'bg-red-900/40 text-red-400 border-red-800/50' :
+                                  'bg-blue-900/40 text-blue-400 border-blue-800/50'
                                 }`}>
                                 {order.status === 'delivered' ? t('delivered') :
                                   order.status === 'cancelled' ? (language === 'ar' ? 'ملغى' : 'Cancelled') :
@@ -946,14 +952,14 @@ export default function AdminDashboard() {
         {
           activeTab === "customers" && (
             <div>
-              <h2 className="text-2xl font-black text-white mb-6 flex items-center gap-3">
+              <h2 className="text-xl sm:text-2xl font-black text-white mb-6 flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-900/30 rounded-xl flex items-center justify-center">
                   <UserCheck className="w-6 h-6 text-blue-400" />
                 </div>
                 {t('manageCustomers')}
               </h2>
 
-              <Card className="border-0 shadow-sm overflow-hidden">
+              <Card className="border border-gray-800 rounded-[1.5rem] md:rounded-[2.5rem] bg-background shadow-none overflow-hidden">
                 <CardContent className="p-0">
                   <div className="p-4 md:p-6 border-b border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4 bg-gray-900/50">
                     <div className="flex flex-wrap items-center gap-3 order-2 md:order-1">
@@ -1000,7 +1006,61 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  <div className="overflow-x-auto text-start" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                  {/* Mobile Customer Cards */}
+                  <div className="md:hidden space-y-4 p-4">
+                    {customers?.filter((c: any) =>
+                      c.name?.toLowerCase().includes(customerSearch.toLowerCase()) ||
+                      c.email?.toLowerCase().includes(customerSearch.toLowerCase()) ||
+                      (c.phone && c.phone.includes(customerSearch))
+                    ).map((c: any) => (
+                      <Card key={c.id}
+                        className="border border-gray-800 shadow-sm rounded-2xl overflow-hidden bg-gray-900/50"
+                        onClick={() => { setDetailsCustomerId(c.id); setCustomerDetailsOpen(true); }}
+                      >
+                        <CardContent className="p-4 space-y-3">
+                          <div className="flex items-center gap-3">
+                            <div className="relative">
+                              <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-white font-black text-xs uppercase shadow-sm border border-gray-700">
+                                {(c.name || 'C').substring(0, 2)}
+                              </div>
+                              {isUserOnline(c.id) && (
+                                <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full animate-pulse shadow-sm"></span>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-bold text-white truncate">{c.name || t('customerUnknown')}</h4>
+                              <p className="text-xs text-gray-500 truncate">{c.email}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-between items-center text-xs">
+                            <div className="text-gray-400">
+                              <p>{t('mobileNumber')}: {c.phone || '-'}</p>
+                            </div>
+                            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-9 w-9 text-white hover:text-purple-400 hover:bg-purple-900/30 rounded-lg"
+                                onClick={() => {
+                                  openAdminChat({
+                                    recipientId: c.id,
+                                    name: c.name || t('customer'),
+                                    logo: c.avatar
+                                  });
+                                }}
+                              >
+                                <MessageSquare className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+
+                  {/* Desktop Table View */}
+                  <div className="hidden md:block overflow-x-auto text-start" dir={language === 'ar' ? 'rtl' : 'ltr'}>
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-gray-800 bg-gray-900">
@@ -1096,14 +1156,14 @@ export default function AdminDashboard() {
         {
           activeTab === "chat" && (
             <div>
-              <h2 className="text-2xl font-black text-white mb-6 flex items-center gap-3">
+              <h2 className="text-xl sm:text-2xl font-black text-white mb-6 flex items-center gap-3">
                 <div className="w-10 h-10 bg-indigo-900/30 rounded-xl flex items-center justify-center">
                   <MessageSquare className="w-6 h-6 text-indigo-400" />
                 </div>
                 {t('manageConversations')}
               </h2>
 
-              <Card className="border-0 shadow-sm overflow-hidden">
+              <Card className="border border-gray-800 rounded-[1.5rem] md:rounded-[2.5rem] bg-background shadow-none overflow-hidden">
                 <div className="bg-gray-900/50 px-6 py-4 border-b border-gray-800 flex items-center justify-between">
                   <p className="text-sm font-bold text-gray-300">{t('activeConversationsDesc')}</p>
                   <span className="bg-gray-800 px-3 py-1 rounded-lg border border-gray-700 text-white text-xs font-black">

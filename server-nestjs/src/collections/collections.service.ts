@@ -15,6 +15,25 @@ export class CollectionsService {
     async create(data: { nameAr: string; nameEn: string; vendorId: number; description?: string; image?: Express.Multer.File; categoryId: number; downPaymentPercentage?: number }) {
         let coverImage = "";
 
+        // Log input data for debugging
+        console.log("⚙️ [Collections Service] Processing Create Collection:", {
+            nameAr: data.nameAr,
+            nameEn: data.nameEn,
+            vendorId: data.vendorId,
+            categoryId: data.categoryId,
+            downPaymentPercentage: data.downPaymentPercentage
+        });
+
+        if (!data.vendorId || isNaN(data.vendorId)) {
+            console.error("❌ [Collections Service] Invalid or Missing Vendor ID:", data.vendorId);
+            throw new Error("Product must belong to a valid vendor");
+        }
+
+        if (!data.categoryId || isNaN(data.categoryId)) {
+            console.error("❌ [Collections Service] Invalid or Missing Category ID:", data.categoryId);
+            throw new NotFoundException('Category is required and must be a valid ID');
+        }
+
         if (data.image) {
             try {
                 const upload = await this.cloudinary.uploadFile(data.image);
@@ -28,15 +47,12 @@ export class CollectionsService {
             }
         }
 
-        if (!data.categoryId) {
-            throw new NotFoundException('Category is required');
-        }
-
         const category = await this.db.db.query.categories.findFirst({
             where: eq(categories.id, data.categoryId),
         });
 
         if (!category) {
+            console.error("❌ [Collections Service] Category not found:", data.categoryId);
             throw new NotFoundException('Invalid Category ID');
         }
 
@@ -45,7 +61,7 @@ export class CollectionsService {
         if (!slug) slug = `collection-${Date.now()}`;
 
         try {
-            console.log("Creating collection with data:", { ...data, image: data.image ? 'File present' : 'No file', slug });
+            console.log("🚀 [Collections Service] Inserting collection into database...");
 
             const [collection] = await this.db.db
                 .insert(collections)
@@ -56,14 +72,15 @@ export class CollectionsService {
                     description: data.description,
                     slug: `${slug}-${Date.now()}`,
                     coverImage,
-                    categoryId: data.categoryId, // Add categoryId
+                    categoryId: data.categoryId,
                     downPaymentPercentage: Number(data.downPaymentPercentage || 0),
                 })
                 .returning();
 
+            console.log("✅ [Collections Service] Collection created successfully ID:", collection.id);
             return collection;
         } catch (error) {
-            console.error("Database Insert Error:", error);
+            console.error("❌ [Collections Service] Database Insert Error:", error);
             throw error;
         }
     }

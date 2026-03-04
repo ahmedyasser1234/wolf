@@ -153,7 +153,7 @@ export default function AdminAnalyticsTab() {
                             <TrendingUp className="w-6 h-6 -primary" />
                         </div>
                     </CardHeader>
-                    <CardContent className="pt-6 h-[350px]" dir="ltr">
+                    <CardContent className="pt-6 h-[280px] sm:h-[350px]" dir="ltr">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={salesHistory}>
                                 <defs>
@@ -205,7 +205,7 @@ export default function AdminAnalyticsTab() {
                             <Package className="w-6 h-6 text-indigo-600" />
                         </div>
                     </CardHeader>
-                    <CardContent className="pt-6 h-[350px]" dir="ltr">
+                    <CardContent className="pt-6 h-[280px] sm:h-[350px]" dir="ltr">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
@@ -239,7 +239,7 @@ export default function AdminAnalyticsTab() {
                             <Store className="w-6 h-6 text-emerald-600" />
                         </div>
                     </CardHeader>
-                    <CardContent className="pt-8 h-[400px]" dir="ltr">
+                    <CardContent className="pt-8 h-[300px] sm:h-[400px]" dir="ltr">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={topVendors} layout="vertical">
                                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#1f2937" />

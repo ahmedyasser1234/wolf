@@ -102,8 +102,8 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700" dir={language === 'ar' ? 'rtl' : 'ltr'}>
             <div className="flex items-center justify-between">
                 <div className={language === 'ar' ? 'text-right' : 'text-left'}>
-                    <h2 className="text-3xl font-black text-white mb-2">{language === 'ar' ? "إدارة الطلبات" : "Order Management"}</h2>
-                    <p className="text-white font-bold">{language === 'ar' ? "تابع وحمل وأدر طلبات عملائك بكل سهولة" : "Track and manage your customer orders easily"}</p>
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white mb-2">{language === 'ar' ? "إدارة الطلبات" : "Order Management"}</h2>
+                    <p className="text-white font-bold text-xs sm:text-sm md:text-base">{language === 'ar' ? "تابع وحمل وأدر طلبات عملائك بكل سهولة" : "Track and manage your customer orders easily"}</p>
                 </div>
             </div>
 
@@ -120,8 +120,8 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
             ) : (
                 <div className="space-y-8">
                     {orders.map((order: any) => (
-                        <Card key={order.id} className="overflow-hidden border border-gray-800 shadow-none rounded-[40px] bg-background group hover:scale-[1.01] transition-transform duration-300">
-                            <div className="bg-gray-900/50 px-8 py-6 border-b border-gray-800">
+                        <Card key={order.id} className="overflow-hidden border border-gray-800 shadow-none rounded-[1.5rem] md:rounded-[2.5rem] bg-background group hover:scale-[1.01] transition-transform duration-300">
+                            <div className="bg-gray-900/50 px-4 sm:px-8 py-5 sm:py-6 border-b border-gray-800">
                                 {/* Top Row: Order Number + Date */}
                                 <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
                                     <div className="flex items-center gap-6">
@@ -153,10 +153,10 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
                                 {/* Bottom Row: Customer + Status */}
                                 <div className="flex flex-wrap items-center justify-between gap-4">
                                     <button
-                                        className="flex items-center gap-4 bg-gray-900 px-5 py-2.5 rounded-2xl border border-gray-800 shadow-none hover:bg-gray-800 transition-all duration-300 group/customer"
+                                        className="flex items-center gap-3 md:gap-4 bg-gray-900 px-3 md:px-5 py-2 md:py-3 rounded-2xl border border-gray-800 shadow-none hover:bg-gray-800 transition-all duration-300 group/customer"
                                         onClick={() => onCustomerClick({ ...order.customer, shippingAddress: order.shippingAddress })}
                                     >
-                                        <div className="w-8 h-8 rounded-full bg-purple-900/30 flex items-center justify-center group-hover/customer:scale-110 transition-transform">
+                                        <div className="w-8 h-8 rounded-full bg-purple-900/30 flex items-center justify-center group-hover/customer:scale-110 transition-transform shrink-0">
                                             <span className="text-xs font-black text-purple-400">{(order.customer?.name?.[0] || 'G').toUpperCase()}</span>
                                         </div>
                                         <div className={`flex flex-col ${language === 'ar' ? 'text-right' : 'text-left'}`}>
@@ -182,7 +182,7 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
                                         <div className="relative">
                                             <select
                                                 className={cn(
-                                                    "text-xs font-black px-6 py-3 rounded-2xl border-none outline-none cursor-pointer appearance-none transition-all duration-300 hover:opacity-80",
+                                                    "text-base md:text-xs font-black px-4 md:px-6 py-2.5 md:py-3 rounded-2xl border-none outline-none cursor-pointer appearance-none transition-all duration-300 hover:opacity-80 w-fit",
                                                     STATUS_LABELS[order.status]?.color || "bg-gray-800 text-white"
                                                 )}
                                                 value={order.status}
@@ -299,8 +299,8 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
 
             {/* KYC Review Modal */}
             {kycModalOrder && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.85)' }}>
-                    <div className="bg-gray-950 border border-gray-800 rounded-[2rem] p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4" style={{ background: 'rgba(0,0,0,0.85)' }}>
+                    <div className="bg-gray-950 border border-gray-800 rounded-[1.5rem] md:rounded-[2rem] p-5 sm:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto" dir={language === 'ar' ? 'rtl' : 'ltr'}>
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-2xl font-black text-white">{language === 'ar' ? 'مراجعة طلب التقسيط' : 'Installment Review'}</h2>
                             <span className="text-sm font-bold text-amber-400 bg-amber-900/30 px-4 py-1.5 rounded-full">#{kycModalOrder.orderNumber}</span>

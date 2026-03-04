@@ -124,8 +124,8 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
                         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-green-500 text-white px-4 py-1.5 rounded-full flex items-center gap-2 font-bold text-sm">
                             <CheckCircle2 size={14} /> {isAr ? "تم ✓" : "Done ✓"}
                         </div>
-                        <button onClick={() => retake(docKey)} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-red-500 transition">
-                            <RotateCcw size={15} />
+                        <button onClick={() => retake(docKey)} className="absolute top-3 right-3 w-11 h-11 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-red-500 transition shadow-lg backdrop-blur-sm">
+                            <RotateCcw size={18} />
                         </button>
                     </div>
                 </div>
@@ -223,12 +223,12 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
     };
 
     return (
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4 md:space-y-8">
-            <div className="bg-white p-3 sm:p-8 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-gray-50 text-right overflow-hidden">
-                <h2 className="text-lg sm:text-2xl md:text-3xl font-black text-gray-900 mb-2 flex items-center justify-end gap-3 font-arabic flex-wrap">
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4 md:space-y-8 w-full">
+            <div className="bg-white p-4 sm:p-8 md:p-10 rounded-[1.5rem] md:rounded-[3rem] shadow-xl border border-gray-50 text-right overflow-hidden w-full">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 mb-2 flex items-center justify-end gap-3 font-arabic flex-wrap">
                     التحقق من الهوية (KYC) <UserCheck className="text-primary" />
                 </h2>
-                <p className="text-gray-500 font-bold mb-4 md:mb-8 leading-relaxed font-arabic text-xs md:text-sm">
+                <p className="text-gray-500 font-bold mb-6 md:mb-8 leading-relaxed font-arabic text-[12px] sm:text-sm">
                     لإكمال عملية التقسيط، التقط صورة لوجهك ثم صوّر وثائق الإقامة وجواز السفر.
                 </p>
 
@@ -243,9 +243,9 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
                 </div>
 
                 {/* Progress */}
-                <div className="flex items-center justify-center gap-3 mt-8">
+                <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mt-8">
                     {(["faceId", "residency", "passport"] as DocKey[]).map(k => (
-                        <div key={k} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black transition-all ${images[k] ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
+                        <div key={k} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-black transition-all ${images[k] ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
                             {images[k] ? <CheckCircle2 size={12} /> : <div className="w-3 h-3 rounded-full border-2 border-current" />}
                             {isAr ? DOC_CONFIG[k].labelAr.split(".")[1].trim().split(" ")[0] : DOC_CONFIG[k].labelEn.split(".")[1].trim().split(" ")[0]}
                         </div>
@@ -253,7 +253,7 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 md:gap-4 mt-6 md:mt-8 font-arabic">
-                    <Button onClick={onBack} variant="outline" className="h-11 md:h-16 rounded-full border-2 border-gray-300 text-gray-900 hover:bg-gray-100 text-base md:text-xl font-bold">العودة</Button>
+                    <Button onClick={onBack} variant="outline" className="h-12 md:h-16 rounded-full border-2 border-gray-300 text-gray-900 hover:bg-gray-100 text-sm md:text-xl font-bold">العودة</Button>
                     <Button
                         disabled={!isStepComplete}
                         onClick={() => {
@@ -261,7 +261,7 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
                                 onComplete({ faceIdImage: images.faceId, residencyImage: images.residency, passportImage: images.passport });
                             }
                         }}
-                        className="h-11 md:h-16 rounded-full bg-primary hover:bg-primary/90 text-sm md:text-xl font-bold shadow-xl shadow-primary/20 text-gray-900 disabled:opacity-50 disabled:text-gray-700"
+                        className="h-12 md:h-16 rounded-full bg-primary hover:bg-primary/90 text-sm md:text-xl font-bold shadow-xl shadow-primary/20 text-gray-950 disabled:opacity-50 disabled:text-gray-700"
                     >
                         {isStepComplete ? '✓ تأكيد والمتابعة' : `${[!images.faceId, !images.residency, !images.passport].filter(Boolean).length} ${isAr ? 'متبقية' : 'remaining'}`}
                     </Button>

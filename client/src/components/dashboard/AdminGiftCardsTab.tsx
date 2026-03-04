@@ -97,10 +97,10 @@ export default function AdminGiftCardsTab({
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-black text-white flex items-center gap-3">
-                    <div className="w-10 h-10 bg-emerald-900/30 rounded-xl flex items-center justify-center">
-                        <Gift className="text-emerald-400 w-6 h-6" />
+            <div className="flex flex-wrap items-center justify-between gap-4">
+                <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-3">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-900/30 rounded-xl flex items-center justify-center shrink-0">
+                        <Gift className="text-emerald-400 w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     {language === 'ar' ? 'إدارة الجيفت كارد' : 'Manage Gift Cards'}
                 </h2>
@@ -124,7 +124,7 @@ export default function AdminGiftCardsTab({
                             <Input
                                 type="text"
                                 placeholder={language === 'ar' ? 'بحث عن كود...' : 'Search code...'}
-                                className={`${language === 'ar' ? 'pr-10' : 'pl-10'} bg-gray-900 border-gray-800 text-white rounded-xl`}
+                                className={`${language === 'ar' ? 'pr-10' : 'pl-10'} bg-gray-900 border-gray-800 text-white rounded-xl text-base md:text-sm`}
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                             />
@@ -193,23 +193,23 @@ export default function AdminGiftCardsTab({
             </Card>
 
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <div className="bg-gray-900 border border-gray-800 rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="p-8 border-b border-gray-800 flex items-center justify-between bg-gradient-to-r from-emerald-900/20 to-transparent">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-gray-900 border border-gray-800 rounded-[1.5rem] md:rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="p-6 sm:p-8 border-b border-gray-800 flex items-center justify-between bg-gradient-to-r from-emerald-900/20 to-transparent">
                             <div>
-                                <h3 className="text-2xl font-black text-white">
+                                <h3 className="text-xl sm:text-2xl font-black text-white">
                                     {editingCoupon ? (language === 'ar' ? 'تعديل الجيفت كارد' : 'Edit Gift Card') : (language === 'ar' ? 'إنشاء جيفت كارد' : 'Create Gift Card')}
                                 </h3>
-                                <p className="text-xs text-gray-400 font-bold mt-1 uppercase tracking-widest">
+                                <p className="text-[10px] sm:text-xs text-gray-400 font-bold mt-1 uppercase tracking-widest">
                                     {language === 'ar' ? "رصيد محفظة مباشر" : "Direct Wallet Credit"}
                                 </p>
                             </div>
-                            <div className="w-14 h-14 bg-emerald-900/30 rounded-2xl flex items-center justify-center">
-                                <Gift className="text-emerald-400 w-7 h-7" />
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-emerald-900/30 rounded-2xl flex items-center justify-center shrink-0">
+                                <Gift className="text-emerald-400 w-6 h-6 sm:w-7 sm:h-7" />
                             </div>
                         </div>
 
-                        <div className="p-8 space-y-6">
+                        <div className="p-5 sm:p-8 space-y-5 sm:space-y-6">
                             <div className="space-y-2 text-start">
                                 <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">{language === 'ar' ? 'كود الجيفت كارد' : 'Gift Card Code'}</label>
                                 <div className="flex gap-2">

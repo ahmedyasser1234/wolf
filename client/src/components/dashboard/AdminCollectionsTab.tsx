@@ -98,10 +98,14 @@ export default function AdminCollectionsTab({
         const formData = new FormData();
         formData.append("nameAr", nameAr);
         formData.append("nameEn", nameEn);
+        // Sync with backend description field - send Arabic as primary or combined
+        formData.append("description", descriptionAr || descriptionEn);
         formData.append("descriptionAr", descriptionAr);
         formData.append("descriptionEn", descriptionEn);
-        formData.append("image", image);
         formData.append("downPaymentPercentage", downPaymentPercentage.toString());
+        if (vendorId) {
+            formData.append("vendorId", vendorId.toString());
+        }
         formData.append("categoryId", categoryId);
 
         if (imageFile) {
@@ -164,14 +168,14 @@ export default function AdminCollectionsTab({
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-black text-white">{language === 'ar' ? 'إدارة المجموعات (الماركات)' : 'Manage Collections (Brands)'}</h2>
-                <div className="flex gap-4">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <h2 className="text-xl sm:text-2xl font-black text-white">{language === 'ar' ? 'إدارة المجموعات (الماركات)' : 'Manage Collections (Brands)'}</h2>
+                <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
                     {collections?.length === 0 && (
                         <Button
                             onClick={() => seedMutation.mutate()}
                             disabled={seedMutation.isPending}
-                            className="bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 border border-purple-500/30 font-black h-12 px-6 rounded-xl animate-pulse"
+                            className="flex-1 md:flex-none bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 border border-purple-500/30 font-black h-12 px-6 rounded-xl animate-pulse text-base"
                         >
                             {seedMutation.isPending ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
                             {language === 'ar' ? 'تعبئة تقنية سريعة' : 'Quick Tech Seed'}
@@ -182,7 +186,7 @@ export default function AdminCollectionsTab({
                             resetForm();
                             setIsModalOpen(true);
                         }}
-                        className="bg-purple-600 hover:bg-purple-700 h-12 px-6 rounded-xl font-black shadow-lg shadow-purple-900/20"
+                        className="flex-1 md:flex-none bg-purple-600 hover:bg-purple-700 h-11 sm:h-12 px-6 rounded-xl font-black shadow-lg shadow-purple-900/20 text-sm sm:text-base min-h-[44px]"
                     >
                         <Plus size={18} className={language === 'ar' ? 'ml-2' : 'mr-2'} />
                         {language === 'ar' ? 'إضافة مجموعة جديدة' : 'Add New Collection'}
@@ -190,7 +194,7 @@ export default function AdminCollectionsTab({
                 </div>
             </div>
 
-            <Card className="border-0 shadow-none overflow-hidden bg-background border border-gray-800">
+            <Card className="border border-gray-800 rounded-[1.5rem] md:rounded-[2rem] bg-background shadow-none overflow-hidden">
                 <CardContent className="p-0">
                     <div className="p-6 border-b border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4">
                         <div className="relative w-full md:w-64">
@@ -198,7 +202,7 @@ export default function AdminCollectionsTab({
                             <Input
                                 type="text"
                                 placeholder={language === 'ar' ? 'بحث عن مجموعة...' : 'Search collection...'}
-                                className={`${language === 'ar' ? 'pr-10' : 'pl-10'} bg-gray-900 border-gray-800 text-white font-bold h-12 rounded-xl`}
+                                className={`${language === 'ar' ? 'pr-10' : 'pl-10'} bg-gray-900 border-gray-800 text-white font-bold h-11 sm:h-12 rounded-xl text-base`}
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                             />
@@ -298,17 +302,17 @@ export default function AdminCollectionsTab({
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 onClick={() => handleEdit(collection)}
-                                                                className="h-10 w-10 bg-gray-800 text-blue-400 hover:text-blue-300 hover:bg-gray-700 rounded-xl"
+                                                                className="h-11 w-11 bg-gray-800 text-blue-400 hover:text-blue-300 hover:bg-gray-700 rounded-xl min-h-[44px] min-w-[44px]"
                                                             >
-                                                                <Edit className="w-4 h-4" />
+                                                                <Edit className="w-5 h-5" />
                                                             </Button>
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 onClick={() => handleDelete(collection.id, collection)}
-                                                                className="h-10 w-10 bg-gray-800 text-red-400 hover:text-red-300 hover:bg-gray-700 rounded-xl"
+                                                                className="h-11 w-11 bg-gray-800 text-red-400 hover:text-red-300 hover:bg-gray-700 rounded-xl min-h-[44px] min-w-[44px]"
                                                             >
-                                                                <Trash2 className="w-4 h-4" />
+                                                                <Trash2 className="w-5 h-5" />
                                                             </Button>
                                                         </div>
                                                     </td>
@@ -323,11 +327,11 @@ export default function AdminCollectionsTab({
             </Card>
 
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-gray-950 rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col border border-gray-800 shadow-2xl overflow-hidden relative">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+                    <div className="bg-gray-950 rounded-[1.5rem] md:rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col border border-gray-800 shadow-2xl overflow-hidden relative">
                         {/* Header */}
-                        <div className="p-6 border-b border-gray-800 flex items-center justify-between bg-gray-900/50 flex-shrink-0">
-                            <h3 className="text-xl font-black text-white">
+                        <div className="p-4 sm:p-6 border-b border-gray-800 flex items-center justify-between bg-gray-900/50 flex-shrink-0">
+                            <h3 className="text-lg sm:text-xl font-black text-white">
                                 {editingCollection ? (language === 'ar' ? 'تعديل المجموعة' : 'Edit Collection') : (language === 'ar' ? 'إضافة مجموعة جديدة' : 'Add New Collection')}
                             </h3>
                             <Button variant="ghost" size="icon" onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-white">
@@ -336,7 +340,7 @@ export default function AdminCollectionsTab({
                         </div>
 
                         {/* Content */}
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
+                        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 min-h-0">
                             {/* Image Section */}
                             <div className="flex flex-col items-center gap-4">
                                 <div
@@ -390,7 +394,7 @@ export default function AdminCollectionsTab({
                                         value={nameAr}
                                         onChange={(e) => setNameAr(e.target.value)}
                                         placeholder="مثال: آيفون، سامسونج..."
-                                        className="bg-gray-900 border-gray-800 text-white h-12 rounded-xl focus:ring-purple-500/20"
+                                        className="bg-gray-900 border-gray-800 text-white h-12 rounded-xl focus:ring-purple-500/20 text-base"
                                     />
                                 </div>
 
@@ -400,7 +404,7 @@ export default function AdminCollectionsTab({
                                         value={nameEn}
                                         onChange={(e) => setNameEn(e.target.value)}
                                         placeholder="e.g. iPhone, Samsung..."
-                                        className="text-left bg-gray-900 border-gray-800 text-white h-12 rounded-xl focus:ring-purple-500/20"
+                                        className="text-left bg-gray-900 border-gray-800 text-white h-12 rounded-xl focus:ring-purple-500/20 text-base"
                                     />
                                 </div>
 
@@ -410,7 +414,7 @@ export default function AdminCollectionsTab({
                                         value={descriptionAr}
                                         onChange={(e) => setDescriptionAr(e.target.value)}
                                         placeholder={language === 'ar' ? 'وصف مختصر...' : 'Short description...'}
-                                        className="bg-gray-900 border-gray-800 text-white h-12 rounded-xl focus:ring-purple-500/20"
+                                        className="bg-gray-900 border-gray-800 text-white h-12 rounded-xl focus:ring-purple-500/20 text-base"
                                     />
                                 </div>
                             </div>

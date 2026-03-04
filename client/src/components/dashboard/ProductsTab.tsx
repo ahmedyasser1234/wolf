@@ -288,11 +288,11 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700" dir={language === 'ar' ? 'rtl' : 'ltr'}>
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className={`w-full sm:w-auto ${language === 'ar' ? 'text-center sm:text-right' : 'text-center sm:text-left'}`}>
-                    <h2 className="text-2xl sm:text-3xl font-black text-white mb-2">{language === 'ar' ? "إدارة المنتجات" : "Product Management"}</h2>
-                    <p className="text-gray-500 font-bold text-sm sm:text-base">{language === 'ar' ? "أضف، عدل وأدر منتجاتك التقنية في مكان واحد" : "Add, edit and manage your tech products in one place"}</p>
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white mb-2">{language === 'ar' ? "إدارة المنتجات" : "Product Management"}</h2>
+                    <p className="text-gray-500 font-bold text-xs sm:text-sm md:text-base">{language === 'ar' ? "أضف، عدل وأدر منتجاتك التقنية في مكان واحد" : "Add, edit and manage your tech products in one place"}</p>
                 </div>
-                <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 h-12 sm:h-14 px-8 rounded-full text-base sm:text-lg font-black shadow-lg shadow-purple-200 transition-all hover:scale-105 active:scale-95 group">
-                    <Plus className={`w-5 h-5 sm:w-6 sm:h-6 ${language === 'ar' ? 'ml-2' : 'mr-2'} group-hover:rotate-90 transition-transform`} />
+                <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 h-11 sm:h-14 px-6 sm:px-8 rounded-xl sm:rounded-full text-sm sm:text-lg font-black shadow-lg shadow-purple-200 transition-all hover:scale-105 active:scale-95 group">
+                    <Plus className={`w-4 h-4 sm:w-6 sm:h-6 ${language === 'ar' ? 'ml-2' : 'mr-2'} group-hover:rotate-90 transition-transform`} />
                     {language === 'ar' ? "منتج جديد" : "New Product"}
                 </Button>
             </div>
@@ -316,7 +316,7 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                 {products?.map((product: any) => (
                     <Card
                         key={product.id}
-                        className="group border-0 shadow-none rounded-[40px] overflow-hidden bg-background border border-gray-800 hover:scale-[1.02] transition-all duration-500 cursor-pointer"
+                        className="group border-0 shadow-none rounded-[1.5rem] md:rounded-[40px] overflow-hidden bg-background border border-gray-800 hover:scale-[1.02] transition-all duration-500 cursor-pointer"
                         onClick={() => onProductClick(product.id)}
                     >
                         <div className="aspect-[3/4] bg-gray-900 relative overflow-hidden">
@@ -329,14 +329,14 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                             )}
 
                             <div className="absolute top-4 left-4 flex flex-col gap-2 opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500 z-10">
-                                <Button size="icon" className="h-10 w-10 bg-gray-800/90 rounded-xl shadow-lg border border-gray-700 transition-all hover:bg-gray-700 active:scale-95" onClick={(e) => { e.stopPropagation(); onPreview?.(product.id); }}>
-                                    <Eye className="w-4 h-4 text-purple-400" />
+                                <Button size="icon" className="h-11 w-11 bg-gray-800/90 rounded-xl shadow-lg border border-gray-700 transition-all hover:bg-gray-700 active:scale-95" onClick={(e) => { e.stopPropagation(); onPreview?.(product.id); }}>
+                                    <Eye className="w-5 h-5 text-purple-400" />
                                 </Button>
-                                <Button size="icon" className="h-10 w-10 bg-gray-800/90 rounded-xl shadow-lg border border-gray-700 transition-all hover:bg-gray-700 active:scale-95" onClick={(e) => handleEdit(e, product)}>
-                                    <Edit className="w-4 h-4 text-blue-400" />
+                                <Button size="icon" className="h-11 w-11 bg-gray-800/90 rounded-xl shadow-lg border border-gray-700 transition-all hover:bg-gray-700 active:scale-95" onClick={(e) => handleEdit(e, product)}>
+                                    <Edit className="w-5 h-5 text-blue-400" />
                                 </Button>
-                                <Button size="icon" className="h-10 w-10 bg-gray-800/90 rounded-xl shadow-lg border border-gray-700 transition-all hover:bg-red-900/40 active:scale-95" onClick={(e) => handleDelete(e, product.id)}>
-                                    <Trash2 className="w-4 h-4 text-red-400" />
+                                <Button size="icon" className="h-11 w-11 bg-gray-800/90 rounded-xl shadow-lg border border-gray-700 transition-all hover:bg-red-900/40 active:scale-95" onClick={(e) => handleDelete(e, product.id)}>
+                                    <Trash2 className="w-5 h-5 text-red-400" />
                                 </Button>
                             </div>
 
@@ -367,10 +367,10 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
             {products?.length === 0 && (
                 <div className="py-20 text-center bg-gray-900/50 rounded-[40px] border-2 border-dashed border-gray-800 animate-in fade-in zoom-in duration-500">
                     <Package size={64} className="text-gray-700 mx-auto mb-6" />
-                    <h3 className="text-2xl font-black text-white mb-3">
+                    <h3 className="text-lg sm:text-2xl font-black text-white mb-3">
                         {language === 'ar' ? "لا توجد منتجات بعد" : "No products found yet"}
                     </h3>
-                    <p className="text-gray-500 font-bold mb-10 max-w-lg mx-auto leading-relaxed">
+                    <p className="text-gray-500 font-bold mb-10 max-w-lg mx-auto leading-relaxed text-xs sm:text-base px-4">
                         {language === 'ar'
                             ? "ابدأ بإضافة منتجاتك يدوياً أو استخدم نظام التعبئة التلقائي لتحميل كتالوج كامل من الأجهزة التقنية (هواتف، لابتوبات، ساعات) مع الصور والأسعار."
                             : "Start adding your products manually or use our automated system to load a complete catalog of tech devices (phones, laptops, watches) with professional images and pricing."}
@@ -393,15 +393,15 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
 
             {/* CREATE/EDIT PRODUCT MODAL */}
             <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
-                <DialogContent className="w-full h-full sm:h-[95vh] sm:max-w-7xl sm:w-[95vw] p-0 overflow-hidden shadow-2xl transition-all duration-700 animate-in zoom-in-95 rounded-none sm:rounded-[40px] border-gray-800">
+                <DialogContent className="w-full h-full sm:h-[95vh] sm:max-w-7xl sm:w-[95vw] p-0 overflow-hidden shadow-2xl transition-all duration-700 animate-in zoom-in-95 rounded-none sm:rounded-[2.5rem] border-gray-800">
                     <div className="flex flex-col h-full bg-gray-900">
                         {/* Custom Header */}
                         <div className="bg-background px-4 py-4 md:px-8 md:py-6 flex items-center justify-between border-b border-gray-800 sticky top-0 z-50">
                             <div>
-                                <h3 className="text-2xl font-black text-white">
+                                <h3 className="text-xl sm:text-2xl font-black text-white">
                                     {editingProduct ? (language === 'ar' ? 'تعديل منتج' : 'Edit Product') : (language === 'ar' ? 'إضافة منتج جديد' : 'New Product')}
                                 </h3>
-                                <p className="text-sm font-bold text-gray-500">{language === 'ar' ? "املأ البيانات التالية لعرض منتجك في المتجر" : "Fill in the details to list your product in the store"}</p>
+                                <p className="text-xs sm:text-sm font-bold text-gray-500">{language === 'ar' ? "املأ البيانات التالية لعرض منتجك في المتجر" : "Fill in the details to list your product in the store"}</p>
                             </div>
                             <Button variant="ghost" size="icon" onClick={handleCloseModal} className="rounded-2xl hover:bg-gray-800 h-12 w-12 transition-all">
                                 <X className="w-6 h-6 text-gray-500" />
@@ -424,7 +424,7 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                                         </div>
 
                                         {/* Dropzone/Main Image Area */}
-                                        <div className="aspect-[3/4] bg-gray-900 rounded-[32px] border-2 border-dashed border-gray-800 flex flex-col items-center justify-center overflow-hidden relative group transition-all duration-500 hover:border-purple-300">
+                                        <div className="aspect-[3/4] bg-gray-900 rounded-[1.5rem] md:rounded-[32px] border-2 border-dashed border-gray-800 flex flex-col items-center justify-center overflow-hidden relative group transition-all duration-500 hover:border-purple-300">
                                             {images.length > 0 ? (
                                                 <img src={URL.createObjectURL(images[0])} className="w-full h-full object-cover transition duration-500 group-hover:scale-105" />
                                             ) : editingProduct?.images?.[0] ? (
@@ -454,7 +454,7 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                                                         const newFiles = Array.from(e.target.files);
                                                         setImages(prev => [newFiles[0], ...prev.slice(1)]);
                                                     }
-                                                }} />
+                                                }} tabIndex={0} />
                                             </label>
                                         </div>
 
@@ -540,19 +540,19 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                                             <div className="space-y-4">
                                                 <div className="space-y-2">
                                                     <label className="text-xs font-black text-gray-500">{language === 'ar' ? "اسم المنتج (بالعربية)" : "ARABIC NAME"}</label>
-                                                    <Input className="h-14 rounded-2xl border-gray-800 bg-gray-900 shadow-sm font-bold text-lg px-6 focus:ring-4 focus:ring-purple-900/20 text-white" value={nameAr} onChange={e => setNameAr(e.target.value)} dir="rtl" placeholder="آيفون 16 برو ماكس..." />
+                                                    <Input className="h-12 sm:h-14 rounded-xl sm:rounded-2xl border-gray-800 bg-gray-900 shadow-sm font-bold text-base sm:text-lg px-6 focus:ring-4 focus:ring-purple-900/20 text-white" value={nameAr} onChange={e => setNameAr(e.target.value)} dir="rtl" placeholder="آيفون 16 برو ماكس..." />
                                                 </div>
                                                 <div className="space-y-2">
                                                     <label className="text-xs font-black text-gray-500">{language === 'ar' ? "ENGLISH NAME" : "ENGLISH NAME"}</label>
-                                                    <Input className="h-14 rounded-2xl border-gray-800 bg-gray-900 shadow-sm font-bold text-lg px-6 focus:ring-4 focus:ring-purple-900/20 text-white" value={nameEn} onChange={e => setNameEn(e.target.value)} dir="ltr" placeholder="iPhone 16 Pro Max..." />
+                                                    <Input className="h-12 sm:h-14 rounded-xl sm:rounded-2xl border-gray-800 bg-gray-900 shadow-sm font-bold text-base sm:text-lg px-6 focus:ring-4 focus:ring-purple-900/20 text-white" value={nameEn} onChange={e => setNameEn(e.target.value)} dir="ltr" placeholder="iPhone 16 Pro Max..." />
                                                 </div>
                                                 <div className="space-y-2">
                                                     <label className="text-xs font-black text-gray-500">{language === 'ar' ? "الرمز (SKU)" : "SKU"}</label>
-                                                    <Input className="h-14 rounded-2xl border-gray-800 bg-gray-900 shadow-sm font-bold text-lg px-6 focus:ring-4 focus:ring-purple-900/20 text-white" value={sku} onChange={e => setSku(e.target.value)} placeholder="SKU-1234..." />
+                                                    <Input className="h-12 sm:h-14 rounded-xl sm:rounded-2xl border-gray-800 bg-gray-900 shadow-sm font-bold text-base sm:text-lg px-6 focus:ring-4 focus:ring-purple-900/20 text-white" value={sku} onChange={e => setSku(e.target.value)} placeholder="SKU-1234..." />
                                                 </div>
                                                 <div className="space-y-2">
                                                     <label className="text-xs font-black text-gray-500">{language === 'ar' ? "الوسوم (مفصولة بفاصلة)" : "Tags (comma separated)"}</label>
-                                                    <Input className="h-14 rounded-2xl border-gray-800 bg-gray-900 shadow-sm font-bold text-lg px-6 focus:ring-4 focus:ring-purple-900/20 text-white" value={tags} onChange={e => setTags(e.target.value)} placeholder="فستان, زفاف, دانتيل..." />
+                                                    <Input className="h-12 sm:h-14 rounded-xl sm:rounded-2xl border-gray-800 bg-gray-900 shadow-sm font-bold text-base sm:text-lg px-6 focus:ring-4 focus:ring-purple-900/20 text-white" value={tags} onChange={e => setTags(e.target.value)} placeholder="فستان, زفاف, دانتيل..." />
                                                 </div>
                                             </div>
                                         </div>
@@ -568,20 +568,20 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                                                 <div className="space-y-2 relative z-10">
                                                     <label className="text-[10px] font-black text-gray-500">{language === 'ar' ? "السعر الأصلي" : "BASE PRICE"}</label>
                                                     <div className="relative">
-                                                        <Input type="number" value={price} onChange={e => setPrice(e.target.value)} className="h-14 rounded-2xl border-gray-800 bg-gray-800 shadow-sm font-black text-xl px-6 pr-14 focus:ring-4 focus:ring-pink-900/20 text-white" />
+                                                        <Input type="number" value={price} onChange={e => setPrice(e.target.value)} className="h-14 rounded-2xl border-gray-800 bg-gray-800 shadow-sm font-black text-xl px-6 pr-14 focus:ring-4 focus:ring-pink-900/20 text-white text-base" />
                                                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-gray-700 pointer-events-none">{t('currency')}</span>
                                                     </div>
                                                 </div>
                                                 <div className="space-y-2 relative z-10">
                                                     <label className="text-[10px] font-black text-gray-500">{language === 'ar' ? "الخصم %" : "DISCOUNT %"}</label>
                                                     <div className="relative">
-                                                        <Input type="number" value={discount} onChange={e => setDiscount(e.target.value)} className="h-14 rounded-2xl border-gray-800 bg-gray-800 shadow-sm font-black text-xl px-6 pr-14 focus:ring-4 focus:ring-pink-900/20 text-white" />
+                                                        <Input type="number" value={discount} onChange={e => setDiscount(e.target.value)} className="h-14 rounded-2xl border-gray-800 bg-gray-800 shadow-sm font-black text-xl px-6 pr-14 focus:ring-4 focus:ring-pink-900/20 text-white text-base" />
                                                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-gray-700 pointer-events-none">%</span>
                                                     </div>
                                                 </div>
                                                 <div className="col-span-2 mt-4 pt-6 border-t border-gray-800/50 flex items-center justify-between">
-                                                    <span className="text-sm font-black text-gray-500">{language === 'ar' ? "السعر النهائي للمشتري:" : "Final Listing Price:"}</span>
-                                                    <span className="text-3xl font-black text-[#e91e63]">{calculateFinalPrice()} <span className="text-xs">{t('currency')}</span></span>
+                                                    <span className="text-xs sm:text-sm font-black text-gray-500">{language === 'ar' ? "السعر النهائي للمشتري:" : "Final Listing Price:"}</span>
+                                                    <span className="text-xl sm:text-3xl font-black text-[#e91e63]">{calculateFinalPrice()} <span className="text-xs">{t('currency')}</span></span>
                                                 </div>
                                             </div>
                                         </div>
@@ -597,7 +597,7 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-black text-gray-500">{language === 'ar' ? "المجموعة" : "COLLECTION"}</label>
                                                 <Select value={collectionIdState} onValueChange={setCollectionId}>
-                                                    <SelectTrigger className="h-14 rounded-2xl border-gray-800 shadow-sm font-bold bg-gray-900 text-white focus:ring-4 focus:ring-blue-900/20">
+                                                    <SelectTrigger className="h-12 sm:h-14 rounded-xl sm:rounded-2xl border-gray-800 shadow-sm font-bold bg-gray-900 text-white focus:ring-4 focus:ring-blue-900/20 text-base">
                                                         <SelectValue placeholder={language === 'ar' ? "اختر مجموعة" : "Select Collection"} />
                                                     </SelectTrigger>
                                                     <SelectContent className="rounded-2xl shadow-xl border-gray-800 bg-gray-900">
@@ -612,7 +612,7 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-black text-gray-500">{language === 'ar' ? "القسم" : "CATEGORY"}</label>
                                                 <Select value={categoryId} onValueChange={setCategoryId}>
-                                                    <SelectTrigger className="h-14 rounded-2xl border-gray-800 shadow-sm font-bold bg-gray-900 text-white focus:ring-4 focus:ring-blue-900/20">
+                                                    <SelectTrigger className="h-12 sm:h-14 rounded-xl sm:rounded-2xl border-gray-800 shadow-sm font-bold bg-gray-900 text-white focus:ring-4 focus:ring-blue-900/20 text-base">
                                                         <SelectValue placeholder={language === 'ar' ? "اختر القسم" : "Select Category"} />
                                                     </SelectTrigger>
                                                     <SelectContent className="rounded-2xl shadow-xl border-gray-800 bg-gray-900">
@@ -629,7 +629,7 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
 
 
                                     {/* Color Variants Section */}
-                                    <div className="space-y-6 bg-gradient-to-br from-blue-50 to-cyan-50 p-6 md:p-12 rounded-[24px] md:rounded-[40px] border border-blue-100">
+                                    <div className="space-y-6 bg-gradient-to-br from-blue-900/20 to-cyan-900/20 p-4 sm:p-12 rounded-[1.5rem] md:rounded-[40px] border border-gray-800">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
                                                 <div className="h-2 w-8 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full" />
@@ -679,7 +679,7 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                                                                 <div className="flex items-center gap-2">
                                                                     <Input
                                                                         type="color"
-                                                                        className="h-10 w-14 rounded-xl border-slate-200 cursor-pointer p-1"
+                                                                        className="h-11 w-14 rounded-xl border-slate-200 cursor-pointer p-1 min-h-[44px]"
                                                                         value={variant.colorCode}
                                                                         onChange={e => {
                                                                             const newVariants = [...colorVariants];
@@ -688,7 +688,7 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                                                                         }}
                                                                     />
                                                                     <Input
-                                                                        className="h-10 flex-1 rounded-xl border-slate-200 font-mono text-xs"
+                                                                        className="h-11 flex-1 rounded-xl border-slate-200 font-mono text-base"
                                                                         value={variant.colorCode}
                                                                         onChange={e => {
                                                                             const newVariants = [...colorVariants];
@@ -784,13 +784,13 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                                             <h4 className="font-black text-slate-900 uppercase tracking-widest text-xs">{language === 'ar' ? "التفاصيل والوصف" : "Copywriting"}</h4>
                                         </div>
                                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 tracking-widest">{language === 'ar' ? "وصف المنتج (بالعربية)" : "ARABIC DESCRIPTION"}</label>
-                                                <Textarea className="min-h-[160px] rounded-[32px] border-slate-100 shadow-sm p-6 font-bold leading-relaxed focus:ring-4 focus:ring-emerald-50" value={descriptionAr} onChange={e => setDescriptionAr(e.target.value)} dir="rtl" placeholder="صف مواصفات الجهاز ومميزاته وما يجعله فريداً..." />
+                                            <div className="space-y-2 text-start">
+                                                <label className="text-[10px] font-black text-gray-500 tracking-widest">{language === 'ar' ? "وصف المنتج (بالعربية)" : "ARABIC DESCRIPTION"}</label>
+                                                <Textarea className="min-h-[160px] rounded-2xl sm:rounded-[32px] border-gray-800 bg-gray-900 text-white shadow-sm p-4 sm:p-6 font-bold leading-relaxed focus:ring-4 focus:ring-emerald-900/10 text-base" value={descriptionAr} onChange={e => setDescriptionAr(e.target.value)} dir="rtl" placeholder="صف مواصفات الجهاز ومميزاته وما يجعله فريداً..." />
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-slate-400 tracking-widest">{language === 'ar' ? "ENGLISH DESCRIPTION" : "ENGLISH DESCRIPTION"}</label>
-                                                <Textarea className="min-h-[160px] rounded-[32px] border-slate-100 shadow-sm p-6 font-bold leading-relaxed focus:ring-4 focus:ring-emerald-50" value={descriptionEn} onChange={e => setDescriptionEn(e.target.value)} dir="ltr" placeholder="Describe the fabrics, the fit, and the feeling..." />
+                                            <div className="space-y-2 text-start">
+                                                <label className="text-[10px] font-black text-gray-500 tracking-widest">{language === 'ar' ? "ENGLISH DESCRIPTION" : "ENGLISH DESCRIPTION"}</label>
+                                                <Textarea className="min-h-[160px] rounded-2xl sm:rounded-[32px] border-gray-800 bg-gray-900 text-white shadow-sm p-4 sm:p-6 font-bold leading-relaxed focus:ring-4 focus:ring-emerald-900/10 text-base" value={descriptionEn} onChange={e => setDescriptionEn(e.target.value)} dir="ltr" placeholder="Describe the fabrics, the fit, and the feeling..." />
                                             </div>
                                         </div>
                                     </div>

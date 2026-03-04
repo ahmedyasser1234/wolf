@@ -311,42 +311,42 @@ export default function Checkout() {
   return (
     <div className="min-h-screen bg-gray-50 pb-32 pt-24 md:pt-28 overflow-x-hidden w-full">
       {/* Header */}
-      <div className="bg-white border-b border-gray-100 sticky top-24 md:top-28 z-40 pt-1 pb-3 md:py-6">
-        <div className="container mx-auto px-2 md:px-4 max-w-7xl">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-1 md:gap-8">
-            <h1 className="text-xl md:text-4xl font-black text-gray-900 tracking-tighter uppercase font-arabic text-right">{t('checkoutReady')}</h1>
-            <div className="flex items-center justify-end gap-2 md:gap-8 font-bold text-[10px] md:text-sm tracking-widest uppercase text-gray-400 font-arabic w-full md:w-auto">
+      <div className="bg-white border-b border-gray-100 sticky top-20 md:top-24 z-40 pt-2 pb-4 md:py-6">
+        <div className="container mx-auto px-4 max-w-7xl">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-8">
+            <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tighter uppercase font-arabic w-full md:w-auto text-center md:text-right">{t('checkoutReady')}</h1>
+            <div className="flex items-center justify-center md:justify-end gap-3 md:gap-8 font-bold text-xs md:text-sm tracking-widest uppercase text-gray-400 font-arabic w-full md:w-auto overflow-x-auto no-scrollbar py-2">
               {formData.paymentMethod === 'installments' ? (
                 <>
-                  <div className={`flex items-center gap-2 ${['kyc', 'shipping', 'review'].includes(step) ? 'text-primary' : ''}`}>
-                    <span className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm ${['kyc', 'shipping', 'review'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>1</span>
+                  <div className={`flex items-center gap-2 shrink-0 ${['kyc', 'shipping', 'review'].includes(step) ? 'text-primary' : ''}`}>
+                    <span className={`w-7 h-7 md:w-8 md:h-8 rounded-full border-2 flex items-center justify-center text-xs md:text-sm ${['kyc', 'shipping', 'review'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>1</span>
                     <span>{language === 'ar' ? 'التحقق' : 'KYC'}</span>
                   </div>
-                  <ChevronLeft className={`w-4 h-4 text-gray-300 ${language === 'en' ? 'rotate-180' : ''}`} />
-                  <div className={`flex items-center gap-2 ${['shipping', 'review'].includes(step) ? 'text-primary' : ''}`}>
-                    <span className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm ${['shipping', 'review'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>2</span>
+                  <ChevronLeft className={`w-4 h-4 text-gray-300 shrink-0 ${language === 'en' ? 'rotate-180' : ''}`} />
+                  <div className={`flex items-center gap-2 shrink-0 ${['shipping', 'review'].includes(step) ? 'text-primary' : ''}`}>
+                    <span className={`w-7 h-7 md:w-8 md:h-8 rounded-full border-2 flex items-center justify-center text-xs md:text-sm ${['shipping', 'review'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>2</span>
                     <span>{t('shippingInfo')}</span>
                   </div>
-                  <ChevronLeft className={`w-4 h-4 text-gray-300 ${language === 'en' ? 'rotate-180' : ''}`} />
-                  <div className={`flex items-center gap-2 ${step === 'review' ? 'text-primary' : ''}`}>
-                    <span className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm ${step === 'review' ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>3</span>
+                  <ChevronLeft className={`w-4 h-4 text-gray-300 shrink-0 ${language === 'en' ? 'rotate-180' : ''}`} />
+                  <div className={`flex items-center gap-2 shrink-0 ${step === 'review' ? 'text-primary' : ''}`}>
+                    <span className={`w-7 h-7 md:w-8 md:h-8 rounded-full border-2 flex items-center justify-center text-xs md:text-sm ${step === 'review' ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>3</span>
                     <span>{t('reviewOrder')}</span>
                   </div>
                 </>
               ) : (
                 <>
-                  <div className={`flex items-center gap-2 ${['shipping', 'payment', 'review'].includes(step) ? 'text-primary' : ''}`}>
-                    <span className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm ${['shipping', 'payment', 'review'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>1</span>
+                  <div className={`flex items-center gap-2 shrink-0 ${['shipping', 'payment', 'review'].includes(step) ? 'text-primary' : ''}`}>
+                    <span className={`w-7 h-7 md:w-8 md:h-8 rounded-full border-2 flex items-center justify-center text-xs md:text-sm ${['shipping', 'payment', 'review'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>1</span>
                     <span>{t('shippingInfo')}</span>
                   </div>
-                  <ChevronLeft className={`w-4 h-4 text-gray-300 ${language === 'en' ? 'rotate-180' : ''}`} />
-                  <div className={`flex items-center gap-2 ${['payment', 'review'].includes(step) ? 'text-primary' : ''}`}>
-                    <span className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm ${['payment', 'review'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>2</span>
+                  <ChevronLeft className={`w-4 h-4 text-gray-300 shrink-0 ${language === 'en' ? 'rotate-180' : ''}`} />
+                  <div className={`flex items-center gap-2 shrink-0 ${['payment', 'review'].includes(step) ? 'text-primary' : ''}`}>
+                    <span className={`w-7 h-7 md:w-8 md:h-8 rounded-full border-2 flex items-center justify-center text-xs md:text-sm ${['payment', 'review'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>2</span>
                     <span>{t('paymentInfo')}</span>
                   </div>
-                  <ChevronLeft className={`w-4 h-4 text-gray-300 ${language === 'en' ? 'rotate-180' : ''}`} />
-                  <div className={`flex items-center gap-2 ${step === 'review' ? 'text-primary' : ''}`}>
-                    <span className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm ${step === 'review' ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>3</span>
+                  <ChevronLeft className={`w-4 h-4 text-gray-300 shrink-0 ${language === 'en' ? 'rotate-180' : ''}`} />
+                  <div className={`flex items-center gap-2 shrink-0 ${step === 'review' ? 'text-primary' : ''}`}>
+                    <span className={`w-7 h-7 md:w-8 md:h-8 rounded-full border-2 flex items-center justify-center text-xs md:text-sm ${step === 'review' ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>3</span>
                     <span>{t('reviewOrder')}</span>
                   </div>
                 </>
@@ -362,32 +362,32 @@ export default function Checkout() {
             <AnimatePresence mode="wait">
               {step === "shipping" && (
                 <motion.div key="shipping" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-6">
-                  <div className="bg-white p-6 sm:p-10 rounded-[2.5rem] md:rounded-[3rem] shadow-xl border border-gray-50 text-right font-arabic w-full">
+                  <div className="bg-white p-6 sm:p-10 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-gray-50 text-right font-arabic w-full">
                     <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 mb-6 md:mb-10">{t('shippingInfo')}</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-8">
                       <div className="space-y-2">
                         <label className="font-bold text-gray-700 text-sm">{t('firstName')}</label>
-                        <Input name="firstName" value={formData.firstName} onChange={handleInputChange} className="h-12 md:h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold w-full focus-visible:ring-primary" />
+                        <Input name="firstName" value={formData.firstName} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold w-full focus-visible:ring-primary text-base" />
                       </div>
                       <div className="space-y-2">
                         <label className="font-bold text-gray-700 text-sm">{t('lastName')}</label>
-                        <Input name="lastName" value={formData.lastName} onChange={handleInputChange} className="h-12 md:h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold w-full focus-visible:ring-primary" />
+                        <Input name="lastName" value={formData.lastName} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold w-full focus-visible:ring-primary text-base" />
                       </div>
                       <div className="sm:col-span-2 space-y-2">
                         <label className="font-bold text-gray-700 text-sm">{t('address')}</label>
-                        <Input name="address" value={formData.address} onChange={handleInputChange} className="h-12 md:h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold w-full focus-visible:ring-primary" />
+                        <Input name="address" value={formData.address} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold w-full focus-visible:ring-primary text-base" />
                       </div>
                       <div className="space-y-2">
                         <label className="font-bold text-gray-700 text-sm">{t('city')}</label>
-                        <Input name="city" value={formData.city} onChange={handleInputChange} className="h-12 md:h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold w-full focus-visible:ring-primary" />
+                        <Input name="city" value={formData.city} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold w-full focus-visible:ring-primary text-base" />
                       </div>
                       <div className="space-y-2">
                         <label className="font-bold text-gray-700 text-sm">{t('uae')}</label>
-                        <Input name="country" value={formData.country} readOnly className="h-12 md:h-14 rounded-2xl bg-gray-50 border-none px-6 text-gray-400 w-full" />
+                        <Input name="country" value={formData.country} readOnly className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-gray-400 w-full text-base" />
                       </div>
                       <div className="sm:col-span-2 space-y-2">
                         <label className="font-bold text-gray-700 text-sm">{t('phone')}</label>
-                        <Input name="phone" value={formData.phone} onChange={handleInputChange} className="h-12 md:h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold w-full focus-visible:ring-primary" />
+                        <Input name="phone" value={formData.phone} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold w-full focus-visible:ring-primary text-base" />
                       </div>
                     </div>
                     <Button
@@ -432,22 +432,22 @@ export default function Checkout() {
                       if (isCardMain || isCardTopUp) {
                         return (
                           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                            <div className="grid md:grid-cols-2 gap-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8">
                               <div className="md:col-span-2 space-y-2">
                                 <label className="font-bold text-gray-700 text-sm">{t('cardName')}</label>
-                                <Input name="cardName" value={formData.cardName} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold focus-visible:ring-primary" />
+                                <Input name="cardName" value={formData.cardName} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold focus-visible:ring-primary text-base" />
                               </div>
                               <div className="md:col-span-2 space-y-2">
                                 <label className="font-bold text-gray-700 text-sm">{t('cardNumber')}</label>
-                                <Input name="cardNumber" value={formData.cardNumber} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold focus-visible:ring-primary" placeholder="0000 0000 0000 0000" />
+                                <Input name="cardNumber" value={formData.cardNumber} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold focus-visible:ring-primary text-base" placeholder="0000 0000 0000 0000" />
                               </div>
                               <div className="space-y-2">
                                 <label className="font-bold text-gray-700 text-sm">{t('cardExpiry')}</label>
-                                <Input name="cardExpiry" value={formData.cardExpiry} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold focus-visible:ring-primary" placeholder="MM / YY" />
+                                <Input name="cardExpiry" value={formData.cardExpiry} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold focus-visible:ring-primary text-base" placeholder="MM / YY" />
                               </div>
                               <div className="space-y-2">
                                 <label className="font-bold text-gray-700 text-sm">{t('cardCVC')}</label>
-                                <Input name="cardCVC" value={formData.cardCVC} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold focus-visible:ring-primary" placeholder="***" type="password" maxLength={3} />
+                                <Input name="cardCVC" value={formData.cardCVC} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold focus-visible:ring-primary text-base" placeholder="***" type="password" maxLength={3} />
                               </div>
                             </div>
                           </motion.div>

@@ -119,8 +119,8 @@ export default function AdminCouponsTab({
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-black text-white">{language === 'ar' ? 'إدارة الكوبونات والجيفت كارت' : 'Manage Coupons & Gift Cards'}</h2>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+                <h2 className="text-xl sm:text-2xl font-black text-white">{language === 'ar' ? 'إدارة الكوبونات والجيفت كارت' : 'Manage Coupons & Gift Cards'}</h2>
                 <Button
                     onClick={() => {
                         resetForm();
@@ -133,7 +133,7 @@ export default function AdminCouponsTab({
                 </Button>
             </div>
 
-            <Card className="border-0 shadow-none overflow-hidden bg-background border border-gray-800">
+            <Card className="border border-gray-800 rounded-[1.5rem] md:rounded-[2.5rem] bg-background shadow-none overflow-hidden">
                 <CardContent className="p-0">
                     <div className="p-6 border-b border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4">
                         <div className="relative w-full md:w-64 text-start">
@@ -141,7 +141,7 @@ export default function AdminCouponsTab({
                             <Input
                                 type="text"
                                 placeholder={language === 'ar' ? 'بحث عن كود...' : 'Search code...'}
-                                className={`${language === 'ar' ? 'pr-10' : 'pl-10'} bg-gray-900 border-gray-800 text-white`}
+                                className={`${language === 'ar' ? 'pr-10' : 'pl-10'} bg-gray-900 border-gray-800 text-white font-bold h-11 sm:h-12 rounded-xl text-base`}
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                             />
@@ -217,18 +217,18 @@ export default function AdminCouponsTab({
             </Card>
 
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <div className="bg-gray-900 border border-gray-800 rounded-xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="p-6 border-b border-gray-800 flex items-center justify-between">
-                            <h3 className="text-xl font-bold text-white">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-gray-900 border border-gray-800 rounded-[1.5rem] md:rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="p-5 sm:p-6 border-b border-gray-800 flex items-center justify-between">
+                            <h3 className="text-lg sm:text-xl font-bold text-white">
                                 {editingCoupon ? (language === 'ar' ? 'تعديل الكوبون' : 'Edit Coupon') : (language === 'ar' ? 'إنشاء كود جديد' : 'Create New Code')}
                             </h3>
-                            <div className="p-2 bg-purple-900/30 rounded-lg">
+                            <div className="p-2 bg-purple-900/30 rounded-lg shrink-0">
                                 <Ticket className="text-purple-400 w-5 h-5" />
                             </div>
                         </div>
 
-                        <div className="p-6 space-y-4">
+                        <div className="p-5 sm:p-6 space-y-4">
                             <div className="space-y-2 text-start">
                                 <label className="text-sm font-bold text-gray-300">{language === 'ar' ? 'كود الخصم' : 'Coupon Code'}</label>
                                 <div className="flex gap-2">

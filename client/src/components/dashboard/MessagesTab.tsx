@@ -179,14 +179,14 @@ export default function MessagesTab() {
     };
 
     return (
-        <div className="relative flex flex-col md:flex-row h-[calc(100dvh-120px)] md:h-[calc(100vh-200px)] w-full border-0 md:rounded-2xl overflow-hidden bg-background border border-gray-800" dir={language === 'ar' ? "rtl" : "ltr"}>
+        <div className="relative flex flex-col md:flex-row h-[calc(100dvh-120px)] md:h-[calc(100vh-200px)] w-full border-0 rounded-[1.5rem] md:rounded-2xl overflow-hidden bg-background border border-gray-800" dir={language === 'ar' ? "rtl" : "ltr"}>
             {/* Sidebar List */}
             <div className={cn(
                 "w-full md:w-1/3 border-b md:border-b-0 md:border-l md:rtl:border-l-0 md:rtl:border-r border-gray-800 bg-gray-900/50 flex flex-col transition-all duration-300 absolute inset-0 md:relative z-10",
                 selectedConversation ? '-translate-x-full md:translate-x-0 rtl:translate-x-full rtl:md:translate-x-0 opacity-0 md:opacity-100 pointer-events-none md:pointer-events-auto' : 'translate-x-0 opacity-100'
             )}>
                 <div className="p-4 border-b border-gray-800 bg-background sticky top-0 z-20">
-                    <h3 className={`font-black text-xl text-white mb-4 ${language === 'ar' ? 'text-right' : 'text-left'}`}>{t('conversations')}</h3>
+                    <h3 className={`font-black text-lg sm:text-xl text-white mb-4 ${language === 'ar' ? 'text-right' : 'text-left'}`}>{t('conversations')}</h3>
                     <div className="relative">
                         <Search className={`absolute ${language === 'ar' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 h-4 w-4 text-white`} />
                         <Input

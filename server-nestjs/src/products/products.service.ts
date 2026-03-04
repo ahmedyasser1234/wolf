@@ -18,16 +18,16 @@ export class ProductsService {
         const vendorId = parseInt(data.vendorId);
         const collectionId = data.collectionId ? parseInt(data.collectionId) : null;
 
-        console.log(`   - Parsed IDs: Vendor=${vendorId}, Collection=${collectionId}`);
+        console.log(`⚙️ [Products Service] Processing Create Product for Vendor=${vendorId}, Collection=${collectionId}`);
 
         if (isNaN(vendorId)) {
-            console.error("❌ Invalid Vendor ID");
+            console.error("❌ [Products Service] Invalid Vendor ID:", data.vendorId);
             throw new BadRequestException('Invalid vendor ID');
         }
 
-        if (!collectionId) {
-            console.error("❌ Missing Collection ID");
-            throw new BadRequestException('Product must belong to a collection');
+        if (!collectionId || isNaN(collectionId)) {
+            console.error("❌ [Products Service] Missing or Invalid Collection ID:", data.collectionId);
+            throw new BadRequestException('Product must belong to a valid collection');
         }
 
         // Verify collection and get categoryId
@@ -36,13 +36,12 @@ export class ProductsService {
         });
 
         if (!collection) {
-            console.error(`❌ Collection not found for ID ${collectionId} and Vendor ${vendorId}`);
-            throw new BadRequestException('Invalid collection ID');
+            console.error(`❌ [Products Service] Collection not found or access denied: ID ${collectionId}, Vendor ${vendorId}`);
+            throw new BadRequestException('Invalid collection ID or access denied');
         }
 
         if (!collection.categoryId) {
-            console.error("❌ Collection has no category ID");
-            throw new BadRequestException('Selected collection does not have a category');
+            console.warn("⚠️ [Products Service] Collection has no category ID. Using default category if available.");
         }
 
         // Upload main product images

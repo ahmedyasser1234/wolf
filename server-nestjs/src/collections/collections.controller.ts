@@ -15,15 +15,30 @@ export class CollectionsController {
     @Roles('admin', 'vendor')
     @UseInterceptors(FileInterceptor('image'))
     create(
-        @Body() createCollectionDto: { nameAr: string; nameEn: string; vendorId: string; categoryId: string; description?: string; downPaymentPercentage?: string },
+        @Body() createCollectionDto: any,
         @UploadedFile(new FileValidationPipe()) image?: Express.Multer.File
     ) {
-        console.log("Controller Received Request:", { body: createCollectionDto, file: image ? 'File Present' : 'No File' });
+        console.log("📥 [Collections Controller] Create Request Received:", {
+            body: { ...createCollectionDto, image: createCollectionDto.image ? 'Base64/Url' : 'None' },
+            file: image ? 'File Present' : 'No File'
+        });
+
+        const vendorId = parseInt(createCollectionDto.vendorId);
+        const categoryId = parseInt(createCollectionDto.categoryId);
+        const downPaymentPercentage = parseFloat(createCollectionDto.downPaymentPercentage || '0');
+
+        // Robust parsing results
+        const validVendorId = isNaN(vendorId) ? null : vendorId;
+        const validCategoryId = isNaN(categoryId) ? null : categoryId;
+        const validDownPayment = isNaN(downPaymentPercentage) ? 0 : downPaymentPercentage;
+
+        console.log("🔢 [Collections Controller] Parsed IDs:", { vendorId: validVendorId, categoryId: validCategoryId, downPaymentPercentage: validDownPayment });
+
         return this.collectionsService.create({
             ...createCollectionDto,
-            vendorId: Number(createCollectionDto.vendorId),
-            categoryId: Number(createCollectionDto.categoryId),
-            downPaymentPercentage: Number(createCollectionDto.downPaymentPercentage || 0),
+            vendorId: validVendorId,
+            categoryId: validCategoryId,
+            downPaymentPercentage: validDownPayment,
             image
         });
     }

@@ -138,8 +138,8 @@ export default function AdminCategoriesTab({
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-black text-white">{t('manageCategories')}</h2>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+                <h2 className="text-xl sm:text-2xl font-black text-white">{t('manageCategories')}</h2>
                 <Button
                     onClick={() => {
                         resetForm();
@@ -152,7 +152,7 @@ export default function AdminCategoriesTab({
                 </Button>
             </div>
 
-            <Card className="border-0 shadow-none overflow-hidden bg-background border border-gray-800">
+            <Card className="border border-gray-800 rounded-[1.5rem] md:rounded-[2.5rem] bg-background shadow-none overflow-hidden">
                 <CardContent className="p-0">
                     <div className="p-6 border-b border-gray-800 flex items-center justify-between">
                         <div className="relative w-full md:w-64">
@@ -160,7 +160,7 @@ export default function AdminCategoriesTab({
                             <Input
                                 type="text"
                                 placeholder={t('searchCategory')}
-                                className={`${language === 'ar' ? 'pr-10' : 'pl-10'} bg-gray-900 border-gray-800 text-white`}
+                                className={`${language === 'ar' ? 'pr-10' : 'pl-10'} bg-gray-900 border-gray-800 text-white font-bold h-11 sm:h-12 rounded-xl text-base`}
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                             />
@@ -236,10 +236,10 @@ export default function AdminCategoriesTab({
 
             {/* Category Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-background rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-800">
-                        <div className="p-6 border-b border-gray-800">
-                            <h3 className="text-xl font-bold text-white">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-3 sm:p-4">
+                    <div className="bg-background rounded-[1.5rem] md:rounded-[2.5rem] max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-800 shadow-2xl">
+                        <div className="p-5 sm:p-6 border-b border-gray-800">
+                            <h3 className="text-lg sm:text-xl font-bold text-white">
                                 {editingCategory ? t('editCategory') : t('addNewCategory')}
                             </h3>
                         </div>
