@@ -561,26 +561,24 @@ export default function ProductsTab({ collectionId, onProductClick, onPreview, s
                                                 <h4 className="font-black text-white uppercase tracking-widest text-xs">{language === 'ar' ? "التسعير والكمية" : "Pricing & Stock"}</h4>
                                             </div>
 
-                                            <div className="bg-gray-900 p-4 sm:p-6 rounded-2xl md:rounded-[32px] border border-gray-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 relative overflow-hidden">
-                                                <div className="space-y-1 sm:space-y-2 relative z-10">
-                                                    <label className="text-[9px] sm:text-[10px] font-black text-gray-500">{language === 'ar' ? "السعر الأصلي" : "BASE PRICE"}</label>
+                                            <div className="bg-gray-900 p-4 sm:p-6 rounded-2xl md:rounded-[32px] border border-gray-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 relative overflow-visible">
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] sm:text-[11px] font-black text-gray-400 block">{language === 'ar' ? "السعر الأصلي" : "BASE PRICE"}</label>
                                                     <div className="relative">
-                                                        <Input type="number" value={price} onChange={e => setPrice(e.target.value)} className="h-14 rounded-2xl border-gray-800 bg-gray-800 shadow-sm font-black text-xl px-6 pr-14 focus:ring-4 focus:ring-pink-900/20 text-white text-base" />
-                                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-gray-700 pointer-events-none">{t('currency')}</span>
+                                                        <Input type="number" value={price} onChange={e => setPrice(e.target.value)} className="h-14 rounded-2xl border-gray-700 bg-gray-800 shadow-sm font-black text-white text-lg px-4 rtl:pl-12 ltr:pr-12 focus:ring-2 focus:ring-pink-500/50" />
+                                                        <span className="absolute rtl:left-4 ltr:right-4 top-1/2 -translate-y-1/2 text-sm font-black text-gray-500 pointer-events-none">{t('currency')}</span>
                                                     </div>
                                                 </div>
-                                                <div className="space-y-2 relative z-10">
-                                                    <label className="text-[10px] font-black text-gray-500">{language === 'ar' ? "الخصم %" : "DISCOUNT %"}</label>
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] sm:text-[11px] font-black text-gray-400 block">{language === 'ar' ? "الخصم %" : "DISCOUNT %"}</label>
                                                     <div className="relative">
-                                                        <Input type="number" value={discount} onChange={e => setDiscount(e.target.value)} className="h-14 rounded-2xl border-gray-800 bg-gray-800 shadow-sm font-black text-xl px-6 pr-14 focus:ring-4 focus:ring-pink-900/20 text-white text-base" />
-                                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-gray-700 pointer-events-none">%</span>
+                                                        <Input type="number" value={discount} onChange={e => setDiscount(e.target.value)} className="h-14 rounded-2xl border-gray-700 bg-gray-800 shadow-sm font-black text-white text-lg px-4 rtl:pl-12 ltr:pr-12 focus:ring-2 focus:ring-pink-500/50" />
+                                                        <span className="absolute rtl:left-4 ltr:right-4 top-1/2 -translate-y-1/2 text-sm font-black text-gray-500 pointer-events-none">%</span>
                                                     </div>
                                                 </div>
-                                                <div className="space-y-2 relative z-10 sm:col-span-2 lg:col-span-1">
-                                                    <label className="text-[10px] font-black text-gray-500">{language === 'ar' ? "الكمية الإجمالية" : "TOTAL STOCK"}</label>
-                                                    <div className="relative">
-                                                        <Input type="number" value={stock} onChange={e => setStock(e.target.value)} className="h-14 rounded-2xl border-gray-800 bg-gray-800 shadow-sm font-black text-xl px-6 focus:ring-4 focus:ring-pink-900/20 text-white text-base" />
-                                                    </div>
+                                                <div className="space-y-2 sm:col-span-2 lg:col-span-1">
+                                                    <label className="text-[10px] sm:text-[11px] font-black text-gray-400 block">{language === 'ar' ? "الكمية الإجمالية" : "TOTAL STOCK"}</label>
+                                                    <Input type="number" value={stock} onChange={e => setStock(e.target.value)} className="h-14 rounded-2xl border-gray-700 bg-gray-800 shadow-sm font-black text-white text-lg px-4 focus:ring-2 focus:ring-pink-500/50" />
                                                 </div>
                                                 <div className="col-span-1 sm:col-span-2 lg:col-span-3 mt-4 pt-6 border-t border-gray-800/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
                                                     <span className="text-xs sm:text-sm font-black text-gray-500">{language === 'ar' ? "السعر النهائي للمشتري:" : "Final Listing Price:"}</span>

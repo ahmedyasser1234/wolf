@@ -283,8 +283,8 @@ html {
   /* --- BEGIN CHECKOUT RESPONSIVE FIXES --- */
   .page-container {
     width: 100%;
-    max-width: 100vw;
-    overflow-x: hidden;
+    max-width: 100%;
+    margin: 0 auto;
     padding: 0 16px;
     box-sizing: border-box;
   }

@@ -223,9 +223,9 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
     };
 
     return (
-        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4 md:space-y-8 w-full">
-            <div className="bg-white p-4 sm:p-8 md:p-10 rounded-[1.5rem] md:rounded-[3rem] shadow-xl border border-gray-50 text-right overflow-hidden w-full">
-                <h2 className="checkout-title font-black text-gray-900 mb-2 flex items-center justify-end gap-3 font-arabic flex-wrap">
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="space-y-4 md:space-y-8 w-full max-w-4xl mx-auto">
+            <div className="bg-white p-4 sm:p-8 md:p-10 rounded-[1.5rem] md:rounded-[3rem] shadow-xl border border-gray-50 text-right w-full">
+                <h2 className="checkout-title font-black text-gray-900 mb-2 flex items-center justify-center gap-3 font-arabic flex-wrap">
                     التحقق من الهوية (KYC) <UserCheck className="text-primary" />
                 </h2>
                 <div className="kyc-description text-gray-500 font-bold mb-6 md:mb-8 font-arabic">
