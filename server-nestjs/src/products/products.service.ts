@@ -15,12 +15,12 @@ export class ProductsService {
         console.log("⚙️ [Products Service] Processing Create Product...");
         try {
             const imageUrls: string[] = [];
-            const vendorId = parseInt(data.vendorId);
+            const vendorId = data.vendorId ? parseInt(data.vendorId) : null;
             const collectionId = data.collectionId ? parseInt(data.collectionId) : null;
 
             console.log(`⚙️ [Products Service] Params: Vendor=${vendorId}, Collection=${collectionId}`);
 
-            if (isNaN(vendorId)) {
+            if (data.vendorId && isNaN(vendorId as number)) {
                 console.error("❌ [Products Service] Invalid Vendor ID:", data.vendorId);
                 throw new BadRequestException('Invalid vendor ID');
             }
@@ -30,9 +30,14 @@ export class ProductsService {
                 throw new BadRequestException('Product must belong to a valid collection');
             }
 
+            if (!collectionId) {
+                console.error("❌ [Products Service] Missing Collection ID");
+                throw new BadRequestException('Collection is required');
+            }
+
             // Verify collection and get categoryId
             const collection = await this.databaseService.db.query.collections.findFirst({
-                where: and(eq(collections.id, collectionId), eq(collections.vendorId, vendorId)),
+                where: eq(collections.id, collectionId),
             });
 
             if (!collection) {
@@ -80,11 +85,15 @@ export class ProductsService {
             }
 
             // Calculate Price with Commission
-            const vendor = await this.databaseService.db.query.vendors.findFirst({
-                where: eq(vendors.id, vendorId),
-            });
-
-            const commissionRate = vendor?.commissionRate || 10;
+            let commissionRate = 10;
+            if (vendorId) {
+                const vendor = await this.databaseService.db.query.vendors.findFirst({
+                    where: eq(vendors.id, vendorId),
+                });
+                commissionRate = vendor?.commissionRate || 10;
+            } else {
+                commissionRate = 0; // Standard for admin-only pieces if no vendor
+            }
             const vendorPrice = parseFloat(data.price);
             const finalPrice = vendorPrice * (1 + commissionRate / 100);
 

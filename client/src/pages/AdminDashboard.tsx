@@ -766,7 +766,6 @@ export default function AdminDashboard() {
           activeTab === "collections" && (
             <AdminCollectionsTab
               showConfirm={showConfirm}
-              vendorId={vendorProfile?.vendor?.id}
             />
           )
         }
@@ -814,7 +813,6 @@ export default function AdminDashboard() {
           activeTab === "products" && (
             <div>
               <ProductsTab
-                vendorId={vendorProfile?.vendor?.id || 0}
                 onProductClick={(id) => setLocation(`/products/${id}`)}
                 onPreview={(id) => window.open(`/products/${id}`, '_blank')}
                 showConfirm={(title, desc, onConfirm) => {

@@ -603,17 +603,20 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                                     <div className="space-y-6">
                                         <div className="flex items-center gap-3">
                                             <div className="h-2 w-8 bg-blue-600 rounded-full" />
-                                            <h4 className="font-black text-slate-900 uppercase tracking-widest text-xs">{language === 'ar' ? "التصنيف والذكاء" : "Product Intelligence"}</h4>
+                                            <h4 className="font-black text-white uppercase tracking-widest text-xs">{language === 'ar' ? "التصنيف والذكاء" : "Product Intelligence"}</h4>
                                         </div>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-gray-500">{language === 'ar' ? "المجموعة" : "COLLECTION"}</label>
-                                                <Select value={collectionIdState} onValueChange={setCollectionId}>
+                                                <label className="text-[10px] font-black text-gray-500">{language === 'ar' ? "القسم (Section)" : "SECTION"}</label>
+                                                <Select value={categoryId} onValueChange={(val) => {
+                                                    setCategoryId(val);
+                                                    setCollectionId(""); // Reset collection when section changes
+                                                }}>
                                                     <SelectTrigger className="h-12 sm:h-14 rounded-xl sm:rounded-2xl border-gray-800 shadow-sm font-bold bg-gray-900 text-white focus:ring-4 focus:ring-blue-900/20 text-base">
-                                                        <SelectValue placeholder={language === 'ar' ? "اختر مجموعة" : "Select Collection"} />
+                                                        <SelectValue placeholder={language === 'ar' ? "اختر القسم" : "Select Section"} />
                                                     </SelectTrigger>
                                                     <SelectContent className="rounded-2xl shadow-xl border-gray-800 bg-gray-900">
-                                                        {collections?.map((c: any) => (
+                                                        {categories?.map((c: any) => (
                                                             <SelectItem key={c.id} value={c.id.toString()} className="font-bold py-3 text-white focus:bg-gray-800">
                                                                 {language === 'ar' ? c.nameAr : c.nameEn}
                                                             </SelectItem>
@@ -622,17 +625,23 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                                                 </Select>
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black text-gray-500">{language === 'ar' ? "القسم" : "CATEGORY"}</label>
-                                                <Select value={categoryId} onValueChange={setCategoryId}>
+                                                <label className="text-[10px] font-black text-gray-500">{language === 'ar' ? "المجموعة (Collection)" : "COLLECTION"}</label>
+                                                <Select
+                                                    value={collectionIdState}
+                                                    onValueChange={setCollectionId}
+                                                    disabled={!categoryId}
+                                                >
                                                     <SelectTrigger className="h-12 sm:h-14 rounded-xl sm:rounded-2xl border-gray-800 shadow-sm font-bold bg-gray-900 text-white focus:ring-4 focus:ring-blue-900/20 text-base">
-                                                        <SelectValue placeholder={language === 'ar' ? "اختر القسم" : "Select Category"} />
+                                                        <SelectValue placeholder={language === 'ar' ? "اختر مجموعة" : "Select Collection"} />
                                                     </SelectTrigger>
                                                     <SelectContent className="rounded-2xl shadow-xl border-gray-800 bg-gray-900">
-                                                        {categories?.map((c: any) => (
-                                                            <SelectItem key={c.id} value={c.id.toString()} className="font-bold py-3 text-white focus:bg-gray-800">
-                                                                {language === 'ar' ? c.nameAr : c.nameEn}
-                                                            </SelectItem>
-                                                        ))}
+                                                        {collections
+                                                            ?.filter((c: any) => !categoryId || c.categoryId?.toString() === categoryId)
+                                                            ?.map((c: any) => (
+                                                                <SelectItem key={c.id} value={c.id.toString()} className="font-bold py-3 text-white focus:bg-gray-800">
+                                                                    {language === 'ar' ? c.nameAr : c.nameEn}
+                                                                </SelectItem>
+                                                            ))}
                                                     </SelectContent>
                                                 </Select>
                                             </div>

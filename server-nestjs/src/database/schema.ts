@@ -127,7 +127,7 @@ export const products = pgTable(
     "products",
     {
         id: serial("id").primaryKey(),
-        vendorId: integer("vendorId").notNull(),
+        vendorId: integer("vendorId"),
         collectionId: integer("collectionId"), // Strict logic handled in service
         categoryId: integer("categoryId"),
         brandId: integer("brandId"),
@@ -292,7 +292,7 @@ export const orderItems = pgTable(
         id: serial("id").primaryKey(),
         orderId: integer("orderId").notNull(),
         productId: integer("productId").notNull(),
-        vendorId: integer("vendorId").notNull(),
+        vendorId: integer("vendorId"),
         quantity: integer("quantity").notNull(),
         price: doublePrecision("price").notNull(),
         total: doublePrecision("total").notNull(),
@@ -381,7 +381,7 @@ export const vendorPayouts = pgTable(
     "vendorPayouts",
     {
         id: serial("id").primaryKey(),
-        vendorId: integer("vendorId").notNull(),
+        vendorId: integer("vendorId"),
         amount: doublePrecision("amount").notNull(),
         status: text("status").default("pending").notNull(),
         period: text("period"),
@@ -398,7 +398,7 @@ export const coupons = pgTable(
     "coupons",
     {
         id: serial("id").primaryKey(),
-        vendorId: integer("vendorId").notNull(),
+        vendorId: integer("vendorId"),
         code: text("code").notNull().unique(),
         discountPercent: integer("discountPercent").notNull(),
         maxUses: integer("maxUses"),
@@ -421,7 +421,7 @@ export const shipping = pgTable(
     {
         id: serial("id").primaryKey(),
         productId: integer("productId").notNull(),
-        vendorId: integer("vendorId").notNull(),
+        vendorId: integer("vendorId"),
         shippingCost: doublePrecision("shippingCost").notNull().default(0),
         createdAt: timestamp("createdAt").defaultNow().notNull(),
         updatedAt: timestamp("updatedAt").defaultNow().notNull(),
@@ -482,7 +482,7 @@ export const conversations = pgTable(
     {
         id: serial("id").primaryKey(),
         customerId: integer("customerId").notNull(),
-        vendorId: integer("vendorId").notNull(),
+        vendorId: integer("vendorId"),
         lastMessageId: integer("lastMessageId"),
         createdAt: timestamp("createdAt").defaultNow().notNull(),
         updatedAt: timestamp("updatedAt").defaultNow().notNull(),
@@ -539,7 +539,7 @@ export const vendorWallets = pgTable(
     "vendorWallets",
     {
         id: serial("id").primaryKey(),
-        vendorId: integer("vendorId").notNull().unique(),
+        vendorId: integer("vendorId").unique(),
         availableBalance: doublePrecision("availableBalance").default(0).notNull(),
         pendingBalance: doublePrecision("pendingBalance").default(0).notNull(),
         updatedAt: timestamp("updatedAt").defaultNow().notNull(),

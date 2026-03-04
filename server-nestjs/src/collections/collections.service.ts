@@ -24,14 +24,16 @@ export class CollectionsService {
             downPaymentPercentage: data.downPaymentPercentage
         });
 
-        if (!data.vendorId || isNaN(data.vendorId)) {
-            console.error("❌ [Collections Service] Invalid or Missing Vendor ID:", data.vendorId);
-            throw new Error("Product must belong to a valid vendor");
+        const vendorId = data.vendorId ? Number(data.vendorId) : null;
+
+        if (data.vendorId && isNaN(vendorId as number)) {
+            console.error("❌ [Collections Service] Invalid Vendor ID:", data.vendorId);
+            throw new Error("Invalid vendor ID");
         }
 
         if (!data.categoryId || isNaN(data.categoryId)) {
-            console.error("❌ [Collections Service] Invalid or Missing Category ID:", data.categoryId);
-            throw new NotFoundException('Category is required and must be a valid ID');
+            console.error("❌ [Collections Service] Missing Category ID (Section):", data.categoryId);
+            throw new NotFoundException('Section is required and must be a valid ID');
         }
 
         if (data.image) {

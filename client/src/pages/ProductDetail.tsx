@@ -522,12 +522,22 @@ export default function ProductDetail() {
               <div className="flex items-center justify-between gap-4 mb-4 md:mb-6" dir="rtl">
                 <div className="flex bg-gray-50/50 backdrop-blur-sm px-3 py-1.5 rounded-full items-center gap-1.5 md:gap-2 text-[10px] md:text-xs font-bold text-gray-500 border border-gray-100/50 overflow-x-auto max-w-[200px] md:max-w-none no-scrollbar whitespace-nowrap">
                   <Link href="/">
-                    <span className="hover:text-primary transition-colors">الرئيسية</span>
+                    <span className="hover:text-primary transition-colors">{language === 'ar' ? "الرئيسية" : "Home"}</span>
                   </Link>
                   <ChevronRight className="w-3 h-3 translate-y-[1px]" />
                   {category && (
                     <>
-                      <span className="truncate max-w-[80px] md:max-w-none">{language === 'ar' ? category.nameAr : category.nameEn}</span>
+                      <Link href={`/categories/${category.slug}`}>
+                        <span className="hover:text-primary transition-colors truncate max-w-[80px] md:max-w-none">{language === 'ar' ? category.nameAr : category.nameEn}</span>
+                      </Link>
+                      <ChevronRight className="w-3 h-3 translate-y-[1px]" />
+                    </>
+                  )}
+                  {collection && (
+                    <>
+                      <Link href={`/groups/${collection.slug}`}>
+                        <span className="hover:text-primary transition-colors truncate max-w-[80px] md:max-w-none">{language === 'ar' ? collection.nameAr : collection.nameEn}</span>
+                      </Link>
                       <ChevronRight className="w-3 h-3 translate-y-[1px]" />
                     </>
                   )}

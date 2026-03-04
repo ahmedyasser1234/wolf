@@ -95,6 +95,10 @@ export default function AdminCollectionsTab({
     };
 
     const handleSubmit = () => {
+        if (!categoryId) {
+            toast.error(language === 'ar' ? "يرجى اختيار القسم (Section)" : "Please select a Section");
+            return;
+        }
         const formData = new FormData();
         formData.append("nameAr", nameAr);
         formData.append("nameEn", nameEn);
@@ -103,9 +107,6 @@ export default function AdminCollectionsTab({
         formData.append("descriptionAr", descriptionAr);
         formData.append("descriptionEn", descriptionEn);
         formData.append("downPaymentPercentage", downPaymentPercentage.toString());
-        if (vendorId) {
-            formData.append("vendorId", vendorId.toString());
-        }
         formData.append("categoryId", categoryId);
 
         if (imageFile) {
@@ -169,7 +170,7 @@ export default function AdminCollectionsTab({
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                <h2 className="text-xl sm:text-2xl font-black text-white">{language === 'ar' ? 'إدارة المجموعات (الماركات)' : 'Manage Collections (Brands)'}</h2>
+                <h2 className="text-xl sm:text-2xl font-black text-white">{language === 'ar' ? 'إدارة المجموعات' : 'Manage Collections'}</h2>
                 <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
                     {collections?.length === 0 && (
                         <Button
@@ -212,7 +213,7 @@ export default function AdminCollectionsTab({
                             <Filter size={16} className="text-gray-400" />
                             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                                 <SelectTrigger className="w-[200px] bg-gray-900 border-gray-800 text-white font-bold h-12 rounded-xl">
-                                    <SelectValue placeholder={language === 'ar' ? 'تصفية حسب القسم' : 'Filter by Category'} />
+                                    <SelectValue placeholder={language === 'ar' ? 'تصفية حسب القسم (Section)' : 'Filter by Section'} />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="all">{language === 'ar' ? 'كل الأقسام' : 'All Categories'}</SelectItem>
@@ -232,7 +233,7 @@ export default function AdminCollectionsTab({
                                 <tr className="border-b border-gray-800 bg-gray-800/50">
                                     <th className="py-4 px-6 font-black text-[10px] uppercase tracking-widest text-gray-500 text-start w-16">{t('image')}</th>
                                     <th className="py-4 px-6 font-black text-[10px] uppercase tracking-widest text-gray-500 text-start">{language === 'ar' ? 'اسم المجموعة' : 'Collection Name'}</th>
-                                    <th className="py-4 px-6 font-black text-[10px] uppercase tracking-widest text-gray-500 text-start">{language === 'ar' ? 'القسم' : 'Category'}</th>
+                                    <th className="py-4 px-6 font-black text-[10px] uppercase tracking-widest text-gray-500 text-start">{language === 'ar' ? 'القسم (Section)' : 'Section'}</th>
                                     <th className="py-4 px-6 font-black text-[10px] uppercase tracking-widest text-gray-500 text-center">{language === 'ar' ? 'المقدم %' : 'Down Payment %'}</th>
                                     <th className="py-4 px-6 font-black text-[10px] uppercase tracking-widest text-gray-500 text-end">{t('actions')}</th>
                                 </tr>
@@ -373,10 +374,10 @@ export default function AdminCollectionsTab({
 
                             <div className="grid md:grid-cols-2 gap-6">
                                 <div className="space-y-2 text-start">
-                                    <label className="text-xs font-black text-gray-500 uppercase tracking-widest">{language === 'ar' ? 'القسم الرئيسي' : 'Parent Category'}</label>
+                                    <label className="text-xs font-black text-gray-500 uppercase tracking-widest">{language === 'ar' ? 'القسم (Section)' : 'Section'}</label>
                                     <Select value={categoryId} onValueChange={setCategoryId}>
                                         <SelectTrigger className="bg-gray-900 border-gray-800 text-white h-12 rounded-xl focus:ring-purple-500/20">
-                                            <SelectValue placeholder={language === 'ar' ? 'اختر القسم الرئيسي' : 'Select parent category'} />
+                                            <SelectValue placeholder={language === 'ar' ? 'اختر القسم' : 'Select Section'} />
                                         </SelectTrigger>
                                         <SelectContent className="bg-gray-900 border-gray-800 text-white">
                                             {categories?.map((cat: any) => (
@@ -429,7 +430,7 @@ export default function AdminCollectionsTab({
                                         <p className="text-[10px] text-gray-500 mt-1 font-bold uppercase tracking-wide">
                                             {language === 'ar'
                                                 ? 'نسبة الدفعة الأولى الافتراضية لهذه العلامة التجارية'
-                                                : 'Default down payment for this brand'}
+                                                : 'Default down payment for this section'}
                                         </p>
                                     </div>
                                     <div className="bg-purple-900/30 px-4 py-2 rounded-xl border border-purple-500/20">
