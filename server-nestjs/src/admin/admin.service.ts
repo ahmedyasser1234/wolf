@@ -838,6 +838,22 @@ export class AdminService {
                 logo: '',
                 isActive: false,
                 isTestMode: true,
+            },
+            {
+                name: 'installments',
+                displayNameAr: 'التقسيط',
+                displayNameEn: 'Installments',
+                logo: '',
+                isActive: true,
+                isTestMode: false,
+            },
+            {
+                name: 'cash',
+                displayNameAr: 'الدفع كاش',
+                displayNameEn: 'Cash Payment',
+                logo: '',
+                isActive: true,
+                isTestMode: false,
             }
         ];
 
@@ -983,6 +999,13 @@ export class AdminService {
             await this.seedProductsCatalog();
         } catch (e) {
             console.error('Seeding catalog failed during forceSetup', e);
+        }
+
+        // Always Seed payment gateways (including installments)
+        try {
+            await this.getPaymentGateways();
+        } catch (e) {
+            console.error('Seeding payment gateways failed during forceSetup', e);
         }
 
         return {
