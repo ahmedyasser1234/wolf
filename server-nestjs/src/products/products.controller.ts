@@ -28,7 +28,6 @@ export class ProductsController {
     async findAll(
         @Query('search') search?: string,
         @Query('categoryId') categoryId?: string,
-        @Query('vendorId') vendorId?: string,
         @Query('collectionId') collectionId?: string,
         @Query('limit') limit?: string,
         @Query('offset') offset?: string,
@@ -38,7 +37,7 @@ export class ProductsController {
             categoryId ? parseInt(categoryId) : undefined,
             limit ? parseInt(limit) : 20,
             offset ? parseInt(offset) : 0,
-            vendorId ? parseInt(vendorId) : undefined,
+            undefined, // vendorId is removed
             collectionId ? parseInt(collectionId) : undefined,
         );
     }

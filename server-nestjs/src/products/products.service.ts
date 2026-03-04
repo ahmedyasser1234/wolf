@@ -15,15 +15,9 @@ export class ProductsService {
         console.log("⚙️ [Products Service] Processing Create Product...");
         try {
             const imageUrls: string[] = [];
-            const vendorId = data.vendorId ? parseInt(data.vendorId) : null;
             const collectionId = data.collectionId ? parseInt(data.collectionId) : null;
 
-            console.log(`⚙️ [Products Service] Params: Vendor=${vendorId}, Collection=${collectionId}`);
-
-            if (data.vendorId && isNaN(vendorId as number)) {
-                console.error("❌ [Products Service] Invalid Vendor ID:", data.vendorId);
-                throw new BadRequestException('Invalid vendor ID');
-            }
+            console.log(`⚙️ [Products Service] Params: Collection=${collectionId}`);
 
             if (!collectionId || isNaN(collectionId)) {
                 console.error("❌ [Products Service] Missing or Invalid Collection ID:", data.collectionId);
@@ -41,8 +35,8 @@ export class ProductsService {
             });
 
             if (!collection) {
-                console.error(`❌ [Products Service] Collection not found or access denied: ID ${collectionId}, Vendor ${vendorId}`);
-                throw new BadRequestException('Invalid collection ID or access denied');
+                console.error(`❌ [Products Service] Collection not found: ID ${collectionId}`);
+                throw new BadRequestException('Invalid collection ID');
             }
 
             console.log("✅ [Products Service] Collection found:", collection.nameAr || collection.nameEn);
@@ -84,20 +78,11 @@ export class ProductsService {
                 totalStock = sizesArr.reduce((sum, s) => sum + (parseInt(s.quantity) || 0), 0);
             }
 
-            // Calculate Price with Commission
-            let commissionRate = 10;
-            if (vendorId) {
-                const vendor = await this.databaseService.db.query.vendors.findFirst({
-                    where: eq(vendors.id, vendorId),
-                });
-                commissionRate = vendor?.commissionRate || 10;
-            } else {
-                commissionRate = 0; // Standard for admin-only pieces if no vendor
-            }
-            const vendorPrice = parseFloat(data.price);
-            const finalPrice = vendorPrice * (1 + commissionRate / 100);
+            // Price is exactly what the admin sets
+            const finalPrice = parseFloat(data.price);
+            const vendorOriginalPrice = parseFloat(data.originalPrice || finalPrice.toString());
 
-            console.log("💰 [Products Service] Price Calculation:", { vendorPrice, commissionRate, finalPrice });
+            console.log("💰 [Products Service] Price Configuration:", { finalPrice, vendorOriginalPrice });
 
             return await this.databaseService.db.transaction(async (tx) => {
                 console.log("🚀 [Products Service] Starting DB Transaction...");
@@ -110,16 +95,13 @@ export class ProductsService {
                     impression: data.impression,
                     occasion: data.occasion,
                     slug,
-                    vendorId,
                     collectionId,
                     categoryId: collection.categoryId,
                     images: imageUrls,
                     aiQualifiedImage: aiQualifiedImageUrl,
                     discount: parseFloat(data.discount || '0'),
-                    vendorPrice: vendorPrice,
-                    vendorOriginalPrice: parseFloat(data.originalPrice || vendorPrice.toString()),
                     price: finalPrice,
-                    originalPrice: parseFloat(data.originalPrice || vendorPrice.toString()) * (1 + commissionRate / 100),
+                    originalPrice: vendorOriginalPrice,
                     stock: totalStock,
                     sizes: sizesArr,
                 }).returning();
@@ -301,7 +283,6 @@ export class ProductsService {
     async update(id: number, data: any, files?: Express.Multer.File[]) {
         const result = await this.findOne(id);
         const product = result.product;
-        const vendor = result.vendor; // Get vendor from findOne
 
         let imageUrls = product.images || [];
         const mainFiles = files?.filter(f => f.fieldname === 'images') || [];
@@ -347,10 +328,9 @@ export class ProductsService {
 
         const colorVariantsArr = typeof data.colorVariants === 'string' ? JSON.parse(data.colorVariants) : data.colorVariants;
 
-        // Calculate Price with Commission
-        const commissionRate = vendor?.commissionRate || 10;
-        const vendorPrice = parseFloat(data.price);
-        const finalPrice = vendorPrice * (1 + commissionRate / 100);
+        // Price is exactly what the admin sets
+        const finalPrice = parseFloat(data.price);
+        const vendorOriginalPrice = parseFloat(data.originalPrice || finalPrice.toString());
 
         return await this.databaseService.db.transaction(async (tx) => {
             const [updatedProduct] = await tx
@@ -367,10 +347,8 @@ export class ProductsService {
                     aiQualifiedImage: aiQualifiedImageUrl,
                     stock: totalStock,
                     sizes: sizesArr,
-                    vendorPrice: vendorPrice,
-                    vendorOriginalPrice: parseFloat(data.originalPrice || vendorPrice.toString()),
                     price: finalPrice,
-                    originalPrice: parseFloat(data.originalPrice || vendorPrice.toString()) * (1 + commissionRate / 100),
+                    originalPrice: vendorOriginalPrice,
                     updatedAt: new Date(),
                 })
                 .where(eq(products.id, id))

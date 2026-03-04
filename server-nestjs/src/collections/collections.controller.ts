@@ -23,20 +23,17 @@ export class CollectionsController {
             file: image ? 'File Present' : 'No File'
         });
 
-        const vendorId = parseInt(createCollectionDto.vendorId);
         const categoryId = parseInt(createCollectionDto.categoryId);
         const downPaymentPercentage = parseFloat(createCollectionDto.downPaymentPercentage || '0');
 
         // Robust parsing results
-        const validVendorId = isNaN(vendorId) ? null : vendorId;
         const validCategoryId = isNaN(categoryId) ? null : categoryId;
         const validDownPayment = isNaN(downPaymentPercentage) ? 0 : downPaymentPercentage;
 
-        console.log("🔢 [Collections Controller] Parsed IDs:", { vendorId: validVendorId, categoryId: validCategoryId, downPaymentPercentage: validDownPayment });
+        console.log("🔢 [Collections Controller] Parsed IDs:", { categoryId: validCategoryId, downPaymentPercentage: validDownPayment });
 
         return this.collectionsService.create({
             ...createCollectionDto,
-            vendorId: validVendorId,
             categoryId: validCategoryId,
             downPaymentPercentage: validDownPayment,
             image
@@ -44,8 +41,8 @@ export class CollectionsController {
     }
 
     @Get()
-    findAll(@Query('vendorId') vendorId?: string) {
-        return this.collectionsService.findAll(vendorId ? +vendorId : undefined);
+    findAll() {
+        return this.collectionsService.findAll();
     }
 
     @Get(':id')

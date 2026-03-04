@@ -22,10 +22,8 @@ import { toast } from "sonner";
 
 export default function AdminCollectionsTab({
     showConfirm,
-    vendorId
 }: {
     showConfirm: (title: string, description: string, onConfirm: () => void) => void;
-    vendorId?: number;
 }) {
     const queryClient = useQueryClient();
     const { t, language } = useLanguage();
@@ -50,7 +48,7 @@ export default function AdminCollectionsTab({
     });
 
     const { data: collections, isLoading } = useQuery({
-        queryKey: ['admin', 'collections', categoryFilter, vendorId],
+        queryKey: ['admin', 'collections', categoryFilter],
         queryFn: () => endpoints.collections.list(categoryFilter === "all" ? undefined : Number(categoryFilter)),
     });
 

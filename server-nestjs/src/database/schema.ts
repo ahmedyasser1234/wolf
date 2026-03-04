@@ -89,7 +89,7 @@ export const collections = pgTable(
     "collections",
     {
         id: serial("id").primaryKey(),
-        vendorId: integer("vendorId").notNull(),
+        vendorId: integer("vendorId"),
         nameAr: text("nameAr").notNull(),
         nameEn: text("nameEn").notNull(),
         slug: text("slug").notNull(),

@@ -15,14 +15,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 interface ProductsTabProps {
-    vendorId?: number;
     collectionId?: number | null;
     onProductClick: (id: number) => void;
     onPreview?: (id: number) => void;
     showConfirm: (title: string, description: string, onConfirm: () => void) => void;
 }
 
-export default function ProductsTab({ vendorId, collectionId, onProductClick, onPreview, showConfirm }: ProductsTabProps) {
+export default function ProductsTab({ collectionId, onProductClick, onPreview, showConfirm }: ProductsTabProps) {
     const queryClient = useQueryClient();
     const { t, language } = useLanguage();
 
@@ -53,13 +52,13 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
 
     // Queries
     const { data: products, isLoading } = useQuery({
-        queryKey: ['products', vendorId, collectionId],
-        queryFn: async () => await endpoints.products.list({ vendorId: vendorId || undefined, collectionId: collectionId || undefined }),
+        queryKey: ['products', collectionId],
+        queryFn: async () => await endpoints.products.list({ collectionId: collectionId || undefined }),
     });
 
     const { data: collections } = useQuery({
-        queryKey: ['collections', vendorId],
-        queryFn: async () => await endpoints.collections.list(vendorId || undefined),
+        queryKey: ['collections'],
+        queryFn: async () => await endpoints.collections.list(),
     });
 
     const { data: categories } = useQuery({
@@ -81,7 +80,7 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
         mutationFn: async (id: number) => await endpoints.products.delete(id),
         onSuccess: () => {
             toast.success(language === 'ar' ? "تم حذف المنتج بنجاح" : "Product deleted successfully");
-            queryClient.invalidateQueries({ queryKey: ['products', vendorId] });
+            queryClient.invalidateQueries({ queryKey: ['products'] });
         },
     });
 
@@ -93,7 +92,6 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
             }
 
             const formData = new FormData();
-            if (vendorId) formData.append("vendorId", vendorId.toString());
             formData.append("nameAr", nameAr);
             formData.append("nameEn", nameEn);
             formData.append("descriptionAr", descriptionAr);
@@ -161,7 +159,7 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                 (language === 'ar' ? "تم إضافة المنتج بنجاح" : "Product added successfully")
             );
             handleCloseModal();
-            queryClient.invalidateQueries({ queryKey: ['products', vendorId] });
+            queryClient.invalidateQueries({ queryKey: ['products'] });
         },
         onError: (err) => {
             console.error(err);
@@ -404,9 +402,9 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
             {/* CREATE/EDIT PRODUCT MODAL */}
             <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
                 <DialogContent className="w-full h-full sm:h-[92vh] sm:max-w-7xl sm:w-[95vw] p-0 overflow-hidden shadow-2xl transition-all duration-700 animate-in zoom-in-95 rounded-none sm:rounded-[2.5rem] border-gray-800 flex flex-col">
-                    <div className="flex flex-col h-full bg-gray-900 border-0">
+                    <div className="flex flex-col h-full bg-background border-0">
                         {/* Custom Header */}
-                        <DialogHeader className="bg-background px-4 py-4 md:px-8 md:py-6 flex flex-row items-center justify-between border-b border-gray-800 space-y-0 text-start">
+                        <DialogHeader className="bg-gray-900 px-5 py-5 md:px-8 md:py-6 flex flex-row items-center justify-between border-b border-gray-800 space-y-0 text-start shrink-0 relative z-20">
                             <div className="flex flex-col gap-1">
                                 <DialogTitle className="text-lg sm:text-2xl font-black text-white">
                                     {editingProduct ? (language === 'ar' ? 'تعديل منتج' : 'Edit Product') : (language === 'ar' ? 'إضافة منتج جديد' : 'New Product')}
@@ -420,8 +418,8 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                             </Button>
                         </DialogHeader>
 
-                        <div className="flex-1 overflow-y-auto">
-                            <div className="grid grid-cols-1 md:grid-cols-12 h-full">
+                        <div className="flex-1 overflow-y-auto min-h-0 relative z-10 bg-background">
+                            <div className="flex flex-col md:grid md:grid-cols-12 min-h-max">
                                 {/* Media Section (Left/Top) */}
                                 <div className="md:col-span-4 bg-background p-5 md:p-8 border-b md:border-b-0 md:border-l border-gray-800 flex flex-col gap-8 md:gap-10">
                                     <div className="space-y-4">
@@ -539,7 +537,7 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                                 </div>
 
                                 {/* Form Section (Right/Bottom) */}
-                                <div className="md:col-span-8 p-4 md:p-12 space-y-8 md:space-y-16 pb-12 md:pb-24">
+                                <div className="md:col-span-8 p-6 md:p-12 space-y-10 md:space-y-16 pb-16 md:pb-24">
                                     {/* Global Sections */}
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-12">
                                         {/* Basic Info */}
@@ -819,9 +817,8 @@ export default function ProductsTab({ vendorId, collectionId, onProductClick, on
                             </div>
                         </div>
 
-                        {/* Sticky Footer */}
                         {/* Improved Footer */}
-                        <div className="bg-gray-900 px-4 py-6 md:px-12 md:py-8 flex flex-col sm:flex-row items-center justify-between border-t border-gray-800 gap-6 mt-auto">
+                        <div className="bg-gray-900 px-5 py-5 md:px-12 md:py-8 flex flex-col sm:flex-row items-center justify-between border-t border-gray-800 gap-6 mt-auto shrink-0 relative z-20">
                             <Button variant="ghost" onClick={handleCloseModal} className="w-full sm:w-auto h-12 md:h-14 px-8 rounded-full font-black text-gray-500 hover:bg-gray-800">
                                 {language === 'ar' ? "تجاهل" : "Discard"}
                             </Button>

@@ -12,24 +12,16 @@ export class CollectionsService {
         private readonly cloudinary: CloudinaryService
     ) { }
 
-    async create(data: { nameAr: string; nameEn: string; vendorId: number; description?: string; image?: Express.Multer.File; categoryId: number; downPaymentPercentage?: number }) {
+    async create(data: { nameAr: string; nameEn: string; description?: string; image?: Express.Multer.File; categoryId: number; downPaymentPercentage?: number }) {
         let coverImage = "";
 
         // Log input data for debugging
         console.log("⚙️ [Collections Service] Processing Create Collection:", {
             nameAr: data.nameAr,
             nameEn: data.nameEn,
-            vendorId: data.vendorId,
             categoryId: data.categoryId,
             downPaymentPercentage: data.downPaymentPercentage
         });
-
-        const vendorId = data.vendorId ? Number(data.vendorId) : null;
-
-        if (data.vendorId && isNaN(vendorId as number)) {
-            console.error("❌ [Collections Service] Invalid Vendor ID:", data.vendorId);
-            throw new Error("Invalid vendor ID");
-        }
 
         if (!data.categoryId || isNaN(data.categoryId)) {
             console.error("❌ [Collections Service] Missing Category ID (Section):", data.categoryId);
@@ -70,7 +62,6 @@ export class CollectionsService {
                 .values({
                     nameAr: data.nameAr,
                     nameEn: data.nameEn,
-                    vendorId: data.vendorId,
                     description: data.description,
                     slug: `${slug}-${Date.now()}`,
                     coverImage,
@@ -87,7 +78,7 @@ export class CollectionsService {
         }
     }
 
-    async findAll(vendorId?: number) {
+    async findAll() {
         const query = this.db.db
             .select({
                 id: collections.id,
@@ -96,7 +87,6 @@ export class CollectionsService {
                 description: collections.description,
                 coverImage: collections.coverImage,
                 slug: collections.slug,
-                vendorId: collections.vendorId,
                 categoryId: collections.categoryId, // Return categoryId
                 downPaymentPercentage: collections.downPaymentPercentage,
                 createdAt: collections.createdAt,
@@ -105,10 +95,6 @@ export class CollectionsService {
             .from(collections)
             .leftJoin(products, eq(collections.id, products.collectionId))
             .groupBy(collections.id);
-
-        if (vendorId) {
-            return query.where(eq(collections.vendorId, vendorId)).orderBy(desc(collections.createdAt));
-        }
 
         return query.orderBy(desc(collections.createdAt));
     }
