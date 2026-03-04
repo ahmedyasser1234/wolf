@@ -936,36 +936,46 @@ export class AdminService {
     }
 
     async forceSetup() {
-        const adminCountResult = await this.databaseService.db
-            .select({ count: sql<number>`count(*)` })
+        const adminEmail = 'admin@wolf.com';
+        const adminPassword = 'wolf1234';
+
+        const [existingAdmin] = await this.databaseService.db
+            .select()
             .from(users)
-            .where(eq(users.role, 'admin'));
+            .where(eq(users.email, adminEmail))
+            .limit(1);
 
-        const count = Number(adminCountResult[0].count);
-        let message = 'Admin account created (admin@wolf.com / wolf1234) and tech products seeded!';
-
-        if (count > 0) {
-            message = 'Admin already exists. Skipped admin creation, but seeding products...';
-        } else {
-            const hashPassword = (password: string): Promise<string> => {
-                return new Promise((resolve, reject) => {
-                    const salt = randomBytes(16).toString('hex');
-                    scrypt(password, salt, 64, (err, derivedKey) => {
-                        if (err) reject(err);
-                        resolve(`${salt}:${derivedKey.toString('hex')}`);
-                    });
+        const hashPassword = (password: string): Promise<string> => {
+            return new Promise((resolve, reject) => {
+                const salt = randomBytes(16).toString('hex');
+                scrypt(password, salt, 64, (err, derivedKey) => {
+                    if (err) reject(err);
+                    resolve(`${salt}:${derivedKey.toString('hex')}`);
                 });
-            };
+            });
+        };
 
-            const hashedPassword = await hashPassword('wolf1234');
+        const hashedPassword = await hashPassword(adminPassword);
+        let message = '';
+
+        if (existingAdmin) {
+            // Update password to ensure the user can log in
+            await this.databaseService.db
+                .update(users)
+                .set({ password: hashedPassword, role: 'admin' })
+                .where(eq(users.email, adminEmail));
+            message = 'Admin account (admin@wolf.com) password reset to wolf1234 and products seeded.';
+        } else {
+            // Insert new admin
             await this.databaseService.db.insert(users).values({
                 openId: `admin_${Date.now()}`,
-                email: 'admin@wolf.com',
+                email: adminEmail,
                 name: 'WOLF ADMIN',
                 password: hashedPassword,
                 role: 'admin',
                 loginMethod: 'email',
             });
+            message = 'Admin account created (admin@wolf.com / wolf1234) and products seeded!';
         }
 
         // Always Seed products

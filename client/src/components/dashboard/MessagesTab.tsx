@@ -61,7 +61,8 @@ export default function MessagesTab() {
     // Socket Connection
     useEffect(() => {
         if (!user) return;
-        const socketUrl = import.meta.env.VITE_SOCKET_URL || window.location.origin;
+        const isProd = import.meta.env.PROD;
+        const socketUrl = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || (isProd ? '' : 'http://localhost:3001');
         const newSocket = io(`${socketUrl}/chat`, {
             withCredentials: true,
             transports: ['websocket', 'polling']

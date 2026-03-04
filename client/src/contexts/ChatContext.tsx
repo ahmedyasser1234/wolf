@@ -61,7 +61,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         if (!socket) {
             // Use environment variable for socket URL
             // CRITICAL: This MUST be a secure URL (wss:// or https://) in production to avoid Mixed Content errors.
-            const socketUrl = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'http://localhost:3001';
+            const isProd = import.meta.env.PROD;
+            const socketUrl = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || (isProd ? '' : 'http://localhost:3001');
 
             if (!import.meta.env.VITE_SOCKET_URL && window.location.hostname.includes('netlify.app')) {
                 console.error("VITE_SOCKET_URL is missing! You must set this to your secure backend URL (e.g. https://api.yourdomain.com) in Netlify.");

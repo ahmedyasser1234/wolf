@@ -32,7 +32,8 @@ export default function NotificationBell() {
         if (!user) return;
 
         // Use environment variable for socket URL
-        const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+        const isProd = import.meta.env.PROD;
+        const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || (isProd ? '' : 'http://localhost:3001');
         const newSocket = io(SOCKET_URL, {
             withCredentials: true,
             transports: ['websocket', 'polling'],

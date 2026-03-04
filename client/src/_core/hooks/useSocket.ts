@@ -19,9 +19,10 @@ export const useSocket = () => {
 
         if (!socketRef.current) {
             // Priority: 1. VITE_SOCKET_URL, 2. VITE_API_URL, 3. Hardcoded Fallback
+            const isProd = import.meta.env.PROD;
             const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ||
                 import.meta.env.VITE_API_URL ||
-                'http://localhost:3001';
+                (isProd ? '' : 'http://localhost:3001');
 
             // Prevent connecting to self if URL is relative (but we hardcoded it to 3001)
             if (!SOCKET_URL) {
