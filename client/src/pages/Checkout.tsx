@@ -309,9 +309,9 @@ export default function Checkout() {
   ].filter((v, i, a) => a.findIndex(t => t.id === v.id) === i); // dedupe
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-32 pt-24 md:pt-40 overflow-x-hidden w-full">
+    <div className="min-h-screen bg-gray-50 pb-32 pt-24 md:pt-28 overflow-x-hidden w-full">
       {/* Header */}
-      <div className="bg-white border-b border-gray-100 sticky top-16 md:top-24 z-40 pt-1 pb-3 md:py-6">
+      <div className="bg-white border-b border-gray-100 sticky top-24 md:top-28 z-40 pt-1 pb-3 md:py-6">
         <div className="container mx-auto px-2 md:px-4 max-w-7xl">
           <div className="flex flex-col md:flex-row justify-between items-center gap-1 md:gap-8">
             <h1 className="text-xl md:text-4xl font-black text-gray-900 tracking-tighter uppercase font-arabic text-right">{t('checkoutReady')}</h1>
