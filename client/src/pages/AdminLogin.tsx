@@ -68,7 +68,7 @@ export default function AdminLogin() {
                                 </div>
                                 <Input
                                     type="email"
-                                    placeholder="admin@fustan.com"
+                                    placeholder="admin@wolf.com"
                                     className="pl-12 h-14 bg-slate-50 border-slate-200 focus:ring-4 focus:ring-primary/10 focus:border-primary/30 focus:bg-white transition-all rounded-2xl text-base text-slate-900 placeholder:text-slate-400"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}

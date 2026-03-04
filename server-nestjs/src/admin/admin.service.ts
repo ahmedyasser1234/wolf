@@ -942,31 +942,33 @@ export class AdminService {
             .where(eq(users.role, 'admin'));
 
         const count = Number(adminCountResult[0].count);
+        let message = 'Admin account created (admin@wolf.com / wolf1234) and tech products seeded!';
+
         if (count > 0) {
-            return { success: false, message: 'Admin already exists. Setup skipped.' };
+            message = 'Admin already exists. Skipped admin creation, but seeding products...';
+        } else {
+            const hashPassword = (password: string): Promise<string> => {
+                return new Promise((resolve, reject) => {
+                    const salt = randomBytes(16).toString('hex');
+                    scrypt(password, salt, 64, (err, derivedKey) => {
+                        if (err) reject(err);
+                        resolve(`${salt}:${derivedKey.toString('hex')}`);
+                    });
+                });
+            };
+
+            const hashedPassword = await hashPassword('wolf1234');
+            await this.databaseService.db.insert(users).values({
+                openId: `admin_${Date.now()}`,
+                email: 'admin@wolf.com',
+                name: 'WOLF ADMIN',
+                password: hashedPassword,
+                role: 'admin',
+                loginMethod: 'email',
+            });
         }
 
-        const hashPassword = (password: string): Promise<string> => {
-            return new Promise((resolve, reject) => {
-                const salt = randomBytes(16).toString('hex');
-                scrypt(password, salt, 64, (err, derivedKey) => {
-                    if (err) reject(err);
-                    resolve(`${salt}:${derivedKey.toString('hex')}`);
-                });
-            });
-        };
-
-        const hashedPassword = await hashPassword('wolf1234');
-        await this.databaseService.db.insert(users).values({
-            openId: `admin_${Date.now()}`,
-            email: 'admin@wolf.com',
-            name: 'WOLF ADMIN',
-            password: hashedPassword,
-            role: 'admin',
-            loginMethod: 'email',
-        });
-
-        // Seed products
+        // Always Seed products
         try {
             await this.seedProductsCatalog();
         } catch (e) {
@@ -975,7 +977,7 @@ export class AdminService {
 
         return {
             success: true,
-            message: 'Admin account created (admin@wolf.com / wolf1234) and tech products seeded!'
+            message: message
         };
     }
 
