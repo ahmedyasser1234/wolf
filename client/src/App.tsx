@@ -707,7 +707,7 @@ function AppContent() {
         unreadCount={unreadCount}
         systemUnreadCount={systemUnreadCount}
       />
-      <main className={`flex-1 ${!HERO_PAGES.includes(location) ? (location.startsWith('/checkout') ? 'pt-0' : 'pt-24 md:pt-28') : ''}`}>
+      <main className={`flex-1 page-content ${!HERO_PAGES.includes(location) ? (location.startsWith('/checkout') ? 'pt-0' : 'pt-24 md:pt-28') : ''}`}>
         <Router />
       </main>
       <Footer />
@@ -727,7 +727,7 @@ function AppContent() {
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={() => setIsChatHistoryOpen(true)}
-          className="fixed bottom-4 left-4 md:bottom-8 md:left-8 z-[100] w-12 h-12 md:w-16 md:h-16 rounded-full bg-primary text-primary-foreground shadow-2xl shadow-primary/20 flex items-center justify-center group transition-all hover:bg-primary/90"
+          className="floating-chat-btn w-12 h-12 md:w-16 md:h-16 rounded-full bg-primary text-primary-foreground shadow-2xl shadow-primary/20 flex items-center justify-center group transition-all hover:bg-primary/90"
         >
           <div className="absolute inset-0 bg-gradient-to-tr from-primary to-primary/80 opacity-0 group-hover:opacity-100 transition-opacity rounded-full"></div>
           <MessageSquare className="w-5 h-5 md:w-8 md:h-8 relative z-10" />

@@ -309,45 +309,45 @@ export default function Checkout() {
   ].filter((v, i, a) => a.findIndex(t => t.id === v.id) === i); // dedupe
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-32 pt-24 md:pt-28 overflow-x-hidden w-full">
+    <div className="min-h-screen bg-gray-50 pb-32 pt-24 md:pt-28 overflow-x-hidden w-full page-container">
       {/* Header */}
       <div className="bg-white border-b border-gray-100 sticky top-20 md:top-24 z-40 pt-2 pb-4 md:py-6">
         <div className="container mx-auto px-4 max-w-7xl">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-8">
-            <h1 className="text-2xl md:text-4xl font-black text-gray-900 tracking-tighter uppercase font-arabic w-full md:w-auto text-center md:text-right">{t('checkoutReady')}</h1>
-            <div className="flex items-center justify-center md:justify-end gap-3 md:gap-8 font-bold text-xs md:text-sm tracking-widest uppercase text-gray-400 font-arabic w-full md:w-auto overflow-x-auto no-scrollbar py-2">
+            <h1 className="checkout-title font-black text-gray-900 tracking-tighter uppercase font-arabic">{t('checkoutReady')}</h1>
+            <div className="steps-container font-bold text-gray-400 font-arabic">
               {formData.paymentMethod === 'installments' ? (
                 <>
                   <div className={`flex items-center gap-2 shrink-0 ${['kyc', 'shipping', 'review'].includes(step) ? 'text-primary' : ''}`}>
-                    <span className={`w-7 h-7 md:w-8 md:h-8 rounded-full border-2 flex items-center justify-center text-xs md:text-sm ${['kyc', 'shipping', 'review'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>1</span>
-                    <span>{language === 'ar' ? 'التحقق' : 'KYC'}</span>
+                    <span className={`step-number border-2 ${['kyc', 'shipping', 'review'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>1</span>
+                    <span className="step-label">{language === 'ar' ? 'التحقق' : 'KYC'}</span>
                   </div>
-                  <ChevronLeft className={`w-4 h-4 text-gray-300 shrink-0 ${language === 'en' ? 'rotate-180' : ''}`} />
+                  <ChevronLeft className={`step-divider text-gray-300 shrink-0 ${language === 'en' ? 'rotate-180' : ''}`} />
                   <div className={`flex items-center gap-2 shrink-0 ${['shipping', 'review'].includes(step) ? 'text-primary' : ''}`}>
-                    <span className={`w-7 h-7 md:w-8 md:h-8 rounded-full border-2 flex items-center justify-center text-xs md:text-sm ${['shipping', 'review'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>2</span>
-                    <span>{t('shippingInfo')}</span>
+                    <span className={`step-number border-2 ${['shipping', 'review'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>2</span>
+                    <span className="step-label">{t('shippingInfo')}</span>
                   </div>
-                  <ChevronLeft className={`w-4 h-4 text-gray-300 shrink-0 ${language === 'en' ? 'rotate-180' : ''}`} />
+                  <ChevronLeft className={`step-divider text-gray-300 shrink-0 ${language === 'en' ? 'rotate-180' : ''}`} />
                   <div className={`flex items-center gap-2 shrink-0 ${step === 'review' ? 'text-primary' : ''}`}>
-                    <span className={`w-7 h-7 md:w-8 md:h-8 rounded-full border-2 flex items-center justify-center text-xs md:text-sm ${step === 'review' ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>3</span>
-                    <span>{t('reviewOrder')}</span>
+                    <span className={`step-number border-2 ${step === 'review' ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>3</span>
+                    <span className="step-label">{t('reviewOrder')}</span>
                   </div>
                 </>
               ) : (
                 <>
                   <div className={`flex items-center gap-2 shrink-0 ${['shipping', 'payment', 'review'].includes(step) ? 'text-primary' : ''}`}>
-                    <span className={`w-7 h-7 md:w-8 md:h-8 rounded-full border-2 flex items-center justify-center text-xs md:text-sm ${['shipping', 'payment', 'review'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>1</span>
-                    <span>{t('shippingInfo')}</span>
+                    <span className={`step-number border-2 ${['shipping', 'payment', 'review'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>1</span>
+                    <span className="step-label">{t('shippingInfo')}</span>
                   </div>
-                  <ChevronLeft className={`w-4 h-4 text-gray-300 shrink-0 ${language === 'en' ? 'rotate-180' : ''}`} />
+                  <ChevronLeft className={`step-divider text-gray-300 shrink-0 ${language === 'en' ? 'rotate-180' : ''}`} />
                   <div className={`flex items-center gap-2 shrink-0 ${['payment', 'review'].includes(step) ? 'text-primary' : ''}`}>
-                    <span className={`w-7 h-7 md:w-8 md:h-8 rounded-full border-2 flex items-center justify-center text-xs md:text-sm ${['payment', 'review'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>2</span>
-                    <span>{t('paymentInfo')}</span>
+                    <span className={`step-number border-2 ${['payment', 'review'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>2</span>
+                    <span className="step-label">{t('paymentInfo')}</span>
                   </div>
-                  <ChevronLeft className={`w-4 h-4 text-gray-300 shrink-0 ${language === 'en' ? 'rotate-180' : ''}`} />
+                  <ChevronLeft className={`step-divider text-gray-300 shrink-0 ${language === 'en' ? 'rotate-180' : ''}`} />
                   <div className={`flex items-center gap-2 shrink-0 ${step === 'review' ? 'text-primary' : ''}`}>
-                    <span className={`w-7 h-7 md:w-8 md:h-8 rounded-full border-2 flex items-center justify-center text-xs md:text-sm ${step === 'review' ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>3</span>
-                    <span>{t('reviewOrder')}</span>
+                    <span className={`step-number border-2 ${step === 'review' ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>3</span>
+                    <span className="step-label">{t('reviewOrder')}</span>
                   </div>
                 </>
               )}

@@ -134,7 +134,7 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
 
         if (isThisActive) {
             return (
-                <div className="space-y-3">
+                <div className="space-y-3 camera-container">
                     <p className="text-lg font-black text-gray-800">{isAr ? cfg.labelAr : cfg.labelEn}</p>
                     <div className="relative aspect-[4/3] rounded-[2rem] overflow-hidden border-2 border-primary bg-black">
                         <video
@@ -177,43 +177,43 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
                     <button
                         type="button"
                         onClick={() => startCamera(docKey)}
-                        className="w-full aspect-[4/3] rounded-[2rem] border-2 border-dashed border-primary/30 bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center justify-center gap-4 hover:border-primary transition-all group"
+                        className="w-full aspect-[4/3] rounded-[2rem] border-2 border-dashed border-primary/30 bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center justify-center hover:border-primary transition-all group camera-container camera-box"
                     >
-                        <div className="w-16 h-16 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center group-hover:bg-primary/20 transition">
-                            <Camera size={30} className="text-primary" />
+                        <div className="w-16 h-16 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center group-hover:bg-primary/20 transition camera-icon">
+                            <Camera size={30} className="text-primary w-full h-full p-2" />
                         </div>
                         <div className="text-center">
-                            <p className="font-black text-white text-base">{isAr ? "اضغط لتشغيل الكاميرا" : "Tap to open camera"}</p>
-                            <p className="text-xs text-gray-400 mt-1">{isAr ? "كاميرا أمامية" : "Front camera"}</p>
+                            <p className="font-black text-white text-base camera-text">{isAr ? "اضغط لتشغيل الكاميرا" : "Tap to open camera"}</p>
+                            <p className="text-xs text-gray-400 mt-1 camera-subtitle">{isAr ? "كاميرا أمامية" : "Front camera"}</p>
                         </div>
                     </button>
                 ) : (
-                    <div className="grid grid-cols-2 gap-3 w-full aspect-[4/3]">
+                    <div className="grid grid-cols-2 gap-3 w-full aspect-[4/3] camera-container">
                         <button
                             type="button"
                             onClick={() => startCamera(docKey)}
-                            className="w-full h-full rounded-[2rem] border-2 border-dashed border-primary/30 bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center justify-center gap-4 hover:border-primary transition-all group"
+                            className="w-full h-full rounded-[2rem] border-2 border-dashed border-primary/30 bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center justify-center hover:border-primary transition-all group camera-box"
                         >
-                            <div className="w-12 h-12 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center group-hover:bg-primary/20 transition">
-                                <Camera size={24} className="text-primary" />
+                            <div className="w-12 h-12 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center group-hover:bg-primary/20 transition camera-icon">
+                                <Camera size={24} className="text-primary w-full h-full p-1" />
                             </div>
                             <div className="text-center px-1">
-                                <p className="font-black text-white text-sm">{isAr ? "تشغيل الكاميرا" : "Open Camera"}</p>
+                                <p className="font-black text-white text-sm camera-text">{isAr ? "تشغيل الكاميرا" : "Open Camera"}</p>
                             </div>
                         </button>
 
-                        <label className="w-full h-full cursor-pointer rounded-[2rem] border-2 border-dashed border-primary/30 bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center justify-center gap-4 hover:border-primary transition-all group">
+                        <label className="w-full h-full cursor-pointer rounded-[2rem] border-2 border-dashed border-primary/30 bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center justify-center hover:border-primary transition-all group camera-box">
                             <input
                                 type="file"
                                 accept="image/*"
                                 className="hidden"
                                 onChange={(e) => handleFileUpload(e, docKey)}
                             />
-                            <div className="w-12 h-12 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center group-hover:bg-primary/20 transition">
-                                <Upload size={24} className="text-primary" />
+                            <div className="w-12 h-12 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center group-hover:bg-primary/20 transition camera-icon">
+                                <Upload size={24} className="text-primary w-full h-full p-1" />
                             </div>
                             <div className="text-center px-1">
-                                <p className="font-black text-white text-sm">{isAr ? "رفع صورة" : "Upload Image"}</p>
+                                <p className="font-black text-white text-sm camera-text">{isAr ? "رفع صورة" : "Upload Image"}</p>
                             </div>
                         </label>
                     </div>
@@ -225,12 +225,12 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
     return (
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4 md:space-y-8 w-full">
             <div className="bg-white p-4 sm:p-8 md:p-10 rounded-[1.5rem] md:rounded-[3rem] shadow-xl border border-gray-50 text-right overflow-hidden w-full">
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 mb-2 flex items-center justify-end gap-3 font-arabic flex-wrap">
+                <h2 className="checkout-title font-black text-gray-900 mb-2 flex items-center justify-end gap-3 font-arabic flex-wrap">
                     التحقق من الهوية (KYC) <UserCheck className="text-primary" />
                 </h2>
-                <p className="text-gray-500 font-bold mb-6 md:mb-8 leading-relaxed font-arabic text-[12px] sm:text-sm">
+                <div className="kyc-description text-gray-500 font-bold mb-6 md:mb-8 font-arabic">
                     لإكمال عملية التقسيط، التقط صورة لوجهك ثم صوّر وثائق الإقامة وجواز السفر.
-                </p>
+                </div>
 
                 <canvas ref={canvasRef} className="hidden" />
 

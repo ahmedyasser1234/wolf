@@ -676,7 +676,7 @@ export default function ProductsTab({ collectionId, onProductClick, onPreview, s
                                                             <div className="space-y-2">
                                                                 <label className="text-[10px] font-black text-slate-400">{language === 'ar' ? "اسم اللون" : "COLOR NAME"}</label>
                                                                 <Input
-                                                                    className="h-10 rounded-xl border-slate-200 font-bold"
+                                                                    className="h-10 rounded-xl border-slate-200 font-bold text-slate-900"
                                                                     value={variant.colorName}
                                                                     onChange={e => {
                                                                         const newVariants = [...colorVariants];
@@ -700,7 +700,7 @@ export default function ProductsTab({ collectionId, onProductClick, onPreview, s
                                                                         }}
                                                                     />
                                                                     <Input
-                                                                        className="h-11 flex-1 rounded-xl border-slate-200 font-mono text-base"
+                                                                        className="h-11 flex-1 rounded-xl border-slate-200 font-mono text-base text-slate-900"
                                                                         value={variant.colorCode}
                                                                         onChange={e => {
                                                                             const newVariants = [...colorVariants];
@@ -714,7 +714,7 @@ export default function ProductsTab({ collectionId, onProductClick, onPreview, s
                                                                 <label className="text-[10px] font-black text-slate-400">{language === 'ar' ? "الكمية" : "QUANTITY"}</label>
                                                                 <Input
                                                                     type="number"
-                                                                    className="h-11 rounded-xl border-slate-200 font-bold"
+                                                                    className="h-11 rounded-xl border-slate-200 font-bold text-slate-900"
                                                                     value={variant.quantity?.toString() || "0"}
                                                                     onChange={e => {
                                                                         const newVariants = [...colorVariants];
