@@ -698,12 +698,12 @@ function AppContent() {
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={() => setIsChatHistoryOpen(true)}
-          className="fixed bottom-5 left-5 md:bottom-8 md:left-8 z-[100] w-14 h-14 md:w-16 md:h-16 rounded-full bg-primary text-primary-foreground shadow-2xl shadow-primary/20 flex items-center justify-center group transition-all hover:bg-primary/90"
+          className="fixed bottom-4 left-4 md:bottom-8 md:left-8 z-[100] w-12 h-12 md:w-16 md:h-16 rounded-full bg-primary text-primary-foreground shadow-2xl shadow-primary/20 flex items-center justify-center group transition-all hover:bg-primary/90"
         >
           <div className="absolute inset-0 bg-gradient-to-tr from-primary to-primary/80 opacity-0 group-hover:opacity-100 transition-opacity rounded-full"></div>
-          <MessageSquare className="w-6 h-6 md:w-8 md:h-8 relative z-10" />
+          <MessageSquare className="w-5 h-5 md:w-8 md:h-8 relative z-10" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-5 w-5 md:h-6 md:w-6 items-center justify-center rounded-full bg-white text-primary text-[10px] md:text-[12px] font-black shadow-lg animate-bounce border-2 border-primary">
+            <span className="absolute -top-1 -right-1 flex h-4 w-4 md:h-6 md:w-6 items-center justify-center rounded-full bg-white text-primary text-[9px] md:text-[12px] font-black shadow-lg animate-bounce border-2 border-primary">
               {unreadCount}
             </span>
           )}

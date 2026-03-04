@@ -252,8 +252,8 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
                     ))}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mt-8 font-arabic">
-                    <Button onClick={onBack} variant="outline" className="h-16 rounded-full border-2 border-gray-300 text-gray-900 hover:bg-gray-100 text-xl font-bold">العودة</Button>
+                <div className="grid grid-cols-2 gap-3 md:gap-4 mt-6 md:mt-8 font-arabic">
+                    <Button onClick={onBack} variant="outline" className="h-11 md:h-16 rounded-full border-2 border-gray-300 text-gray-900 hover:bg-gray-100 text-base md:text-xl font-bold">العودة</Button>
                     <Button
                         disabled={!isStepComplete}
                         onClick={() => {
@@ -261,7 +261,7 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
                                 onComplete({ faceIdImage: images.faceId, residencyImage: images.residency, passportImage: images.passport });
                             }
                         }}
-                        className="h-16 rounded-full bg-primary hover:bg-primary/90 text-xl font-bold shadow-xl shadow-primary/20 text-gray-900 disabled:opacity-50 disabled:text-gray-700"
+                        className="h-11 md:h-16 rounded-full bg-primary hover:bg-primary/90 text-sm md:text-xl font-bold shadow-xl shadow-primary/20 text-gray-900 disabled:opacity-50 disabled:text-gray-700"
                     >
                         {isStepComplete ? '✓ تأكيد والمتابعة' : `${[!images.faceId, !images.residency, !images.passport].filter(Boolean).length} ${isAr ? 'متبقية' : 'remaining'}`}
                     </Button>

@@ -343,41 +343,41 @@ export default function Checkout() {
           <div className="lg:col-span-8">
             <AnimatePresence mode="wait">
               {step === "shipping" && (
-                <motion.div key="shipping" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-8">
+                <motion.div key="shipping" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-6">
                   <div className="bg-white p-4 sm:p-8 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-gray-50 text-right font-arabic w-full">
-                    <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 mb-6 md:mb-8">{language === 'ar' ? 'عنوان الشحن' : 'Shipping Address'}</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-8">
-                      <div className="space-y-2">
-                        <label className="font-bold text-gray-700 text-sm">{language === 'ar' ? 'الاسم الأول' : 'First Name'}</label>
-                        <Input name="firstName" value={formData.firstName} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-lg text-black font-bold" />
+                    <h2 className="text-lg sm:text-2xl md:text-3xl font-black text-gray-900 mb-4 md:mb-8">{language === 'ar' ? 'عنوان الشحن' : 'Shipping Address'}</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-8">
+                      <div className="space-y-1">
+                        <label className="font-bold text-gray-700 text-xs md:text-sm">{language === 'ar' ? 'الاسم الأول' : 'First Name'}</label>
+                        <Input name="firstName" value={formData.firstName} onChange={handleInputChange} className="h-10 md:h-14 rounded-xl md:rounded-2xl bg-gray-50 border-none px-3 md:px-6 text-sm md:text-lg text-black font-bold w-full" />
                       </div>
-                      <div className="space-y-2">
-                        <label className="font-bold text-gray-700 text-sm">{language === 'ar' ? 'اسم العائلة' : 'Last Name'}</label>
-                        <Input name="lastName" value={formData.lastName} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-lg text-black font-bold" />
+                      <div className="space-y-1">
+                        <label className="font-bold text-gray-700 text-xs md:text-sm">{language === 'ar' ? 'اسم العائلة' : 'Last Name'}</label>
+                        <Input name="lastName" value={formData.lastName} onChange={handleInputChange} className="h-10 md:h-14 rounded-xl md:rounded-2xl bg-gray-50 border-none px-3 md:px-6 text-sm md:text-lg text-black font-bold w-full" />
                       </div>
-                      <div className="md:col-span-2 space-y-2">
-                        <label className="font-bold text-gray-700 text-sm">{language === 'ar' ? 'العنوان' : 'Address'}</label>
-                        <Input name="address" value={formData.address} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-lg text-black font-bold" />
+                      <div className="sm:col-span-2 space-y-1">
+                        <label className="font-bold text-gray-700 text-xs md:text-sm">{language === 'ar' ? 'العنوان' : 'Address'}</label>
+                        <Input name="address" value={formData.address} onChange={handleInputChange} className="h-10 md:h-14 rounded-xl md:rounded-2xl bg-gray-50 border-none px-3 md:px-6 text-sm md:text-lg text-black font-bold w-full" />
                       </div>
-                      <div className="space-y-2">
-                        <label className="font-bold text-gray-700 text-sm">{language === 'ar' ? 'المدينة' : 'City'}</label>
-                        <Input name="city" value={formData.city} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-lg text-black font-bold" />
+                      <div className="space-y-1">
+                        <label className="font-bold text-gray-700 text-xs md:text-sm">{language === 'ar' ? 'المدينة' : 'City'}</label>
+                        <Input name="city" value={formData.city} onChange={handleInputChange} className="h-10 md:h-14 rounded-xl md:rounded-2xl bg-gray-50 border-none px-3 md:px-6 text-sm md:text-lg text-black font-bold w-full" />
                       </div>
-                      <div className="space-y-2">
-                        <label className="font-bold text-gray-700 text-sm">الإمارات</label>
-                        <Input name="country" value={formData.country} readOnly className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-lg text-gray-400" />
+                      <div className="space-y-1">
+                        <label className="font-bold text-gray-700 text-xs md:text-sm">الإمارات</label>
+                        <Input name="country" value={formData.country} readOnly className="h-10 md:h-14 rounded-xl md:rounded-2xl bg-gray-50 border-none px-3 md:px-6 text-sm md:text-lg text-gray-400 w-full" />
                       </div>
-                      <div className="md:col-span-2 space-y-2">
-                        <label className="font-bold text-gray-700 text-sm">{language === 'ar' ? 'رقم الهاتف' : 'Phone Number'}</label>
-                        <Input name="phone" value={formData.phone} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-lg text-black font-bold" />
+                      <div className="sm:col-span-2 space-y-1">
+                        <label className="font-bold text-gray-700 text-xs md:text-sm">{language === 'ar' ? 'رقم الهاتف' : 'Phone Number'}</label>
+                        <Input name="phone" value={formData.phone} onChange={handleInputChange} className="h-10 md:h-14 rounded-xl md:rounded-2xl bg-gray-50 border-none px-3 md:px-6 text-sm md:text-lg text-black font-bold w-full" />
                       </div>
                     </div>
                     <Button
                       onClick={() => setStep(formData.paymentMethod === 'installments' ? "review" : "payment")}
-                      className="w-full h-16 rounded-full mt-12 bg-primary hover:bg-primary/90 text-xl font-bold text-white shadow-xl shadow-primary/20 group uppercase"
+                      className="w-full h-12 md:h-16 rounded-full mt-6 md:mt-12 bg-primary hover:bg-primary/90 text-base md:text-xl font-bold text-white shadow-xl shadow-primary/20 group uppercase"
                     >
                       {language === 'ar' ? (formData.paymentMethod === 'installments' ? 'مراجعة الطلب' : 'متابعة للدفع') : (formData.paymentMethod === 'installments' ? 'Review Order' : 'Continue to Payment')}
-                      <ChevronLeft className="mr-3 group-hover:-translate-x-2 transition-transform" />
+                      <ChevronLeft className="mr-2 group-hover:-translate-x-2 transition-transform" />
                     </Button>
                   </div>
                 </motion.div>
