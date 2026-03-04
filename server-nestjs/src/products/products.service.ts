@@ -331,7 +331,6 @@ export class ProductsService {
             (data as any).categoryId = collection.categoryId;
         }
 
-        const colorVariantsArr = typeof data.colorVariants === 'string' ? JSON.parse(data.colorVariants) : data.colorVariants;
 
         // Price is exactly what the admin sets
         const finalPrice = parseFloat(data.price);
