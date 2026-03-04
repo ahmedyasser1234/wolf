@@ -32,6 +32,11 @@ export class PaymentsService {
     }
 
     async createCheckoutSession(gatewayName: string, orderId: number, amount: number, customerEmail: string) {
+        const frontendUrl = this.configService.get('FRONTEND_URL');
+        console.log(`🌐 [PaymentsService] START createCheckoutSession`);
+        console.log(`   - Gateway: ${gatewayName}, Order: ${orderId}, Amount: ${amount}`);
+        console.log(`   - FRONTEND_URL from Config: ${frontendUrl}`);
+
         const config = await this.getGatewayConfig(gatewayName);
 
         if (!config && gatewayName !== 'cash_on_delivery') {

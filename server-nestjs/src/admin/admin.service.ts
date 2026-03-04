@@ -102,10 +102,19 @@ export class AdminService {
                 id: orders.id,
                 orderNumber: orders.orderNumber,
                 customerId: orders.customerId,
-                customerName: users.name,
+                customer: {
+                    name: users.name,
+                    email: users.email,
+                    phone: users.phone,
+                },
                 total: orders.total,
                 status: orders.status,
                 paymentStatus: orders.paymentStatus,
+                paymentMethod: orders.paymentMethod,
+                installmentPlanId: orders.installmentPlanId,
+                kycData: orders.kycData,
+                shippingAddress: orders.shippingAddress,
+                billingAddress: orders.billingAddress,
                 createdAt: orders.createdAt,
             })
             .from(orders)

@@ -601,6 +601,12 @@ function Router() {
       <Route path={"/checkout"}>
         <ProtectedRoute component={Checkout} />
       </Route>
+      <Route path={"/checkout/success"}>
+        <ProtectedRoute component={OrderSuccess} />
+      </Route>
+      <Route path={"/checkout/cancel"}>
+        <ProtectedRoute component={Checkout} />
+      </Route>
 
       {/* Admin Auth */}
       <Route path="/admin/login" component={AdminLogin} />
