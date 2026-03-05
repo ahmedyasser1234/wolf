@@ -62,16 +62,24 @@ export function useAuth(options?: UseAuthOptions) {
   });
 
   const logout = useCallback(async () => {
+    // 1. Immediately clear client state to prevent UI flickers or double-clicks
+    localStorage.removeItem("manus-runtime-user-info");
+    localStorage.removeItem("app_token");
+    queryClient.setQueryData(['auth', 'me'], null);
+
     try {
+      // 2. Attempt server logout
       await logoutMutation.mutateAsync();
     } catch (error: unknown) {
-      console.error("Logout failed:", error);
+      console.error("Logout failed on server:", error);
     } finally {
-      localStorage.removeItem("manus-runtime-user-info");
-      localStorage.removeItem("app_token");
-      queryClient.setQueryData(['auth', 'me'], null);
-      await queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
-      await queryClient.resetQueries({ queryKey: ['auth', 'me'] });
+      // 3. Ensure deep cleanup and Hard Redirect
+      await queryClient.cancelQueries({ queryKey: ['auth', 'me'] });
+      queryClient.removeQueries({ queryKey: ['auth', 'me'] });
+
+      if (typeof window !== "undefined") {
+        window.location.replace("/"); // Use replace to prevent back-button weirdness
+      }
     }
   }, [logoutMutation, queryClient]);
 

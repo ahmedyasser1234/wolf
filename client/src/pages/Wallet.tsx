@@ -37,7 +37,7 @@ export default function WalletPage() {
     const balance = wallet?.balance ?? 0;
 
     const redeemMutation = useMutation({
-        mutationFn: () => endpoints.wallets.redeem(giftCode.trim().toUpperCase()),
+        mutationFn: () => endpoints.giftCards.redeem(giftCode.trim().toUpperCase()),
         onSuccess: (updated: any) => {
             const amount = updated?.balance - balance;
             setRedeemed(amount > 0 ? amount : null);
@@ -71,11 +71,9 @@ export default function WalletPage() {
 
         setIsTopUpLoading(true);
         try {
-            const transaction = await endpoints.wallets.topUp(amount, selectedGateway);
-
-            // In a real app, you'd redirect to Stripe/Paymob here. 
-            // For now, we simulate success for demo purposes.
-            await endpoints.wallets.confirmTopUp(transaction.id);
+            // The backend's top-up endpoint currently bypasses the 2-step gateway verification for simulation
+            // and expects a referenceId. We send the gateway name as the reference in this mock flow.
+            await endpoints.wallets.topUp(amount, `TOPUP_${selectedGateway}_${Date.now()}`);
 
             toast.success(language === "ar" ? "✅ تم شحن المحفظة بنجاح!" : "✅ Wallet topped up successfully!");
             setTopUpAmount("");
