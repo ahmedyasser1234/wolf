@@ -7,10 +7,15 @@ import { COOKIE_NAME } from '../common/constants';
 @Controller('admin')
 export class AdminController {
     constructor(
-        private adminService: AdminService,
+        private readonly adminService: AdminService,
         private authService: AuthService
     ) { }
 
+    @Get('stats')
+    async getStats(@Req() req: Request) {
+        await this.checkAdmin(req);
+        return this.adminService.getDashboardStats();
+    }
 
 
     private async checkAdmin(req: Request) {
@@ -80,10 +85,20 @@ export class AdminController {
         @Req() req: Request,
         @Query('search') search?: string,
         @Query('dateFrom') dateFrom?: string,
-        @Query('dateTo') dateTo?: string
+        @Query('dateTo') dateTo?: string,
+        @Query('page') page?: string,
+        @Query('limit') limit?: string,
+        @Query('isInstallmentOnly') isInstallmentOnly?: string
     ) {
         await this.checkAdmin(req);
-        return this.adminService.getAllOrders(search, dateFrom, dateTo);
+        return this.adminService.getAllOrders(
+            search,
+            dateFrom,
+            dateTo,
+            page ? parseInt(page) : 1,
+            limit ? parseInt(limit) : 100,
+            isInstallmentOnly === 'true'
+        );
     }
 
     @Get('products')

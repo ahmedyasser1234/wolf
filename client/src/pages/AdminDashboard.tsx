@@ -369,15 +369,12 @@ export default function AdminDashboard() {
   };
 
   // These must be defined before `tabs` useMemo since tabs references pendingInstallmentReviews
-  const { data: adminOrders } = useQuery({
-    queryKey: ['admin-orders-full'],
-    queryFn: async () => (await api.get('/admin/orders')).data,
+  const { data: dashboardStats } = useQuery({
+    queryKey: ['admin', 'stats'],
+    queryFn: async () => (await api.get('/admin/stats')).data,
   });
 
-  // Count pending installment KYC reviews for badge
-  const pendingInstallmentReviews = (adminOrders || []).filter(
-    (o: any) => o.installmentPlanId && o.paymentStatus === 'pending_kyc_review'
-  ).length;
+  const pendingInstallmentReviews = dashboardStats?.pendingKycReviews || 0;
 
   /* Define tabs with distinct gradient colors */
   const tabs = useMemo<{ id: string; label: string; icon: any; color?: string; badge?: number }[]>(() => [
@@ -681,7 +678,7 @@ export default function AdminDashboard() {
                         <header className="h-4 md:h-6 flex items-center">
                           <p className="text-[10px] md:text-xs text-white font-black uppercase tracking-widest opacity-70">{t('totalCustomers')}</p>
                         </header>
-                        <p className="text-2xl md:text-3xl font-black text-white">{customers?.length || 0}</p>
+                        <p className="text-2xl md:text-3xl font-black text-white">{dashboardStats?.totalCustomers || 0}</p>
                       </div>
                       <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-900/20 rounded-2xl flex items-center justify-center shrink-0">
                         <Users className="w-5 h-5 md:w-6 md:h-6 text-blue-400" />
@@ -695,7 +692,7 @@ export default function AdminDashboard() {
                     <div className="flex items-center justify-between gap-4">
                       <div className="space-y-1">
                         <p className="text-[10px] md:text-xs text-white font-black uppercase tracking-widest opacity-70">{t('totalProducts')}</p>
-                        <p className="text-2xl md:text-3xl font-black text-white">{products?.length || 0}</p>
+                        <p className="text-2xl md:text-3xl font-black text-white">{dashboardStats?.totalProducts || 0}</p>
                       </div>
                       <div className="w-10 h-10 md:w-12 md:h-12 bg-yellow-900/20 rounded-2xl flex items-center justify-center shrink-0">
                         <Package className="w-5 h-5 md:w-6 md:h-6 text-yellow-400" />
@@ -709,7 +706,7 @@ export default function AdminDashboard() {
                     <div className="flex items-center justify-between gap-4">
                       <div className="space-y-1">
                         <p className="text-[10px] md:text-xs text-white font-black uppercase tracking-widest opacity-70">{t('paidOrders')}</p>
-                        <p className="text-2xl md:text-3xl font-black text-white">{adminOrders?.length || 0}</p>
+                        <p className="text-2xl md:text-3xl font-black text-white">{dashboardStats?.totalPaidOrders || 0}</p>
                       </div>
                       <div className="w-10 h-10 md:w-12 md:h-12 bg-primary/10 rounded-2xl flex items-center justify-center shrink-0">
                         <ShoppingCart className="w-5 h-5 md:w-6 md:h-6 text-primary" />
@@ -723,7 +720,7 @@ export default function AdminDashboard() {
                     <div className="flex items-center justify-between gap-4">
                       <div className="space-y-1">
                         <p className="text-[10px] md:text-xs text-emerald-400 font-black uppercase tracking-widest">{t('totalRevenue')}</p>
-                        <p className="text-xl md:text-2xl font-black text-white">{totalRevenue.toFixed(2)} {t('currency')}</p>
+                        <p className="text-xl md:text-2xl font-black text-white">{(dashboardStats?.totalRevenue || 0).toFixed(2)} {t('currency')}</p>
                         <div className="mt-1 flex items-center gap-1 text-[10px] text-emerald-600 font-bold">
                           <TrendingUp size={10} />
                           <span>{t('fromPaidOrders')}</span>

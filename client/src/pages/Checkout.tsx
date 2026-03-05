@@ -186,7 +186,15 @@ export default function Checkout() {
       }
     }
 
-    const isInstallment = formData.paymentMethod === 'installments';
+    const isInstallment = formData.paymentMethod === 'installments' || formData.installmentPlanId !== null;
+
+    console.log('🚀 [Checkout] handlePlaceOrder', {
+      isInstallment,
+      formDataPaymentMethod: formData.paymentMethod,
+      depositMethod,
+      installmentPlanId: formData.installmentPlanId,
+      hasKycData: !!kycData
+    });
 
     placeOrderMutation.mutate({
       shippingAddress: {

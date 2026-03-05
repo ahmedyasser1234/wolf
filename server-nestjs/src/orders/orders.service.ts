@@ -162,7 +162,8 @@ export class OrdersService {
         // ============================================================
         let depositAmount = 0;
         let stripeCheckoutUrl: string | null = null;
-        let resolvedDepositPaymentMethod = depositPaymentMethod || 'card';
+        let resolvedDepositPaymentMethod = (depositPaymentMethod || 'card') as 'card' | 'wallet' | 'gift_card';
+        console.log(`   - [Installment Check] depositPaymentMethod: ${depositPaymentMethod}, resolved: ${resolvedDepositPaymentMethod}`);
 
         if (installmentPlanId) {
             // Calculate gross cart total (before coupon / shipping per vendor)
@@ -205,7 +206,7 @@ export class OrdersService {
                     throw new BadRequestException(`رصيد المحفظة غير كافٍ. الرصيد المتاح: ${wallet?.balance || 0}, المطلوب: ${depositAmount}`);
                 }
                 await this.walletsService.deductBalance(customerId, depositAmount, `مقدم دفع تقسيط - في انتظار مراجعة الأوراق`);
-                console.log(`  - [Deposit] Deducted ${depositAmount} from wallet for customer ${customerId}`);
+                console.log(`  - [Deposit] SUCCESS: Deducted ${depositAmount} from wallet for customer ${customerId}. resolvedDepositPaymentMethod: ${resolvedDepositPaymentMethod}`);
 
             } else if (depositPaymentMethod === 'gift_card') {
                 if (!depositGiftCardCode) throw new BadRequestException('يرجى إدخال كود كارت الهدية');

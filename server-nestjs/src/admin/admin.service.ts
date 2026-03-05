@@ -145,7 +145,7 @@ export class AdminService {
             .orderBy(desc(accountStatusLogs.changedAt));
     }
 
-    async getAllOrders(search?: string, dateFrom?: string, dateTo?: string) {
+    async getAllOrders(search?: string, dateFrom?: string, dateTo?: string, page = 1, limit = 100, isInstallmentOnly = false) {
         let query = this.databaseService.db
             .select({
                 order: orders,
@@ -161,6 +161,10 @@ export class AdminService {
             .leftJoin(installmentPlans, eq(orders.installmentPlanId, installmentPlans.id));
 
         const conditions: any[] = [];
+
+        if (isInstallmentOnly) {
+            conditions.push(sql`${orders.installmentPlanId} IS NOT NULL`);
+        }
 
         if (search) {
             const searchPattern = `%${search.toLowerCase()}%`;
@@ -184,7 +188,11 @@ export class AdminService {
             query = query.where(and(...conditions)) as any;
         }
 
-        const rows = await query.orderBy(desc(orders.createdAt));
+        const offset = (page - 1) * limit;
+        const rows = await query
+            .orderBy(desc(orders.createdAt))
+            .limit(limit)
+            .offset(offset);
 
         const orderIds = rows.map(r => r.order.id);
         if (orderIds.length === 0) return [];
@@ -202,19 +210,63 @@ export class AdminService {
             .leftJoin(products, eq(orderItems.productId, products.id))
             .where(sql`${orderItems.orderId} IN ${orderIds}`);
 
+        // Efficient grouping by orderId
+        const itemsMap = new Map<number, any[]>();
+        for (const i of allItems) {
+            if (!itemsMap.has(i.item.orderId)) {
+                itemsMap.set(i.item.orderId, []);
+            }
+            itemsMap.get(i.item.orderId)!.push({
+                ...i.item,
+                productNameAr: i.product?.nameAr,
+                productNameEn: i.product?.nameEn,
+                productImage: (i.product?.images as string[])?.[0],
+            });
+        }
+
         return rows.map(r => ({
             ...r.order,
             customer: r.customer,
             installmentPlan: r.installmentPlan,
-            items: allItems
-                .filter(i => i.item.orderId === r.order.id)
-                .map(i => ({
-                    ...i.item,
-                    productNameAr: i.product?.nameAr,
-                    productNameEn: i.product?.nameEn,
-                    productImage: (i.product?.images as string[])?.[0],
-                })),
+            items: itemsMap.get(r.order.id) || [],
         }));
+    }
+
+    async getDashboardStats() {
+        const [customersTotal] = await this.databaseService.db
+            .select({ count: sql`count(*)` })
+            .from(users)
+            .where(eq(users.role, 'customer'));
+
+        const [productsTotal] = await this.databaseService.db
+            .select({ count: sql`count(*)` })
+            .from(products);
+
+        const [paidOrdersCount] = await this.databaseService.db
+            .select({ count: sql`count(*)` })
+            .from(orders)
+            .where(eq(orders.paymentStatus, 'paid'));
+
+        const [revenueTotal] = await this.databaseService.db
+            .select({ total: sql`sum(${orders.total})` })
+            .from(orders)
+            .where(eq(orders.paymentStatus, 'paid'));
+
+        const [pendingKycReviews] = await this.databaseService.db
+            .select({ count: sql`count(*)` })
+            .from(orders)
+            .where(and(
+                sql`${orders.installmentPlanId} IS NOT NULL`,
+                eq(orders.paymentStatus, 'pending_kyc_review')
+            ));
+
+        return {
+            totalCustomers: Number(customersTotal?.count || 0),
+            totalProducts: Number(productsTotal?.count || 0),
+            totalPaidOrders: Number(paidOrdersCount?.count || 0),
+            totalRevenue: Number(revenueTotal?.total || 0),
+            pendingKycReviews: Number(pendingKycReviews?.count || 0),
+        };
     }
 
     async getAllProducts(search?: string) {

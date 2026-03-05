@@ -28,9 +28,9 @@ export default function InstallmentOrdersTab() {
         onError: () => toast.error(language === 'ar' ? 'فشلت عملية التأكيد' : 'Confirmation failed'),
     });
 
-    const { data: allOrders, isLoading } = useQuery({
+    const { data: allOrders, isLoading, isFetching } = useQuery({
         queryKey: ['admin', 'installment-orders'],
-        queryFn: async () => (await api.get('/admin/orders')).data,
+        queryFn: async () => (await api.get('/admin/orders?limit=200&isInstallmentOnly=true')).data,
     });
 
     const kycReviewMutation = useMutation({
@@ -99,8 +99,9 @@ export default function InstallmentOrdersTab() {
             <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                     <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white mb-1">{language === 'ar' ? 'طلبات التقسيط' : 'Installment Requests'}</h2>
-                    <p className="text-gray-400 font-bold text-xs sm:text-sm">
+                    <p className="text-gray-400 font-bold text-xs sm:text-sm flex items-center gap-2">
                         {language === 'ar' ? `${reviewCount} طلب بانتظار المراجعة` : `${reviewCount} request(s) awaiting review`}
+                        {isFetching && !isLoading && <Loader2 className="w-3 h-3 animate-spin text-primary" />}
                     </p>
                 </div>
 
