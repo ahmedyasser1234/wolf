@@ -75,7 +75,10 @@ export const endpoints = {
         get: (id: number) => api.get(`/orders/${id}`).then(res => res.data),
         create: (data: any) => api.post('/orders', data).then(res => res.data),
         updateStatus: (id: number, status: string) => api.patch(`/orders/${id}/status`, { status }).then(res => res.data),
+        payOrder: (id: number, paymentMethod: string, giftCardCode?: string) =>
+            api.post(`/orders/${id}/pay`, { paymentMethod, giftCardCode }).then(res => res.data),
     },
+
     collections: {
         list: (categoryId?: number) => api.get('/collections', { params: { categoryId } }).then(res => res.data),
         get: (id: number) => api.get(`/collections/${id}`).then(res => res.data),

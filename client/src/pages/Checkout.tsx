@@ -16,7 +16,7 @@ import { formatPrice } from "@/lib/utils";
 import KYCStep from "@/components/checkout/KYCStep";
 import { useAuth } from "@/_core/hooks/useAuth";
 
-type CheckoutStep = "shipping" | "payment" | "kyc" | "review" | "success";
+type CheckoutStep = "shipping" | "kyc" | "deposit" | "success";
 
 export default function Checkout() {
   const { user } = useAuth();
@@ -31,9 +31,7 @@ export default function Checkout() {
   };
   const intent = getInitialIntent();
 
-  const [step, setStep] = useState<CheckoutStep>(
-    intent?.paymentMethod === 'installments' ? "kyc" : "shipping"
-  );
+  const [step, setStep] = useState<CheckoutStep>("shipping");
 
   const [formData, setFormData] = useState({
     firstName: user?.name?.split(' ')[0] || "",
@@ -56,6 +54,8 @@ export default function Checkout() {
   const [kycData, setKycData] = useState<any>(null);
   const [orderResult, setOrderResult] = useState<any>(null);
   const [giftCardCode, setGiftCardCode] = useState("");
+  const [depositMethod, setDepositMethod] = useState<'wallet' | 'card' | 'gift_card'>('card');
+  const [depositGiftCardCode, setDepositGiftCardCode] = useState("");
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
 
@@ -64,7 +64,7 @@ export default function Checkout() {
     if (step === 'kyc') {
       toast.info(language === 'ar' ? "يرجى إكمال التحقق من الهوية للمتابعة" : "Please complete identity verification to proceed");
     }
-  }, [language]); // Only run once on mount or language change if step is kyc
+  }, [language]);
 
   // Queries
   const { data: cartData, isLoading: isCartLoading, isFetching: isCartFetching } = useQuery({
@@ -137,10 +137,8 @@ export default function Checkout() {
   const placeOrderMutation = useMutation({
     mutationFn: (data: any) => endpoints.orders.create(data),
     onSuccess: (data) => {
-      // API returns { orders: [], checkoutUrl: string }
       const result = data;
 
-      // If there's a checkoutUrl, redirect to it
       if (result.checkoutUrl) {
         window.location.href = result.checkoutUrl;
         return;
@@ -159,18 +157,6 @@ export default function Checkout() {
   });
 
   const queryClient = useQueryClient();
-  const redeemGiftCardMutation = useMutation({
-    mutationFn: (code: string) => endpoints.giftCards.redeem(code),
-    onSuccess: (data) => {
-      toast.success(language === 'ar' ? 'تم شحن الكارت بنجاح في محفظتك' : 'Gift card redeemed successfully to your wallet');
-      queryClient.invalidateQueries({ queryKey: ['wallet'] });
-      setFormData(prev => ({ ...prev, paymentMethod: 'wallet' }));
-      setGiftCardCode("");
-    },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || (language === 'ar' ? 'كود غير صالح أو مستخدم من قبل' : 'Invalid or already used code'));
-    }
-  });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -183,34 +169,14 @@ export default function Checkout() {
       return;
     }
 
-    const walletBal = walletData?.wallet?.balance ?? 0;
-    const isWallet = formData.paymentMethod === 'wallet';
-    const walletAmountUsed = isWallet ? Math.min(walletBal, finalTotal) : 0;
-    const topUpMethod = formData.topUpMethod;
-
-    if (isWallet && walletBal < finalTotal && !topUpMethod) {
-      toast.error(language === 'ar' ? 'يرجى اختيار طريقة دفع للمبلغ المتبقي' : 'Please select payment method for the remainder');
-      return;
-    }
-
-    // Validation for online payments
-    const isOnline = !['cash', 'wallet', 'installments'].includes(formData.paymentMethod);
-    if (isOnline && (!formData.cardNumber || !formData.cardExpiry)) {
-      // For now we allow redirecting to gateways with just the method selection
-      // but if we show card fields, we should validate them.
-      // toast.error(language === 'ar' ? 'يرجى إدخال بيانات البطاقة' : 'Please enter card details');
-    }
-
     // Check quantity limit again (only validate against actual cart items)
     if (formData.paymentMethod === 'installments' && items.length > 0) {
       const intentRaw = localStorage.getItem('wolf_payment_intent');
       if (intentRaw) {
         const intent = JSON.parse(intentRaw);
         const totalItems = items.reduce((sum: number, i: any) => sum + i.quantity, 0);
-
         const minQ = intent.minQuantity || 1;
         const maxQ = intent.maxQuantity || 0;
-
         if (totalItems < minQ || (maxQ > 0 && totalItems > maxQ)) {
           toast.error(language === 'ar'
             ? `هذا النظام يدعم عدد منتجات بين ${minQ} و ${maxQ > 0 ? maxQ : '∞'}`
@@ -219,21 +185,6 @@ export default function Checkout() {
         }
       }
     }
-
-    console.log("🚀 [Checkout] SENDING ORDER REQUEST:", {
-      shippingAddress: {
-        name: `${formData.firstName} ${formData.lastName}`,
-        phone: formData.phone,
-        address: formData.address,
-        city: formData.city,
-        country: formData.country,
-        zipCode: formData.zipCode
-      },
-      paymentMethod: formData.paymentMethod,
-      couponCode: appliedCoupon?.code || undefined,
-      installmentPlanId: formData.paymentMethod === 'installments' ? formData.installmentPlanId : undefined,
-      kycData: !!kycData ? "PRESENT" : "MISSING"
-    });
 
     placeOrderMutation.mutate({
       shippingAddress: {
@@ -248,10 +199,12 @@ export default function Checkout() {
       couponCode: appliedCoupon?.code || undefined,
       installmentPlanId: formData.paymentMethod === 'installments' ? formData.installmentPlanId : undefined,
       kycData: kycData,
-      walletAmountUsed,
-      topUpMethod
+      depositPaymentMethod: formData.paymentMethod === 'installments' ? depositMethod : undefined,
+      depositGiftCardCode: formData.paymentMethod === 'installments' ? depositGiftCardCode : undefined,
     });
   };
+
+  const currentIntent = intent;
 
   // Wait for loading or background fetching if items are empty (to prevent stale cache from showing "Empty cart" too early)
   if (isCartLoading || (isCartFetching && items.length === 0)) {
@@ -278,52 +231,9 @@ export default function Checkout() {
   const getGatewayIcon = (name: string) => {
     switch (name) {
       case 'stripe': return CreditCard;
-      case 'paymob': return CreditCard;
-      case 'ccavenue': return Globe;
-      case 'tigerpay': return ShieldCheck;
-      case 'mamo': return Zap;
-      case 'paymennt': return CreditCard;
-      case 'utap': return QrCode;
-      case 'my_network': return Globe;
-      case 'omnispay': return CreditCard;
-      case 'vaultspay': return Shield;
-      case 'afspro': return ShieldCheck;
-      case 'payby': return Phone;
-      case 'geidea': return CreditCard;
-      case 'dpo_pay': return Globe;
-      case 'cash_on_delivery': return Banknote;
-      case 'wallet': return Wallet;
-      case 'installments': return UserCheck;
       default: return CreditCard;
     }
   };
-
-  const paymentMethods = [
-    ...gateways.map(g => {
-      const gName = g.name.toLowerCase();
-      const isCard = gName.includes('stripe') || gName.includes('paymob') || gName.includes('ccavenue') || gName.includes('card') || gName.includes('checkout');
-      return {
-        id: g.name,
-        label: isCard ? (language === 'ar' ? 'بطاقة بنكية (فيزا/ماستركارد)' : 'Bank Card (Visa/MasterCard)') : (language === 'ar' ? g.displayNameAr : g.displayNameEn),
-        Icon: getGatewayIcon(g.name),
-        isCard
-      }
-    }),
-    // If no card gateway exists, add a placeholder "Bank Card"
-    ...((!gateways.some(g => {
-      const gn = g.name.toLowerCase();
-      return gn.includes('stripe') || gn.includes('paymob') || gn.includes('card') || gn.includes('checkout');
-    })) ? [{
-      id: 'card',
-      label: language === 'ar' ? 'بطاقة بنكية (فيزا/ماستركارد)' : 'Bank Card (Visa/MasterCard)',
-      Icon: CreditCard,
-      isCard: true
-    }] : []),
-    { id: 'wallet', label: language === 'ar' ? 'المحفظة' : 'Wallet', Icon: Wallet, isCard: false },
-    { id: 'gift_card', label: language === 'ar' ? 'كارت هدية' : 'Gift Card', Icon: Gift, isCard: false },
-    { id: 'cash', label: language === 'ar' ? 'الدفع عند الاستلام' : 'Cash on Delivery', Icon: Banknote, isCard: false },
-    { id: 'installments', label: language === 'ar' ? 'تقسيط WOLF' : 'WOLF TECHNO Installments', Icon: UserCheck, isCard: false },
-  ].filter((v, i, a) => a.findIndex(t => t.id === v.id) === i); // dedupe
 
   return (
     <div className="min-h-screen bg-gray-50 pb-32 w-full page-container mx-auto">
@@ -333,41 +243,26 @@ export default function Checkout() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-8">
             <h1 className="checkout-title font-black text-gray-900 tracking-tighter uppercase font-arabic">{t('checkoutReady')}</h1>
             <div className="steps-container font-bold text-gray-400 font-arabic">
-              {formData.paymentMethod === 'installments' ? (
-                <>
-                  <div className={`flex items-center gap-2 shrink-0 ${['kyc', 'shipping', 'review'].includes(step) ? 'text-primary' : ''}`}>
-                    <span className={`step-number border-2 ${['kyc', 'shipping', 'review'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>1</span>
-                    <span className="step-label">{language === 'ar' ? 'التحقق' : 'KYC'}</span>
-                  </div>
-                  <ChevronLeft className={`step-divider text-gray-300 shrink-0 ${language === 'en' ? 'rotate-180' : ''}`} />
-                  <div className={`flex items-center gap-2 shrink-0 ${['shipping', 'review'].includes(step) ? 'text-primary' : ''}`}>
-                    <span className={`step-number border-2 ${['shipping', 'review'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>2</span>
-                    <span className="step-label">{t('shippingInfo')}</span>
-                  </div>
-                  <ChevronLeft className={`step-divider text-gray-300 shrink-0 ${language === 'en' ? 'rotate-180' : ''}`} />
-                  <div className={`flex items-center gap-2 shrink-0 ${step === 'review' ? 'text-primary' : ''}`}>
-                    <span className={`step-number border-2 ${step === 'review' ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>3</span>
-                    <span className="step-label">{t('reviewOrder')}</span>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className={`flex items-center gap-2 shrink-0 ${['shipping', 'payment', 'review'].includes(step) ? 'text-primary' : ''}`}>
-                    <span className={`step-number border-2 ${['shipping', 'payment', 'review'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>1</span>
-                    <span className="step-label">{t('shippingInfo')}</span>
-                  </div>
-                  <ChevronLeft className={`step-divider text-gray-300 shrink-0 ${language === 'en' ? 'rotate-180' : ''}`} />
-                  <div className={`flex items-center gap-2 shrink-0 ${['payment', 'review'].includes(step) ? 'text-primary' : ''}`}>
-                    <span className={`step-number border-2 ${['payment', 'review'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>2</span>
-                    <span className="step-label">{t('paymentInfo')}</span>
-                  </div>
-                  <ChevronLeft className={`step-divider text-gray-300 shrink-0 ${language === 'en' ? 'rotate-180' : ''}`} />
-                  <div className={`flex items-center gap-2 shrink-0 ${step === 'review' ? 'text-primary' : ''}`}>
-                    <span className={`step-number border-2 ${step === 'review' ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>3</span>
-                    <span className="step-label">{t('reviewOrder')}</span>
-                  </div>
-                </>
-              )}
+              <div className="flex items-center gap-2">
+                <div className={`flex items-center gap-2 shrink-0 ${['shipping', 'kyc', 'deposit'].includes(step) ? 'text-primary' : ''}`}>
+                  <span className={`step-number border-2 ${['shipping', 'kyc', 'deposit'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>1</span>
+                  <span className="step-label">{t('shippingInfo')}</span>
+                </div>
+                <ChevronLeft className={`step-divider text-gray-300 shrink-0 ${language === 'en' ? 'rotate-180' : ''}`} />
+                {formData.paymentMethod === 'installments' && (
+                  <>
+                    <div className={`flex items-center gap-2 shrink-0 ${['kyc', 'deposit'].includes(step) ? 'text-primary' : ''}`}>
+                      <span className={`step-number border-2 ${['kyc', 'deposit'].includes(step) ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>2</span>
+                      <span className="step-label">{language === 'ar' ? 'التحقق' : 'KYC'}</span>
+                    </div>
+                    <ChevronLeft className={`step-divider text-gray-300 shrink-0 ${language === 'en' ? 'rotate-180' : ''}`} />
+                  </>
+                )}
+                <div className={`flex items-center gap-2 shrink-0 ${step === 'deposit' ? 'text-primary' : ''}`}>
+                  <span className={`step-number border-2 ${step === 'deposit' ? 'border-primary bg-primary text-white shadow-lg shadow-primary/20' : 'border-gray-200'}`}>{formData.paymentMethod === 'installments' ? 3 : 2}</span>
+                  <span className="step-label">{formData.paymentMethod === 'installments' ? (language === 'ar' ? 'دفع المقدم' : 'Deposit') : (language === 'ar' ? 'تأكيد' : 'Confirm')}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -444,209 +339,87 @@ export default function Checkout() {
                       </div>
                     </div>
                     <Button
-                      onClick={() => setStep(formData.paymentMethod === 'installments' ? "review" : "payment")}
+                      onClick={() => {
+                        if (formData.paymentMethod === 'installments') setStep("kyc");
+                        else setStep("deposit");
+                      }}
                       className="w-full h-14 md:h-16 rounded-full mt-8 md:mt-12 bg-primary hover:bg-primary/90 text-lg md:text-xl font-bold text-white shadow-xl shadow-primary/20 group"
                     >
-                      {formData.paymentMethod === 'installments' ? t('reviewOrder') : t('continueToPayment')}
+                      {formData.paymentMethod === 'installments' ? (language === 'ar' ? 'التالي: رفع الأوراق' : 'Next: Upload Docs') : (language === 'ar' ? 'تأكيد الطلب' : 'Confirm Order')}
                       <ChevronLeft className={`mr-2 group-hover:-translate-x-2 transition-transform ${language === 'en' ? 'rotate-180 group-hover:translate-x-2' : ''}`} />
                     </Button>
                   </div>
                 </motion.div>
               )}
 
-              {step === "payment" && (
-                <motion.div key="payment" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-8 text-right">
-                  <div className="bg-white p-6 sm:p-10 rounded-[2.5rem] md:rounded-[3rem] shadow-xl border border-gray-50 font-arabic">
-                    <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 mb-8 md:mb-10">{t('paymentInfo')}</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5 mb-10 md:mb-12">
-                      {paymentMethods.map((method: any) => (
-                        <button
-                          key={method.id}
-                          onClick={() => setFormData({ ...formData, paymentMethod: method.id })}
-                          className={`flex flex-col items-center justify-center p-6 rounded-[2.5rem] border-2 transition-all group ${formData.paymentMethod === method.id ? 'border-primary bg-primary/5 shadow-inner' : 'border-gray-50 bg-gray-50 hover:border-primary/30 hover:bg-white'}`}
-                        >
-                          <div className={`w-10 h-10 rounded-xl mb-4 flex items-center justify-center transition-transform group-hover:scale-110 ${formData.paymentMethod === method.id ? 'bg-primary text-white' : 'bg-white text-gray-400'}`}>
-                            <method.Icon size={20} />
-                          </div>
-                          <span className={`text-sm font-black transition-colors ${formData.paymentMethod === method.id ? 'text-primary' : 'text-gray-500'}`}>{method.label}</span>
-                          {method.id === 'wallet' && walletData?.wallet && (
-                            <span className="text-xs font-bold text-emerald-600 mt-2">{formatPrice(walletData.wallet.balance)}</span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Method Views */}
-                    {(() => {
-                      const selectedMethod = paymentMethods.find(m => m.id === formData.paymentMethod);
-                      const isCardMain = selectedMethod?.isCard || formData.paymentMethod === 'card';
-                      const isCardTopUp = formData.paymentMethod === 'wallet' && formData.topUpMethod === 'card';
-
-                      if (isCardMain || isCardTopUp) {
-                        return (
-                          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                            <div className="bg-gray-50 p-6 rounded-2xl border-2 border-gray-100 text-center">
-                              <CreditCard className="mx-auto mb-4 text-gray-400 w-12 h-12" />
-                              <p className="font-bold text-gray-600">{language === 'ar' ? 'سيتم تحويلك لصفحة الدفع الآمنة عند تأكيد الطلب' : 'You will be redirected to the secure payment page upon confirmation'}</p>
-                            </div>
-                          </motion.div>
-                        );
-                      }
-                      return null;
-                    })()}
-
-                    {formData.paymentMethod === 'wallet' && (() => {
-                      const walletBal = walletData?.wallet?.balance ?? 0;
-                      const isFull = walletBal >= total;
-                      const shortfall = Math.max(0, total - walletBal);
-                      return (
-                        <div className="space-y-5">
-                          <div className={`rounded-[2rem] p-7 border-2 text-center ${isFull ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
-                            <Wallet size={40} className={`mx-auto mb-3 ${isFull ? 'text-emerald-600' : 'text-amber-600'}`} />
-                            <p className="text-sm font-black text-gray-500 uppercase tracking-widest mb-1">{t('walletBalance')}</p>
-                            <p className={`text-4xl font-black mb-1 ${isFull ? 'text-emerald-600' : 'text-amber-600'}`}>{formatPrice(walletBal)}</p>
-                            {isFull ? (
-                              <p className="text-emerald-700 font-bold text-sm">✓ {t('sufficientBalance')}</p>
-                            ) : (
-                              <p className="text-amber-700 font-bold text-sm">{t('insufficientBalance').replace('{amount}', formatPrice(shortfall))}</p>
-                            )}
-                          </div>
-                          {!isFull && (
-                            <div className="grid grid-cols-2 gap-3 mt-4">
-                              <Button variant={formData.topUpMethod === 'card' ? 'default' : 'outline'} onClick={() => setFormData({ ...formData, topUpMethod: 'card' })} className={`h-12 rounded-xl border-gray-300 font-bold ${formData.topUpMethod !== 'card' ? 'text-gray-900 shadow-sm' : ''}`}>{t('bankCard')}</Button>
-                              <Button variant={formData.topUpMethod === 'cash' ? 'default' : 'outline'} onClick={() => setFormData({ ...formData, topUpMethod: 'cash' })} className={`h-12 rounded-xl border-gray-300 font-bold ${formData.topUpMethod !== 'cash' ? 'text-gray-900 shadow-sm' : ''}`}>{t('cashOnDelivery')}</Button>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })()}
-
-                    {formData.paymentMethod === 'gift_card' && (
-                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                        <div className="bg-purple-50 p-8 rounded-[2rem] border-2 border-purple-100 text-center">
-                          <Gift size={40} className="mx-auto mb-4 text-purple-600" />
-                          <h3 className="text-xl font-black text-gray-900 mb-2">{language === 'ar' ? 'لديك كارت هدية؟' : 'Have a Gift Card?'}</h3>
-                          <p className="text-sm text-gray-500 font-bold mb-6">{language === 'ar' ? 'أدخل الكود أدناه لشحن الرصيد فوراً في محفظتك' : 'Enter the code below to instantly top up your wallet'}</p>
-                          <div className="flex gap-3">
-                            <Input
-                              value={giftCardCode}
-                              onChange={(e) => setGiftCardCode(e.target.value.toUpperCase())}
-                              placeholder="XXXX-XXXX-XXXX"
-                              className="h-14 rounded-xl bg-white border-2 border-purple-100 text-center font-mono text-xl tracking-widest focus-visible:ring-purple-500 text-black font-bold"
-                            />
-                            <Button
-                              onClick={() => redeemGiftCardMutation.mutate(giftCardCode)}
-                              disabled={!giftCardCode || redeemGiftCardMutation.isPending}
-                              className="h-14 px-8 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black shrink-0"
-                            >
-                              {redeemGiftCardMutation.isPending ? <Loader2 className="animate-spin" /> : (language === 'ar' ? 'تفعيل' : 'Redeem')}
-                            </Button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {formData.paymentMethod === 'installments' && (
-                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                        <h3 className="text-xl font-black text-gray-900 text-right mb-4">{language === 'ar' ? 'اختر خطة التقسيط المناسبة' : 'Choose Installment Plan'}</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {availablePlans.map((plan: any) => (
-                            <button
-                              key={plan.id}
-                              onClick={() => setFormData({ ...formData, installmentPlanId: plan.id })}
-                              className={`flex flex-col p-6 rounded-[2.5rem] border-2 transition-all text-right group ${formData.installmentPlanId === plan.id ? 'border-primary bg-primary/5 shadow-inner' : 'border-gray-100 bg-white hover:border-primary/30'}`}
-                            >
-                              <div className="flex justify-between items-center mb-4 w-full">
-                                <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${formData.installmentPlanId === plan.id ? 'border-primary bg-primary text-white' : 'border-gray-200 bg-gray-50'}`}>
-                                  {formData.installmentPlanId === plan.id && <CheckCircle2 size={16} />}
-                                </div>
-                                <span className="font-black text-lg text-gray-900">{plan.name}</span>
-                              </div>
-                              <div className="space-y-3 text-sm font-bold text-gray-500">
-                                <div className="flex justify-between items-center pb-2 border-b border-gray-50">
-                                  <span>{plan.months} {language === 'ar' ? 'أشهر' : 'Months'}</span>
-                                  <span>{language === 'ar' ? 'مدة التقسيط:' : 'Duration:'}</span>
-                                </div>
-                                <div className="flex justify-between items-center pb-2 border-b border-gray-50">
-                                  <span>{plan.downPaymentPercentage}%</span>
-                                  <span>{language === 'ar' ? 'مقدم الدفع:' : 'Down Payment:'}</span>
-                                </div>
-                                <div className="flex justify-between items-center text-primary pt-1">
-                                  <span className="text-lg font-black">{formatPrice((finalTotal * (1 - plan.downPaymentPercentage / 100)) / plan.months)}</span>
-                                  <span>{language === 'ar' ? 'القسط الشهري:' : 'Monthly Payment:'}</span>
-                                </div>
-                              </div>
-                            </button>
-                          ))}
-                          {availablePlans.length === 0 && (
-                            <div className="col-span-full p-12 text-center bg-gray-50 rounded-[3rem] border-2 border-dashed border-gray-200">
-                              <AlertCircle size={40} className="mx-auto mb-4 text-gray-400 opacity-50" />
-                              <p className="font-bold text-gray-500">{language === 'ar' ? 'لا توجد خطط تقسيط متاحة لهذه المنتجات حالياً' : 'No installment plans available for these products'}</p>
-                            </div>
-                          )}
-                        </div>
-                      </motion.div>
-                    )}
-
-                    <div className="grid grid-cols-2 gap-4 mt-12 font-arabic">
-                      <Button onClick={() => setStep("shipping")} variant="outline" className="h-16 rounded-full border-2 text-xl font-bold text-gray-900 border-gray-300">{t('back')}</Button>
-                      <Button
-                        onClick={() => {
-                          if (formData.paymentMethod === 'installments') {
-                            if (!formData.installmentPlanId) {
-                              toast.error(language === 'ar' ? "يرجى اختيار خطة تقسيط" : "Please select an installment plan");
-                              return;
-                            }
-                            setStep("kyc");
-                            return;
-                          }
-                          const walletBal = walletData?.wallet?.balance ?? 0;
-                          if (formData.paymentMethod === 'wallet' && walletBal < finalTotal && !formData.topUpMethod) {
-                            toast.error(language === 'ar' ? "يرجى اختيار طريقة دفع للمتبقي" : "Please select payment method for the remainder"); return;
-                          }
-                          setStep("review");
-                        }}
-                        className="h-16 rounded-full bg-primary hover:bg-primary/90 text-xl font-bold group text-white shadow-xl shadow-primary/20"
-                      >
-                        {t('reviewOrder')} <ChevronLeft className={`mr-3 group-hover:-translate-x-2 transition-transform ${language === 'en' ? 'rotate-180 group-hover:translate-x-2' : ''}`} />
-                      </Button>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
               {step === "kyc" && (
                 <KYCStep
-                  onBack={() => {
-                    // If we were forced into KYC from the start, back should go to cart or payment
-                    if (formData.paymentMethod === 'installments') {
-                      setStep("payment"); // Allow changing payment method if they back out of KYC
-                    } else {
-                      setStep("payment");
-                    }
-                  }}
+                  onBack={() => setStep("shipping")}
                   onComplete={(data) => {
                     setKycData(data);
-                    // If we haven't filled shipping yet, go to shipping
-                    if (!formData.address || !formData.city) {
-                      setStep("shipping");
-                    } else {
-                      setStep("review");
-                    }
+                    setStep("deposit");
                   }}
                 />
               )}
 
-              {step === "review" && (
-                <motion.div key="review" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="space-y-8">
-                  <div className="bg-white p-10 rounded-[3rem] shadow-xl border border-gray-50 text-right font-arabic">
-                    <CheckCircle2 size={64} className="text-green-500 mx-auto mb-6" />
-                    <h2 className="text-3xl font-black text-gray-900 mb-2 text-center">{t('reviewOrderTitle')}</h2>
-                    <p className="text-gray-500 text-center mb-12 text-lg">{t('reviewOrderDesc')}</p>
-                    <div className="grid grid-cols-2 gap-4 mt-16">
-                      <Button onClick={() => setStep(formData.paymentMethod === 'installments' ? "shipping" : "payment")} variant="outline" className="h-16 rounded-full border-2 text-xl font-bold font-arabic text-gray-900 border-gray-300">{t('back')}</Button>
-                      <Button onClick={handlePlaceOrder} disabled={placeOrderMutation.isPending} className="h-16 rounded-full bg-primary hover:bg-primary/90 text-xl font-bold text-white shadow-xl shadow-primary/20 font-arabic">
-                        {placeOrderMutation.isPending ? <Loader2 className="animate-spin" /> : t('confirmOrder')}
+              {step === "deposit" && (
+                <motion.div key="deposit" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="space-y-8">
+                  <div className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-gray-50 text-right font-arabic">
+                    <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-6">
+                      {formData.paymentMethod === 'installments' ? (language === 'ar' ? 'دفع مقدم التقسيط' : 'Pay Down Payment') : (language === 'ar' ? 'مراجعة الطلب' : 'Review Order')}
+                    </h2>
+
+                    {formData.paymentMethod === 'installments' && (
+                      <div className="mb-8 p-6 bg-purple-50 rounded-2xl border border-purple-100 flex justify-between items-center">
+                        <span className="text-2xl font-black text-purple-900">{formatPrice(currentIntent?.downPayment || 0)}</span>
+                        <span className="font-bold text-purple-700 text-lg">مبلغ المقدم المطلوب</span>
+                      </div>
+                    )}
+
+                    <div className="space-y-4">
+                      <p className="font-bold text-gray-600 mb-4">{language === 'ar' ? 'اختر طريقة الدفع للمقدم:' : 'Select deposit payment method:'}</p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {[
+                          { id: 'card', label: language === 'ar' ? 'بطاقة بنكية' : 'Bank Card', Icon: CreditCard },
+                          { id: 'wallet', label: language === 'ar' ? 'المحفظة' : 'Wallet', Icon: Wallet },
+                          { id: 'gift_card', label: language === 'ar' ? 'كارت هدية' : 'Gift Card', Icon: Gift },
+                        ].map((m) => (
+                          <div
+                            key={m.id}
+                            onClick={() => setDepositMethod(m.id as any)}
+                            className={`p-6 rounded-2xl border-2 transition-all cursor-pointer flex flex-col items-center gap-3 ${depositMethod === m.id ? 'border-primary bg-primary/5 shadow-md' : 'border-gray-100 hover:border-gray-200'}`}
+                          >
+                            <m.Icon className={`w-8 h-8 ${depositMethod === m.id ? 'text-primary' : 'text-gray-400'}`} />
+                            <span className={`font-bold ${depositMethod === m.id ? 'text-primary' : 'text-gray-600'}`}>{m.label}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {depositMethod === 'gift_card' && (
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 space-y-2">
+                          <label className="font-bold text-gray-700">{language === 'ar' ? 'كود كارت الهدية' : 'Gift Card Code'}</label>
+                          <Input
+                            value={depositGiftCardCode}
+                            onChange={(e) => setDepositGiftCardCode(e.target.value.toUpperCase())}
+                            placeholder="XXXX-XXXX-XXXX"
+                            className="h-14 rounded-xl text-center font-mono font-bold text-lg border-gray-200"
+                          />
+                        </motion.div>
+                      )}
+
+                      {depositMethod === 'wallet' && (
+                        <div className="mt-4 p-4 bg-blue-50 rounded-xl flex justify-between items-center">
+                          <span className="font-bold text-blue-700">{formatPrice(walletData?.balance || 0)}</span>
+                          <span className="text-blue-600 font-bold">رصيدك الحالي</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mt-12">
+                      <Button onClick={() => setStep(formData.paymentMethod === 'installments' ? "kyc" : "shipping")} variant="outline" className="h-14 md:h-16 rounded-full border-2 text-lg font-bold font-arabic text-gray-900 border-gray-300">{t('back')}</Button>
+                      <Button onClick={handlePlaceOrder} disabled={placeOrderMutation.isPending} className="h-14 md:h-16 rounded-full bg-primary hover:bg-primary/90 text-lg md:text-xl font-bold text-white shadow-xl shadow-primary/20 font-arabic">
+                        {placeOrderMutation.isPending ? <Loader2 className="animate-spin" /> : (language === 'ar' ? 'إرسال الطلب' : 'Place Order')}
                       </Button>
                     </div>
                   </div>
@@ -654,32 +427,28 @@ export default function Checkout() {
               )}
 
               {step === "success" && orderResult && (
-                <motion.div key="success" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white p-12 rounded-[3.5rem] shadow-2xl border-4 border-green-50 text-center font-arabic">
-                  {orderResult.paymentStatus === 'pending_kyc_review' ? (
-                    <>
-                      <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-6 shadow-inner shadow-blue-200">
-                        <Loader2 size={40} className="text-blue-500 animate-spin" />
-                      </div>
-                      <h2 className="text-4xl font-black text-gray-900 mb-4 tracking-tight">{language === 'ar' ? 'طلب التقسيط قيد المراجعة' : 'Installment Request Under Review'}</h2>
-                      <p className="text-xl text-gray-500 font-bold mb-4">{t('orderNumberLabel')} <span className="text-primary tracking-widest text-2xl ml-2">#{orderResult.orderNumber}</span></p>
-                      <p className="text-md text-gray-400 font-bold mb-10 max-w-sm mx-auto">
-                        {language === 'ar'
-                          ? 'تم استلام الدفعة الأولى بنجاح! نقوم حالياً بمراجعة مستنداتك للموافقة النهائية على الطلب.'
-                          : 'Down payment received successfully! We are currently reviewing your documents for final approval.'}
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 size={64} className="text-green-500 mx-auto mb-8" />
-                      <h2 className="text-4xl font-black text-gray-900 mb-4 tracking-tight">{t('congratulations')}</h2>
-                      <p className="text-xl text-gray-500 font-bold mb-10">{t('orderNumberLabel')} <span className="text-primary tracking-widest text-2xl ml-2">#{orderResult.orderNumber}</span></p>
-                    </>
-                  )}
+                <motion.div key="success" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white p-6 md:p-12 rounded-[2rem] md:rounded-[3.5rem] shadow-2xl border-4 border-green-50 text-center font-arabic">
+                  <CheckCircle2 size={64} className="text-green-500 mx-auto mb-8" />
+                  <h2 className="text-2xl md:text-4xl font-black text-gray-900 mb-4 tracking-tight">
+                    {language === 'ar' ? 'تم إرسال طلبك بنجاح! 🎉' : 'Order Placed Successfully! 🎉'}
+                  </h2>
+                  <p className="text-lg md:text-xl text-gray-500 font-bold mb-4">{t('orderNumberLabel')} <span className="text-primary tracking-widest text-xl md:text-2xl ml-2">#{orderResult.orderNumber}</span></p>
+                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-8 text-right">
+                    <p className="text-amber-800 font-bold text-base">
+                      {language === 'ar'
+                        ? orderResult.paymentStatus === 'pending_kyc_review'
+                          ? '📋 طلبك قيد مراجعة الأوراق من الإدارة. ستتلقى إشعاراً عند الموافقة.'
+                          : '💳 تم استلام طلبك ومقدم الدفع. يمكنك متابعة حالة الطلب من لوحة تحكمك.'
+                        : orderResult.paymentStatus === 'pending_kyc_review'
+                          ? '📋 Your order is under document review by admin. You will be notified upon approval.'
+                          : '💳 Your order and deposit have been received. You can follow the status from your dashboard.'}
+                    </p>
+                  </div>
                   <Button onClick={() => {
                     localStorage.removeItem('wolf_payment_intent');
                     setLocation("/orders");
-                  }} className="rounded-full px-12 h-16 bg-gray-950 text-xl font-bold hover:bg-black transition-all shadow-2xl shadow-gray-900/40 hover:shadow-gray-900/60 hover:-translate-y-1">
-                    متابعة طلباتي
+                  }} className="rounded-full px-8 md:px-12 h-14 md:h-16 bg-gray-950 text-lg md:text-xl font-bold hover:bg-black transition-all shadow-2xl shadow-gray-900/40 hover:shadow-gray-900/60 hover:-translate-y-1">
+                    {language === 'ar' ? 'متابعة طلباتي' : 'View My Orders'}
                   </Button>
                 </motion.div>
               )}

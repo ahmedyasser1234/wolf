@@ -266,6 +266,8 @@ export const orders = pgTable(
         }>(),
         paymentMethod: text("paymentMethod"),
         paymentStatus: text("paymentStatus").default("pending").notNull(),
+        depositAmount: doublePrecision("depositAmount").default(0),
+        depositPaymentMethod: text("depositPaymentMethod"), // 'wallet' | 'card' | 'gift_card'
         stripePaymentId: text("stripePaymentId"),
         installmentPlanId: integer("installmentPlanId"), // Link to installment plan if chosen
         kycData: jsonb("kycData").$type<{

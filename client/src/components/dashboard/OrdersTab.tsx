@@ -69,10 +69,12 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
     const orders = ordersData?.data || [];
 
     const STATUS_LABELS: Record<string, { label: string, color: string }> = {
-        pending: { label: language === 'ar' ? "قيد الانتظار" : "Pending", color: "bg-amber-900/30 text-amber-500 shadow-none border border-amber-800/30" },
-        confirmed: { label: language === 'ar' ? "تم التأكيد" : "Confirmed", color: "bg-blue-900/30 text-blue-400 shadow-none border border-blue-800/30" },
+        pending_kyc_review: { label: language === 'ar' ? "مراجعة أوراق" : "KYC Review", color: "bg-amber-900/30 text-amber-500 shadow-none border border-amber-800/30" },
+        pending_payment: { label: language === 'ar' ? "بانتظار الدفع" : "Awaiting Payment", color: "bg-blue-900/30 text-blue-400 shadow-none border border-blue-800/30" },
+        pending: { label: language === 'ar' ? "قيد الانتظار" : "Pending", color: "bg-slate-900/30 text-slate-500 shadow-none border border-slate-800/30" },
+        confirmed: { label: language === 'ar' ? "تم التأكيد" : "Confirmed", color: "bg-emerald-900/30 text-emerald-400 shadow-none border border-emerald-800/30" },
         shipped: { label: language === 'ar' ? "تم الشحن" : "Shipped", color: "bg-purple-900/30 text-purple-400 shadow-none border border-purple-800/30" },
-        delivered: { label: language === 'ar' ? "تم التسليم" : "Delivered", color: "bg-emerald-900/30 text-emerald-400 shadow-none border border-emerald-800/30" },
+        delivered: { label: language === 'ar' ? "تم التسليم" : "Delivered", color: "bg-blue-900/30 text-blue-400 shadow-none border border-blue-800/30" },
         cancelled: { label: language === 'ar' ? "ملغى" : "Cancelled", color: "bg-red-900/30 text-red-500 shadow-none border border-red-800/30" },
     };
 
@@ -376,40 +378,78 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
                             <p className="text-gray-400 text-sm">{kycModalOrder.customer?.phone || kycModalOrder.shippingAddress?.phone}</p>
                         </div>
 
+                        {/* Deposit Info */}
+                        {kycModalOrder.depositAmount && (
+                            <div className="bg-emerald-900/20 p-5 rounded-2xl mb-6 border border-emerald-500/20">
+                                <div className="flex justify-between items-center">
+                                    <div className="text-xs font-black text-gray-400 uppercase tracking-widest">
+                                        {language === 'ar' ? 'المقدم المدفوع' : 'Downpayment Paid'}
+                                    </div>
+                                    <div className="text-xl font-black text-emerald-400">
+                                        {Number(kycModalOrder.depositAmount).toFixed(2)} {t('currency')}
+                                    </div>
+                                </div>
+                                <div className="text-xs text-emerald-500/70 font-bold mt-1">
+                                    {language === 'ar' ? 'طريقة الدفع:' : 'Payment Method:'} {({
+                                        'card': language === 'ar' ? 'بطاقة بنكية' : 'Bank Card',
+                                        'wallet': language === 'ar' ? 'المحفظة' : 'Wallet',
+                                        'gift_card': language === 'ar' ? 'كارت هدية' : 'Gift Card',
+                                    } as any)[kycModalOrder.depositPaymentMethod] || kycModalOrder.depositPaymentMethod}
+                                </div>
+                            </div>
+                        )}
+
                         {/* KYC Documents */}
                         {kycModalOrder.kycData && (
                             <div className="space-y-4 mb-6">
                                 <p className="text-xs font-black text-gray-400 uppercase tracking-widest">{language === 'ar' ? 'المستندات المرفوعة' : 'Uploaded Documents'}</p>
 
-                                {kycModalOrder.kycData.faceImage && (
-                                    <div className="bg-gray-900 p-4 rounded-2xl">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <ScanFace className="w-4 h-4 text-blue-400" />
-                                            <span className="text-sm font-black text-white">{language === 'ar' ? 'صورة الوجه' : 'Face Image'}</span>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    {(kycModalOrder.kycData.faceId || kycModalOrder.kycData.faceImage) && (
+                                        <div className="bg-gray-900 p-4 rounded-2xl border border-gray-800">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <ScanFace className="w-4 h-4 text-blue-400" />
+                                                <span className="text-[10px] font-black text-white">{language === 'ar' ? 'صورة الوجه' : 'Face Image'}</span>
+                                            </div>
+                                            <img
+                                                src={kycModalOrder.kycData.faceId || kycModalOrder.kycData.faceImage}
+                                                alt="Face"
+                                                className="w-full h-32 rounded-xl object-cover border-2 border-gray-700 cursor-zoom-in"
+                                                onClick={() => window.open(kycModalOrder.kycData.faceId || kycModalOrder.kycData.faceImage, '_blank')}
+                                            />
                                         </div>
-                                        <img src={kycModalOrder.kycData.faceImage} alt="Face" className="w-32 h-32 rounded-2xl object-cover border-2 border-gray-700" />
-                                    </div>
-                                )}
+                                    )}
 
-                                {kycModalOrder.kycData.idImage && (
-                                    <div className="bg-gray-900 p-4 rounded-2xl">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <CreditCard className="w-4 h-4 text-green-400" />
-                                            <span className="text-sm font-black text-white">{language === 'ar' ? 'صورة الهوية / الإقامة' : 'ID / Residency'}</span>
+                                    {(kycModalOrder.kycData.residencyDoc || kycModalOrder.kycData.idImage) && (
+                                        <div className="bg-gray-900 p-4 rounded-2xl border border-gray-800">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <CreditCard className="w-4 h-4 text-green-400" />
+                                                <span className="text-[10px] font-black text-white">{language === 'ar' ? 'الهوية / الإقامة' : 'ID / Residency'}</span>
+                                            </div>
+                                            <img
+                                                src={kycModalOrder.kycData.residencyDoc || kycModalOrder.kycData.idImage}
+                                                alt="ID"
+                                                className="w-full h-32 rounded-xl object-cover border-2 border-gray-700 cursor-zoom-in"
+                                                onClick={() => window.open(kycModalOrder.kycData.residencyDoc || kycModalOrder.kycData.idImage, '_blank')}
+                                            />
                                         </div>
-                                        <img src={kycModalOrder.kycData.idImage} alt="ID" className="max-w-full rounded-2xl object-cover border-2 border-gray-700" style={{ maxHeight: 240 }} />
-                                    </div>
-                                )}
+                                    )}
 
-                                {kycModalOrder.kycData.passportImage && (
-                                    <div className="bg-gray-900 p-4 rounded-2xl">
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <FileText className="w-4 h-4 text-purple-400" />
-                                            <span className="text-sm font-black text-white">{language === 'ar' ? 'صورة جواز السفر' : 'Passport'}</span>
+                                    {(kycModalOrder.kycData.passportDoc || kycModalOrder.kycData.passportImage) && (
+                                        <div className="bg-gray-900 p-4 rounded-2xl border border-gray-800">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <FileText className="w-4 h-4 text-purple-400" />
+                                                <span className="text-[10px] font-black text-white">{language === 'ar' ? 'الجواز' : 'Passport'}</span>
+                                            </div>
+                                            <img
+                                                src={kycModalOrder.kycData.passportDoc || kycModalOrder.kycData.passportImage}
+                                                alt="Passport"
+                                                className="w-full h-32 rounded-xl object-cover border-2 border-gray-700 cursor-zoom-in"
+                                                onClick={() => window.open(kycModalOrder.kycData.passportDoc || kycModalOrder.kycData.passportImage, '_blank')}
+                                            />
                                         </div>
-                                        <img src={kycModalOrder.kycData.passportImage} alt="Passport" className="max-w-full rounded-2xl object-cover border-2 border-gray-700" style={{ maxHeight: 240 }} />
-                                    </div>
-                                )}
+                                    )}
+                                </div>
                             </div>
                         )}
 

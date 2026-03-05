@@ -961,11 +961,11 @@ export default function AdminDashboard() {
                                   {order.paymentMethod === 'cash' || order.paymentMethod === 'cod' || order.paymentMethod === 'cashOnDelivery' ? (language === 'ar' ? 'دفع عند الاستلام' : 'COD') :
                                     order.paymentMethod === 'wallet' ? (language === 'ar' ? 'محفظة' : 'Wallet') :
                                       order.paymentMethod === 'gift_card' ? (language === 'ar' ? 'بطاقة هدية' : 'Gift Card') :
-                                        (language === 'ar' ? 'بطاقة ائتمان' : 'Credit Card')}
+                                        (language === 'ar' ? 'بطاقة بنكية' : 'Bank Card')}
                                 </span>
                                 {order.paymentMethod === 'installments' && (
                                   <span className="px-2 py-0.5 bg-violet-900/40 text-violet-400 rounded-full text-[9px] font-black border border-violet-800/50">
-                                    تقسيط WOLF
+                                    {language === 'ar' ? 'تقسيط WOLF (بطاقة)' : 'WOLF Installments (Card)'}
                                   </span>
                                 )}
                               </div>
@@ -973,15 +973,13 @@ export default function AdminDashboard() {
                             <td className="py-4 px-6 text-center">
                               <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${order.paymentStatus === 'paid' ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800/50' :
                                 order.paymentStatus === 'failed' ? 'bg-red-900/40 text-red-400 border-red-800/50' :
-                                  order.paymentStatus === 'pending_kyc_review' ? 'bg-amber-900/40 text-amber-500 border-amber-800/50' :
-                                    order.paymentStatus === 'pending_payment' ? 'bg-orange-900/40 text-orange-400 border-orange-800/50' :
-                                      'bg-blue-900/40 text-blue-400 border-blue-800/50'
+                                  (order.paymentStatus === 'pending_kyc_review' || order.paymentStatus === 'pending_payment') ? 'bg-amber-900/40 text-amber-500 border-amber-800/50' :
+                                    'bg-blue-900/40 text-blue-400 border-blue-800/50'
                                 }`}>
                                 {order.paymentStatus === 'paid' ? (language === 'ar' ? 'تم الدفع ✅' : 'Paid ✅') :
-                                  order.paymentStatus === 'pending_kyc_review' ? (language === 'ar' ? 'مراجعة أوراق' : 'Reviewing') :
-                                    order.paymentStatus === 'pending_payment' ? (language === 'ar' ? 'بانتظار المقدم' : 'Awaiting Down Payment') :
-                                      order.paymentStatus === 'failed' ? (language === 'ar' ? 'فشل الدفع' : 'Failed') :
-                                        (language === 'ar' ? 'معلق' : 'Pending')}
+                                  (order.paymentStatus === 'pending_kyc_review' || order.paymentStatus === 'pending_payment') ? (language === 'ar' ? 'مراجعة أوراق 📋' : 'Reviewing Docs 📋') :
+                                    order.paymentStatus === 'failed' ? (language === 'ar' ? 'فشل الدفع' : 'Failed') :
+                                      (language === 'ar' ? 'معلق' : 'Pending')}
                               </span>
                             </td>
                             <td className="py-4 px-6 text-center">
@@ -1317,36 +1315,93 @@ export default function AdminDashboard() {
           </DialogHeader>
           {selectedOrder && (
             <div className="py-4 space-y-6 max-h-[70vh] overflow-y-auto">
-              <div className="bg-gray-900 p-4 rounded-2xl flex justify-between items-center text-start">
-                <div className="space-y-1">
-                  <p className="text-white font-medium">
-                    {t('paymentMethod')}: {({
-                      'card': language === 'ar' ? 'بطاقة ائتمان' : 'Credit Card',
-                      'cash': language === 'ar' ? 'دفع عند الاستلام' : 'Cash on Delivery',
-                      'cod': language === 'ar' ? 'دفع عند الاستلام' : 'Cash on Delivery',
-                      'cashOnDelivery': language === 'ar' ? 'دفع عند الاستلام' : 'Cash on Delivery',
-                      'installments': language === 'ar' ? 'بطاقة ائتمان' : 'Credit Card',
-                      'wallet': language === 'ar' ? 'المحفظة الإلكترونية' : 'Wallet',
-                      'gift_card': language === 'ar' ? 'بطاقة هدية' : 'Gift Card',
-                      'stripe': language === 'ar' ? 'بطاقة ائتمان' : 'Credit Card',
-                    } as any)[selectedOrder.paymentMethod] || selectedOrder.paymentMethod}
-                  </p>
-                  {selectedOrder.paymentMethod === 'installments' && (
-                    <span className="inline-block px-2 py-0.5 bg-violet-900/40 text-violet-300 rounded-full text-[10px] font-black border border-violet-700/50">
-                      {language === 'ar' ? 'تمويل: تقسيط WOLF' : 'Financed: WOLF Installments'}
+              <div className="bg-gray-900 p-4 rounded-2xl flex flex-col gap-4 text-start">
+                <div className="flex justify-between items-center">
+                  <div className="space-y-1">
+                    <p className="text-white font-medium">
+                      {t('paymentMethod')}: {({
+                        'card': language === 'ar' ? 'بطاقة بنكية' : 'Bank Card',
+                        'cash': language === 'ar' ? 'دفع عند الاستلام' : 'Cash on Delivery',
+                        'cod': language === 'ar' ? 'دفع عند الاستلام' : 'Cash on Delivery',
+                        'cashOnDelivery': language === 'ar' ? 'دفع عند الاستلام' : 'Cash on Delivery',
+                        'installments': language === 'ar' ? 'تقسيط' : 'Installments',
+                        'wallet': language === 'ar' ? 'المحفظة الإلكترونية' : 'Wallet',
+                        'gift_card': language === 'ar' ? 'بطاقة هدية' : 'Gift Card',
+                        'stripe': language === 'ar' ? 'بطاقة بنكية' : 'Bank Card',
+                      } as any)[selectedOrder.paymentMethod] || selectedOrder.paymentMethod}
+                    </p>
+                    <p className="text-white font-medium">{t('paymentStatus')}: {({
+                      'paid': language === 'ar' ? 'تم الدفع ✅' : 'Paid ✅',
+                      'pending': language === 'ar' ? 'قيد الانتظار' : 'Pending',
+                      'pending_kyc_review': language === 'ar' ? 'مراجعة أوراق 📋' : 'KYC Review 📋',
+                      'pending_payment': language === 'ar' ? 'انتظار الدفع' : 'Awaiting Payment',
+                      'failed': language === 'ar' ? 'فشل الدفع ❌' : 'Failed ❌',
+                      'refunded': language === 'ar' ? 'مُستردّ' : 'Refunded',
+                      'on_delivery': language === 'ar' ? 'يُدفع عند الاستلام' : 'Pay on Delivery',
+                    } as any)[selectedOrder.paymentStatus] || selectedOrder.paymentStatus}</p>
+                  </div>
+                  <div className="text-right">
+                    <span className={`px-3 py-1 rounded-full text-xs font-black ${selectedOrder.installmentPlanId ? 'bg-purple-900 text-purple-300 border border-purple-700' : 'bg-blue-900 text-blue-300 border border-blue-700'}`}>
+                      {selectedOrder.installmentPlanId ? (language === 'ar' ? 'طلب تقسيط' : 'Installment Order') : (language === 'ar' ? 'طلب كاش' : 'Cash Order')}
                     </span>
-                  )}
-                  <p className="text-white font-medium">{t('paymentStatus')}: {({
-                    'paid': language === 'ar' ? 'تم الدفع ✅' : 'Paid ✅',
-                    'pending': language === 'ar' ? 'قيد الانتظار' : 'Pending',
-                    'pending_kyc_review': language === 'ar' ? 'مراجعة الأوراق 📋' : 'KYC Under Review 📋',
-                    'pending_payment': language === 'ar' ? 'بانتظار دفع المقدم ⏳' : 'Awaiting Down Payment ⏳',
-                    'failed': language === 'ar' ? 'فشل الدفع ❌' : 'Failed ❌',
-                    'refunded': language === 'ar' ? 'مُستردّ' : 'Refunded',
-                    'on_delivery': language === 'ar' ? 'يُدفع عند الاستلام' : 'Pay on Delivery',
-                  } as any)[selectedOrder.paymentStatus] || selectedOrder.paymentStatus}</p>
+                  </div>
                 </div>
+
+                {selectedOrder.depositAmount && (
+                  <div className="pt-3 border-t border-gray-800">
+                    <div className="flex justify-between items-center">
+                      <div className="text-sm font-bold text-gray-400">
+                        {language === 'ar' ? 'طريقة دفع المقدم:' : 'Deposit Payment Method:'}
+                        <span className="text-white ml-2">
+                          {({
+                            'card': language === 'ar' ? 'بطاقة بنكية' : 'Bank Card',
+                            'wallet': language === 'ar' ? 'المحفظة' : 'Wallet',
+                            'gift_card': language === 'ar' ? 'كارت هدية' : 'Gift Card',
+                          } as any)[selectedOrder.depositPaymentMethod] || selectedOrder.depositPaymentMethod}
+                        </span>
+                      </div>
+                      <div className="text-sm font-bold text-emerald-400">
+                        {language === 'ar' ? 'المبلغ المدفوع كـ مقدم:' : 'Amount Paid as Deposit:'}
+                        <span className="text-lg ml-2">{selectedOrder.depositAmount} {t('currency')}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
+
+              {selectedOrder.kycData && (
+                <div className="bg-gray-900 p-4 rounded-2xl text-start">
+                  <h4 className="font-black text-white mb-4 text-sm flex items-center gap-2">
+                    <UserCheck className="w-4 h-4 text-emerald-500" /> {language === 'ar' ? 'أوراق العميل (KYC)' : 'Customer Documents (KYC)'}
+                  </h4>
+                  <div className="grid grid-cols-3 gap-3">
+                    {selectedOrder.kycData.faceId && (
+                      <a href={selectedOrder.kycData.faceId} target="_blank" rel="noopener noreferrer" className="block group">
+                        <div className="aspect-square rounded-xl bg-gray-800 border border-gray-700 flex flex-col items-center justify-center gap-2 overflow-hidden hover:border-emerald-500 transition-all">
+                          <ImageIcon className="w-6 h-6 text-gray-500 group-hover:text-emerald-500" />
+                          <span className="text-[10px] text-white font-bold">{language === 'ar' ? 'صورة الوجه' : 'Face ID'}</span>
+                        </div>
+                      </a>
+                    )}
+                    {selectedOrder.kycData.residencyDoc && (
+                      <a href={selectedOrder.kycData.residencyDoc} target="_blank" rel="noopener noreferrer" className="block group">
+                        <div className="aspect-square rounded-xl bg-gray-800 border border-gray-700 flex flex-col items-center justify-center gap-2 overflow-hidden hover:border-emerald-500 transition-all">
+                          <ImageIcon className="w-6 h-6 text-gray-500 group-hover:text-emerald-500" />
+                          <span className="text-[10px] text-white font-bold">{language === 'ar' ? 'إثبات السكن' : 'Residency'}</span>
+                        </div>
+                      </a>
+                    )}
+                    {selectedOrder.kycData.passportDoc && (
+                      <a href={selectedOrder.kycData.passportDoc} target="_blank" rel="noopener noreferrer" className="block group">
+                        <div className="aspect-square rounded-xl bg-gray-800 border border-gray-700 flex flex-col items-center justify-center gap-2 overflow-hidden hover:border-emerald-500 transition-all">
+                          <ImageIcon className="w-6 h-6 text-gray-500 group-hover:text-emerald-500" />
+                          <span className="text-[10px] text-white font-bold">{language === 'ar' ? 'الجواز/الهوية' : 'Passport/ID'}</span>
+                        </div>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="bg-gray-900 p-4 rounded-2xl text-start">
                 <h4 className="font-black text-white mb-3 text-sm flex items-center gap-2">
@@ -1360,8 +1415,8 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="border border-slate-100 rounded-2xl overflow-hidden text-start">
-                <div className="bg-slate-50 px-4 py-2 font-black text-sm">{t('invoiceSummary')}</div>
+              <div className="border border-gray-800 rounded-2xl overflow-hidden text-start">
+                <div className="bg-gray-800 px-4 py-2 font-black text-sm text-white">{t('invoiceSummary')}</div>
                 <div className="p-4 space-y-3">
                   <div className="flex justify-between text-sm text-white">
                     <span>{t('subtotal')}</span>
@@ -1372,14 +1427,14 @@ export default function AdminDashboard() {
                     <span>{Number(selectedOrder.shippingCost).toFixed(2)} {t('currency')}</span>
                   </div>
                   {Number(selectedOrder.discount) > 0 && (
-                    <div className="flex justify-between text-sm text-green-600 font-bold">
+                    <div className="flex justify-between text-sm text-green-400 font-bold">
                       <span>{t('discountLabel')}</span>
                       <span>-{Number(selectedOrder.discount).toFixed(2)} {t('currency')}</span>
                     </div>
                   )}
                   <div className="border-t border-gray-800 pt-3 flex justify-between font-black text-white">
                     <span>{t('orderTotal')}</span>
-                    <span className="text-lg text-purple-600">{Number(selectedOrder.total).toFixed(2)} {t('currency')}</span>
+                    <span className="text-lg text-purple-500">{Number(selectedOrder.total).toFixed(2)} {t('currency')}</span>
                   </div>
                 </div>
               </div>

@@ -265,61 +265,114 @@ export default function OrderDetailsView({ orderId, onClose }: OrderDetailsViewP
                                     {language === 'ar' ? "معلومات الدفع" : "Payment Info"}
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent className="pt-4 flex items-center justify-between gap-4 flex-wrap">
-                                <div className="flex flex-col">
-                                    <span className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{language === 'ar' ? "طريقة الدفع" : "Payment Method"}</span>
-                                    <span className="font-black text-slate-900">
-                                        {language === 'ar' ? ({
-                                            'card': 'بطاقة ائتمان',
-                                            'cash': 'دفع عند الاستلام',
-                                            'installments': 'تقسيط WOLF',
-                                            'wallet': 'المحفظة الإلكترونية',
-                                            'gift_card': 'بطاقة هدية',
-                                        } as any)[order.paymentMethod] || order.paymentMethod : ({
-                                            'card': 'Credit Card',
-                                            'cash': 'Cash on Delivery',
-                                            'installments': 'WOLF Installments',
-                                            'wallet': 'Wallet',
-                                            'gift_card': 'Gift Card',
-                                        } as any)[order.paymentMethod] || order.paymentMethod}
-                                    </span>
-                                </div>
-                                {/* Installment plan info if applicable */}
-                                {order.paymentMethod === 'installments' && order.installmentPlan && (
+                            <CardContent className="pt-4 space-y-6">
+                                <div className="flex items-center justify-between gap-4 flex-wrap">
                                     <div className="flex flex-col">
-                                        <span className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{language === 'ar' ? "خطة التقسيط" : "Installment Plan"}</span>
-                                        <span className="font-black text-slate-900 text-sm">
-                                            {language === 'ar' ? order.installmentPlan.name : order.installmentPlan.name} — {order.installmentPlan.months} {language === 'ar' ? 'شهر' : 'months'}
+                                        <span className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{language === 'ar' ? "طريقة الدفع" : "Payment Method"}</span>
+                                        <span className="font-black text-slate-900">
+                                            {language === 'ar' ? ({
+                                                'card': 'بطاقة ائتمان',
+                                                'cash': 'دفع عند الاستلام',
+                                                'installments': 'تقسيط Fustan',
+                                                'wallet': 'المحفظة الإلكترونية',
+                                                'gift_card': 'بطاقة هدية',
+                                            } as any)[order.paymentMethod] || order.paymentMethod : ({
+                                                'card': 'Credit Card',
+                                                'cash': 'Cash on Delivery',
+                                                'installments': 'Fustan Installments',
+                                                'wallet': 'Wallet',
+                                                'gift_card': 'Gift Card',
+                                            } as any)[order.paymentMethod] || order.paymentMethod}
                                         </span>
                                     </div>
-                                )}
-                                <div className="flex flex-col items-end">
-                                    <span className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{language === 'ar' ? "حالة الدفع" : "Payment Status"}</span>
-                                    <Badge className={cn(
-                                        "capitalize font-bold",
-                                        order.paymentStatus === 'paid' ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" :
-                                            order.paymentStatus === 'pending_kyc_review' ? "bg-amber-100 text-amber-700" :
-                                                order.paymentStatus === 'failed' ? "bg-red-100 text-red-700" :
-                                                    order.paymentStatus === 'refunded' ? "bg-blue-100 text-blue-700" :
-                                                        "bg-slate-100 text-slate-700"
-                                    )}>
-                                        {language === 'ar' ? ({
-                                            'pending': 'قيد الانتظار',
-                                            'paid': 'تم الدفع',
-                                            'pending_kyc_review': 'مراجعة الأوراق',
-                                            'failed': 'فشل الدفع',
-                                            'refunded': 'مُستردّ',
-                                            'on_delivery': 'يُدفع عند الاستلام',
-                                        } as any)[order.paymentStatus] || order.paymentStatus : ({
-                                            'pending': 'Pending',
-                                            'paid': 'Paid',
-                                            'pending_kyc_review': 'KYC Under Review',
-                                            'failed': 'Failed',
-                                            'refunded': 'Refunded',
-                                            'on_delivery': 'Pay on Delivery',
-                                        } as any)[order.paymentStatus] || order.paymentStatus}
-                                    </Badge>
+                                    {/* Installment plan info if applicable */}
+                                    {order.paymentMethod === 'installments' && order.installmentPlan && (
+                                        <div className="flex flex-col">
+                                            <span className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{language === 'ar' ? "خطة التقسيط" : "Installment Plan"}</span>
+                                            <span className="font-black text-slate-900 text-sm">
+                                                {language === 'ar' ? order.installmentPlan.name : order.installmentPlan.name} — {order.installmentPlan.months} {language === 'ar' ? 'شهر' : 'months'}
+                                            </span>
+                                        </div>
+                                    )}
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{language === 'ar' ? "حالة الدفع" : "Payment Status"}</span>
+                                        <Badge className={cn(
+                                            "capitalize font-bold",
+                                            order.paymentStatus === 'paid' ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" :
+                                                order.paymentStatus === 'pending_kyc_review' ? "bg-amber-100 text-amber-700" :
+                                                    order.paymentStatus === 'failed' ? "bg-red-100 text-red-700" :
+                                                        order.paymentStatus === 'refunded' ? "bg-blue-100 text-blue-700" :
+                                                            "bg-slate-100 text-slate-700"
+                                        )}>
+                                            {language === 'ar' ? ({
+                                                'pending': 'قيد الانتظار',
+                                                'paid': 'تم الدفع',
+                                                'pending_kyc_review': 'مراجعة الأوراق',
+                                                'failed': 'فشل الدفع',
+                                                'refunded': 'مُستردّ',
+                                                'on_delivery': 'يُدفع عند الاستلام',
+                                            } as any)[order.paymentStatus] || order.paymentStatus : ({
+                                                'pending': 'Pending',
+                                                'paid': 'Paid',
+                                                'pending_kyc_review': 'KYC Under Review',
+                                                'failed': 'Failed',
+                                                'refunded': 'Refunded',
+                                                'on_delivery': 'Pay on Delivery',
+                                            } as any)[order.paymentStatus] || order.paymentStatus}
+                                        </Badge>
+                                    </div>
                                 </div>
+
+                                {/* Deposit Information */}
+                                {order.depositAmount && (
+                                    <div className="pt-4 border-t border-slate-50">
+                                        <div className="flex items-center justify-between gap-4 flex-wrap">
+                                            <div className="flex flex-col">
+                                                <span className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{language === 'ar' ? "طريقة دفع المقدم" : "Deposit Method"}</span>
+                                                <span className="font-black text-slate-900">
+                                                    {({
+                                                        'card': language === 'ar' ? 'بطاقة بنكية' : 'Bank Card',
+                                                        'wallet': language === 'ar' ? 'المحفظة' : 'Wallet',
+                                                        'gift_card': language === 'ar' ? 'كارت هدية' : 'Gift Card',
+                                                    } as any)[order.depositPaymentMethod] || order.depositPaymentMethod}
+                                                </span>
+                                            </div>
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{language === 'ar' ? "مبلغ المقدم" : "Deposit Amount"}</span>
+                                                <span className="font-black text-emerald-600 text-lg">
+                                                    {Number(order.depositAmount).toFixed(2)} {t('currency')}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* KYC Documents */}
+                                {order.kycData && (
+                                    <div className="pt-4 border-t border-slate-50">
+                                        <span className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 block">{language === 'ar' ? "مستندات العميل (KYC)" : "Customer Documents (KYC)"}</span>
+                                        <div className="grid grid-cols-3 gap-3">
+                                            {order.kycData.faceId && (
+                                                <a href={order.kycData.faceId} target="_blank" rel="noopener noreferrer" className="block p-2 border border-slate-100 rounded-xl hover:bg-slate-50 transition-colors text-center">
+                                                    <span className="text-[10px] font-bold text-slate-500 block mb-1">{language === 'ar' ? "صورة الوجه" : "Face ID"}</span>
+                                                    <span className="text-[10px] font-black text-pink-600">{language === 'ar' ? "عرض" : "View"}</span>
+                                                </a>
+                                            )}
+                                            {order.kycData.residencyDoc && (
+                                                <a href={order.kycData.residencyDoc} target="_blank" rel="noopener noreferrer" className="block p-2 border border-slate-100 rounded-xl hover:bg-slate-50 transition-colors text-center">
+                                                    <span className="text-[10px] font-bold text-slate-500 block mb-1">{language === 'ar' ? "إثبات سكن" : "Residency"}</span>
+                                                    <span className="text-[10px] font-black text-pink-600">{language === 'ar' ? "عرض" : "View"}</span>
+                                                </a>
+                                            )}
+                                            {order.kycData.passportDoc && (
+                                                <a href={order.kycData.passportDoc} target="_blank" rel="noopener noreferrer" className="block p-2 border border-slate-100 rounded-xl hover:bg-slate-50 transition-colors text-center">
+                                                    <span className="text-[10px] font-bold text-slate-500 block mb-1">{language === 'ar' ? "الجواز/الهوية" : "Passport/ID"}</span>
+                                                    <span className="text-[10px] font-black text-pink-600">{language === 'ar' ? "عرض" : "View"}</span>
+                                                </a>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     </div>

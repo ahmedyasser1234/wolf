@@ -1,7 +1,7 @@
 
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { orders, orderItems, products, cartItems, notifications, vendors, coupons, offers, offerItems, users, walletTransactions, customerWallets, installmentPlans, installments } from '../database/schema';
+import { orders, orderItems, products, cartItems, notifications, vendors, coupons, offers, offerItems, users, walletTransactions, customerWallets, installmentPlans, installments, giftCards } from '../database/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CouponsService } from '../coupons/coupons.service';
@@ -72,8 +72,24 @@ export class OrdersService {
         return { ...orderRaw[0].order, customer: orderRaw[0].customer, items };
     }
 
-    async create(customerId: number, shippingAddress: any, paymentMethod = 'card', couponCode?: string, walletAmountUsed = 0, installmentPlanId?: number, kycData?: any) {
-        console.log(`📦 [OrdersService] Creating Order for Customer: ${customerId}, WalletUsed: ${walletAmountUsed}`);
+    /**
+     * NEW FLOW:
+     * - INSTALLMENT: validate deposit payment (wallet/gift_card/card) FIRST,
+     *   then create order with paymentStatus='pending_kyc_review' + store depositAmount + depositPaymentMethod.
+     * - CASH / COD: create order directly with status='pending_confirmation', no deposit needed.
+     */
+    async create(
+        customerId: number,
+        shippingAddress: any,
+        paymentMethod = 'card',
+        couponCode?: string,
+        walletAmountUsed = 0,
+        installmentPlanId?: number,
+        kycData?: any,
+        depositPaymentMethod?: 'wallet' | 'card' | 'gift_card',
+        depositGiftCardCode?: string,
+    ) {
+        console.log(`📦 [OrdersService] NEW deposit-first flow. Customer: ${customerId}, Method: ${paymentMethod}, InstallPlan: ${installmentPlanId}`);
 
         const cart = await this.databaseService.db
             .select()
@@ -82,7 +98,6 @@ export class OrdersService {
 
         if (cart.length === 0) throw new BadRequestException('السلة فارغة');
 
-        // Feature 8: Block deactivated or blocked customers from placing orders
         const [customerRecord] = await this.databaseService.db
             .select({ status: users.status })
             .from(users)
@@ -92,7 +107,6 @@ export class OrdersService {
 
         // Group items by vendor
         const vendorGroups = new Map<number, { items: any[], subtotal: number, vendorUserId: number }>();
-
         for (const item of cart) {
             const product = await this.databaseService.db
                 .select()
@@ -103,7 +117,6 @@ export class OrdersService {
             if (product.length > 0) {
                 const prod = product[0];
                 const vendorId = prod.vendorId;
-
                 let vendorUserId = 0;
                 if (vendorId) {
                     const vendor = await this.databaseService.db
@@ -113,15 +126,12 @@ export class OrdersService {
                         .limit(1);
                     if (vendor.length > 0) vendorUserId = vendor[0].userId;
                 }
-
                 if (!vendorGroups.has(vendorId)) {
                     vendorGroups.set(vendorId, { items: [], subtotal: 0, vendorUserId });
                 }
-
                 const price = Number(prod.price);
                 const itemTotal = price * item.quantity;
                 const group = vendorGroups.get(vendorId)!;
-
                 group.subtotal += itemTotal;
                 group.items.push({
                     productId: prod.id,
@@ -136,51 +146,107 @@ export class OrdersService {
 
         let coupon: any = null;
         if (couponCode) {
-            try {
-                coupon = await this.couponsService.findByCode(couponCode);
-            } catch (e) { }
+            try { coupon = await this.couponsService.findByCode(couponCode); } catch (e) { }
         }
 
+        // ============================================================
+        // INSTALLMENT FLOW: Calculate deposit & validate payment FIRST
+        // ============================================================
+        let depositAmount = 0;
+        let stripeCheckoutUrl: string | null = null;
+        let resolvedDepositPaymentMethod = depositPaymentMethod || 'card';
+
+        if (installmentPlanId) {
+            // Calculate gross cart total (before coupon / shipping per vendor)
+            const grossTotal = Array.from(vendorGroups.values()).reduce((sum, g) => sum + g.subtotal, 0);
+            const totalItems = cart.reduce((sum, i) => sum + i.quantity, 0);
+
+            const [plan] = await this.databaseService.db
+                .select()
+                .from(installmentPlans)
+                .where(eq(installmentPlans.id, installmentPlanId))
+                .limit(1);
+
+            if (!plan) throw new BadRequestException('خطة التقسيط غير موجودة');
+            if (grossTotal < Number(plan.minAmount)) {
+                throw new BadRequestException(`الحد الأدنى للتقسيط هو ${plan.minAmount}`);
+            }
+            const minQ = plan.minQuantity || 1;
+            const maxQ = plan.maxQuantity || 0;
+            if (totalItems < minQ || (maxQ > 0 && totalItems > maxQ)) {
+                throw new BadRequestException(`هذا النظام متاح فقط لعدد منتجات بين ${minQ} و ${maxQ > 0 ? maxQ : '∞'}`);
+            }
+
+            const interestAmount = grossTotal * (plan.interestRate || 0) / 100;
+            const totalWithInterest = grossTotal + interestAmount;
+            const dpPct = plan.downPaymentPercentage || 0;
+            depositAmount = totalWithInterest * dpPct / 100;
+
+            if (depositAmount <= 0) throw new BadRequestException('مبلغ المقدم غير صحيح');
+            if (!kycData) throw new BadRequestException('يجب رفع الأوراق المطلوبة قبل الدفع');
+            if (!depositPaymentMethod) throw new BadRequestException('يرجى اختيار طريقة دفع للمقدم');
+
+            // --- Process deposit payment ---
+            if (depositPaymentMethod === 'wallet') {
+                const [wallet] = await this.databaseService.db
+                    .select()
+                    .from(customerWallets)
+                    .where(eq(customerWallets.userId, customerId))
+                    .limit(1);
+                if (!wallet || Number(wallet.balance) < depositAmount) {
+                    throw new BadRequestException(`رصيد المحفظة غير كافٍ. الرصيد المتاح: ${wallet?.balance || 0}, المطلوب: ${depositAmount}`);
+                }
+                await this.walletsService.deductBalance(customerId, depositAmount, `مقدم دفع تقسيط - في انتظار مراجعة الأوراق`);
+                console.log(`  - [Deposit] Deducted ${depositAmount} from wallet for customer ${customerId}`);
+
+            } else if (depositPaymentMethod === 'gift_card') {
+                if (!depositGiftCardCode) throw new BadRequestException('يرجى إدخال كود كارت الهدية');
+                const [giftCard] = await this.databaseService.db
+                    .select()
+                    .from(giftCards)
+                    .where(eq(giftCards.code, depositGiftCardCode.toUpperCase()))
+                    .limit(1);
+                if (!giftCard) throw new BadRequestException('كود كارت الهدية غير صحيح');
+                if (giftCard.isRedeemed) throw new BadRequestException('هذا الكارت تم استخدامه بالفعل');
+                if (Number(giftCard.amount) < depositAmount) {
+                    throw new BadRequestException(`قيمة الكارت (${giftCard.amount}) أقل من المقدم المطلوب (${depositAmount})`);
+                }
+                await this.databaseService.db
+                    .update(giftCards)
+                    .set({ isRedeemed: true, redeemedByUserId: customerId, redeemedAt: new Date() })
+                    .where(eq(giftCards.id, giftCard.id));
+                console.log(`  - [Deposit] Gift card ${depositGiftCardCode} redeemed for deposit`);
+
+            } else if (depositPaymentMethod === 'card') {
+                // For card payments we create a gateway session.
+                // The order is created BEFORE redirect so we have an orderId for the session metadata.
+                // We mark it with paymentStatus='awaiting_deposit_payment'.
+                // The webhook will flip it to 'pending_kyc_review' after payment confirmation.
+                // SIMPLIFICATION: We create the order and return checkoutUrl; webhook updates payment status.
+                resolvedDepositPaymentMethod = 'card';
+                // We'll proceed to order creation below; stripeCheckoutUrl set after order inserted.
+            }
+        }
+
+        // ============================================================
+        // CREATE ORDERS IN TRANSACTION
+        // ============================================================
         const createdOrders: any[] = [];
-        let stripeCheckoutUrl = null;
 
         try {
-            console.log(`📦 [OrdersService] START create for customerId: ${customerId}, Method: ${paymentMethod}, InstallmentPlan: ${installmentPlanId}`);
-
             await this.databaseService.db.transaction(async (tx) => {
-                console.log(`  - [Transaction] Starting transaction for customerId: ${customerId}`);
-
-                // Check Wallet Balance if used
-                if (walletAmountUsed > 0) {
-                    console.log(`  - [Wallet] Checking balance for deduction: ${walletAmountUsed}`);
-                    const [wallet] = await tx.select().from(customerWallets).where(eq(customerWallets.userId, customerId)).limit(1);
-                    if (!wallet || Number(wallet.balance) < walletAmountUsed) {
-                        console.error(`  - [Wallet] Insufficient balance. Available: ${wallet?.balance}, Needed: ${walletAmountUsed}`);
-                        throw new BadRequestException('رصيد المحفظة غير كافٍ');
-                    }
-                }
-
-                console.log(`  - [VendorGroups] Processing ${vendorGroups.size} vendor groups`);
                 for (const [vendorId, group] of vendorGroups) {
-                    console.log(`    - [Vendor ${vendorId}] Processing group with ${group.items.length} items`);
-
                     // Stock Check
                     for (const item of group.items) {
                         const [prod] = await tx.select().from(products).where(eq(products.id, item.productId)).limit(1);
-                        if (!prod) {
-                            console.error(`    - [Stock] Product ${item.productId} not found`);
-                            throw new BadRequestException('Product not found');
-                        }
-
+                        if (!prod) throw new BadRequestException('Product not found');
                         if (item.size) {
                             const sizes = prod.sizes as { size: string; quantity: number }[] | null;
                             const sizeObj = sizes?.find(s => s.size === item.size);
                             if (!sizeObj || sizeObj.quantity < item.quantity) {
-                                console.error(`    - [Stock] Size ${item.size} unavailable for product ${prod.id}. Available: ${sizeObj?.quantity}, Requested: ${item.quantity}`);
                                 throw new BadRequestException(`الكمية غير متوفرة لـ ${prod.nameAr}`);
                             }
                         } else if ((prod.stock || 0) < item.quantity) {
-                            console.error(`    - [Stock] Insufficient stock for product ${prod.id}. Available: ${prod.stock}, Requested: ${item.quantity}`);
                             throw new BadRequestException(`الكمية غير متوفرة لـ ${prod.nameAr}`);
                         }
                     }
@@ -190,46 +256,50 @@ export class OrdersService {
                     if (coupon && coupon.vendorId === vendorId) {
                         totalDiscount = (group.subtotal * coupon.discountPercent) / 100;
                     }
-
                     const [vendor] = await tx.select().from(vendors).where(eq(vendors.id, vendorId)).limit(1);
                     const shippingCost = vendor?.shippingCost || 0;
                     const commissionRate = vendor?.commissionRate || 10;
-
                     const finalSubtotal = group.subtotal - totalDiscount;
                     const orderTotal = finalSubtotal + shippingCost;
                     const commission = (finalSubtotal * commissionRate) / 100;
-
                     const orderNumber = `ORD-${Date.now()}-${vendorId}`;
 
-                    console.log(`    - [Order] Inserting order metadata for vendor ${vendorId}`);
+                    // Determine status/paymentStatus based on order type
+                    const isInstallment = !!installmentPlanId;
+                    const isCash = paymentMethod === 'cash' || paymentMethod === 'cod' || paymentMethod === 'cashOnDelivery';
+                    const orderStatus = isCash ? 'pending_confirmation' : (isInstallment ? 'pending' : 'pending_confirmation');
+                    const orderPaymentStatus = isInstallment
+                        ? (resolvedDepositPaymentMethod === 'card' ? 'awaiting_deposit_payment' : 'pending_kyc_review')
+                        : 'pending';
+
                     const [newOrder] = await tx
                         .insert(orders)
                         .values({
                             orderNumber,
                             customerId,
                             vendorId,
-                            status: 'pending',
-                            paymentStatus: installmentPlanId ? 'pending_kyc_review' : 'pending',
+                            status: orderStatus,
+                            paymentStatus: orderPaymentStatus,
                             subtotal: group.subtotal,
                             discount: totalDiscount,
                             shippingCost,
                             commission,
                             total: orderTotal,
                             shippingAddress,
-                            paymentMethod,
+                            paymentMethod: isInstallment ? 'installments' : paymentMethod,
                             installmentPlanId,
-                            kycData,
+                            kycData: isInstallment ? kycData : null,
+                            depositAmount: isInstallment ? depositAmount : 0,
+                            depositPaymentMethod: isInstallment ? resolvedDepositPaymentMethod : null,
                             createdAt: new Date(),
                             updatedAt: new Date(),
                         })
                         .returning();
 
-                    console.log(`    - [OrderItems] Inserting ${group.items.length} items for order ${newOrder.id}`);
                     const itemsWithOrderId = group.items.map(item => ({ ...item, orderId: newOrder.id }));
                     await tx.insert(orderItems).values(itemsWithOrderId);
 
                     // Update stock
-                    console.log(`    - [StockUpdate] Updating stock and sizes for items`);
                     for (const item of group.items) {
                         const [prod] = await tx.select().from(products).where(eq(products.id, item.productId)).limit(1);
                         const newStock = Math.max(0, (prod.stock || 0) - item.quantity);
@@ -240,183 +310,88 @@ export class OrdersService {
                         await tx.update(products).set({ stock: newStock, sizes: newSizes }).where(eq(products.id, item.productId));
                     }
 
+                    // Create installment record
+                    if (isInstallment) {
+                        const [plan] = await tx.select().from(installmentPlans).where(eq(installmentPlans.id, installmentPlanId!)).limit(1);
+                        if (plan) {
+                            const interestAmount = orderTotal * (plan.interestRate || 0) / 100;
+                            const totalWithInterest = orderTotal + interestAmount;
+                            const dpPct = plan.downPaymentPercentage || 0;
+                            const financedAmount = totalWithInterest * (1 - dpPct / 100);
+                            await tx.insert(installments).values({
+                                orderId: newOrder.id,
+                                totalAmount: financedAmount,
+                                remainingAmount: financedAmount,
+                                installmentsCount: plan.months,
+                                status: 'pending_approval',
+                                nextPaymentDate: null,
+                                createdAt: new Date(),
+                                updatedAt: new Date(),
+                            });
+                        }
+                    }
+
                     createdOrders.push(newOrder);
                 }
 
-                // Handle Payments (Wallet + Stripe)
-                let remainingToPay = createdOrders.reduce((sum, o) => sum + Number(o.total), 0);
-                console.log(`  - [Payment] Total to pay: ${remainingToPay}`);
-
-                if (walletAmountUsed > 0) {
-                    const amountToDeduct = Math.min(walletAmountUsed, remainingToPay);
-                    console.log(`  - [Wallet] Deducting balance: ${amountToDeduct}`);
-                    await this.walletsService.deductBalance(customerId, amountToDeduct, `Order Payment (Split)`);
-                    remainingToPay -= amountToDeduct;
-                }
-
-                // Handle Installments if selected
-                let requiresInstallmentReview = false;
-                let actualAmountToPayOnline = remainingToPay;
-
-                if (installmentPlanId && createdOrders.length > 0) {
-                    console.log(`  - [Installments] Processing installment request for plan ${installmentPlanId}`);
-                    const totalItems = cart.reduce((sum, i) => sum + i.quantity, 0);
-                    const baseTotalToFinance = createdOrders.reduce((sum, o) => sum + Number(o.total), 0) - (walletAmountUsed || 0);
-
-                    if (baseTotalToFinance > 0) {
-                        const [plan] = await tx.select().from(installmentPlans).where(eq(installmentPlans.id, installmentPlanId)).limit(1);
-                        if (plan) {
-                            console.log(`  - [Installments] Plan found, validating thresholds`);
-                            // Validation: Min Amount (base)
-                            if (baseTotalToFinance < Number(plan.minAmount)) {
-                                console.error(`  - [Installments] Base total ${baseTotalToFinance} below min ${plan.minAmount}`);
-                                throw new BadRequestException(`الحد الأدنى للتقسيط هو ${plan.minAmount}`);
-                            }
-
-                            // Validation: Quantity Range
-                            const minQ = plan.minQuantity || 1;
-                            const maxQ = plan.maxQuantity || 0;
-                            if (totalItems < minQ || (maxQ > 0 && totalItems > maxQ)) {
-                                console.error(`  - [Installments] Quantity ${totalItems} out of range [${minQ}, ${maxQ}]`);
-                                throw new BadRequestException(`هذا النظام متاح فقط لعدد منتجات بين ${minQ} و ${maxQ > 0 ? maxQ : '∞'}`);
-                            }
-
-                            const interestAmount = baseTotalToFinance * (plan.interestRate || 0) / 100;
-                            const totalWithInterest = baseTotalToFinance + interestAmount;
-                            const dpPct = plan.downPaymentPercentage || 0;
-
-                            // Calculate the Down Payment that must be paid NOW
-                            const downPayment = totalWithInterest * dpPct / 100;
-                            const financedAmount = totalWithInterest - downPayment;
-
-                            actualAmountToPayOnline = downPayment; // Only charge down payment online right now
-
-                            requiresInstallmentReview = true; // Indicates it is an installment order, but we STILL charge `actualAmountToPayOnline`
-
-                            console.log(`  - [Installments] Recording installment record, financed: ${financedAmount}, downPaymentToPayNow: ${downPayment}`);
-                            await tx.insert(installments).values({
-                                orderId: createdOrders[0].id,
-                                totalAmount: financedAmount,
-                                remainingAmount: financedAmount,
-                                installmentsCount: plan.months,
-                                status: 'pending_approval',
-                                nextPaymentDate: null,
-                                createdAt: new Date(),
-                                updatedAt: new Date(),
-                            });
-                        }
-                    }
-                }
-
-                if (actualAmountToPayOnline > 0 && paymentMethod !== 'cash_on_delivery') {
-                    console.log(`  - [Stripe/Gateway] Creating session for amount: ${actualAmountToPayOnline}`);
-                    const [customer] = await tx.select().from(users).where(eq(users.id, customerId)).limit(1);
-
-                    // If paymentMethod is 'card' or empty or 'installments', default to 'stripe' for backward compatibility
-                    const gateway = (paymentMethod === 'card' || !paymentMethod || paymentMethod === 'installments') ? 'stripe' : paymentMethod;
-
-                    const session = await this.paymentsService.createCheckoutSession(
-                        gateway,
-                        createdOrders[0].id,
-                        actualAmountToPayOnline,
-                        customer.email!
-                    );
-                    stripeCheckoutUrl = session.url;
-                } else if (actualAmountToPayOnline <= 0 && !requiresInstallmentReview) {
-                    console.log(`  - [Payment] Fully paid by wallet, marking as confirmed`);
-                    // Fully paid by wallet
-                    for (const order of createdOrders) {
-                        await tx.update(orders).set({ paymentStatus: 'paid', status: 'confirmed' }).where(eq(orders.id, order.id));
-                    }
-                }
-
-                if (installmentPlanId && createdOrders.length > 0) {
-                    console.log(`  - [Installments] Processing installment request for plan ${installmentPlanId}`);
-                    const totalItems = cart.reduce((sum, i) => sum + i.quantity, 0);
-                    const baseTotalToFinance = createdOrders.reduce((sum, o) => sum + Number(o.total), 0) - (walletAmountUsed || 0);
-
-                    if (baseTotalToFinance > 0) {
-                        const [plan] = await tx.select().from(installmentPlans).where(eq(installmentPlans.id, installmentPlanId)).limit(1);
-                        if (plan) {
-                            console.log(`  - [Installments] Plan found, validating thresholds`);
-                            // Validation: Min Amount (base)
-                            if (baseTotalToFinance < Number(plan.minAmount)) {
-                                console.error(`  - [Installments] Base total ${baseTotalToFinance} below min ${plan.minAmount}`);
-                                throw new BadRequestException(`الحد الأدنى للتقسيط هو ${plan.minAmount}`);
-                            }
-
-                            // Validation: Quantity Range
-                            const minQ = plan.minQuantity || 1;
-                            const maxQ = plan.maxQuantity || 0;
-                            if (totalItems < minQ || (maxQ > 0 && totalItems > maxQ)) {
-                                console.error(`  - [Installments] Quantity ${totalItems} out of range [${minQ}, ${maxQ}]`);
-                                throw new BadRequestException(`هذا النظام متاح فقط لعدد منتجات بين ${minQ} و ${maxQ > 0 ? maxQ : '∞'}`);
-                            }
-
-                            const interestAmount = baseTotalToFinance * (plan.interestRate || 0) / 100;
-                            const totalWithInterest = baseTotalToFinance + interestAmount;
-                            const dpPct = plan.downPaymentPercentage || 0;
-                            const downPayment = totalWithInterest * dpPct / 100;
-                            const financedAmount = totalWithInterest - downPayment;
-
-                            requiresInstallmentReview = true;
-
-                            console.log(`  - [Installments] Recording installment record, financed: ${financedAmount}`);
-                            await tx.insert(installments).values({
-                                orderId: createdOrders[0].id,
-                                totalAmount: financedAmount,
-                                remainingAmount: financedAmount,
-                                installmentsCount: plan.months,
-                                status: 'pending_approval',
-                                nextPaymentDate: null,
-                                createdAt: new Date(),
-                                updatedAt: new Date(),
-                            });
-                        }
-                    }
-                }
-
-                // Award Points (1 AED = 1 Point)
-                const totalPurchaseAmount = createdOrders.reduce((sum, o) => sum + Number(o.total), 0);
-                if (totalPurchaseAmount > 0) {
-                    console.log(`  - [Points] Awarding ${totalPurchaseAmount} points to customer ${customerId}`);
-                    await this.pointsService.earnPoints(customerId, totalPurchaseAmount, createdOrders[0].id);
-                }
-
-                console.log(`  - [CartCleanup] Deleting cart items for customer ${customerId}`);
+                // Cart cleanup
                 await tx.delete(cartItems).where(eq(cartItems.customerId, customerId));
                 if (coupon) {
-                    console.log(`  - [Coupons] Incrementing usedCount for coupon: ${coupon.code}`);
                     await tx.update(coupons)
                         .set({ usedCount: sql`${coupons.usedCount} + 1` })
                         .where(eq(coupons.id, coupon.id));
                 }
-
             });
 
-            // Notify Admins of new order(s)
-            console.log(`  - [Notifications] Notifying admins for ${createdOrders.length} orders`);
+            // For card deposit: create gateway session now that we have orderId
+            if (installmentPlanId && resolvedDepositPaymentMethod === 'card' && createdOrders.length > 0) {
+                const [customer] = await this.databaseService.db.select().from(users).where(eq(users.id, customerId)).limit(1);
+                const session = await this.paymentsService.createCheckoutSession(
+                    'stripe',
+                    createdOrders[0].id,
+                    depositAmount,
+                    customer.email!
+                );
+                stripeCheckoutUrl = session.url;
+            }
+
+            // Notify admins
             for (const order of createdOrders) {
                 try {
+                    const isInstallment = !!installmentPlanId;
                     await this.notificationsService.notifyAdmins(
                         'new_order',
-                        '🛒 طلب جديد',
-                        `تم استلام طلب جديد رقم #${order.orderNumber} بقيمة ${order.total}`,
+                        isInstallment ? '📋 طلب تقسيط جديد' : '🛒 طلب جديد',
+                        isInstallment
+                            ? `طلب تقسيط جديد #${order.orderNumber} بمقدم ${depositAmount} - يحتاج مراجعة الأوراق`
+                            : `طلب جديد #${order.orderNumber} بقيمة ${order.total}`,
                         order.id
                     );
                 } catch (e) {
-                    console.error('Failed to notify admin of new order:', e.message);
+                    console.error('Failed to notify admin:', e.message);
                 }
             }
 
-            console.log(`📦 [OrdersService] SUCCESS create for customerId: ${customerId}`);
             return { orders: createdOrders, checkoutUrl: stripeCheckoutUrl };
         } catch (error) {
-            console.error(`❌ [OrdersService] FATAL ERROR in create for customerId: ${customerId}:`, error);
-            if (error.stack) console.error(error.stack);
+            // IMPORTANT: If order creation fails AFTER deposit was deducted (wallet/gift_card),
+            // we must refund to prevent money loss.
+            if (installmentPlanId && depositAmount > 0 && resolvedDepositPaymentMethod === 'wallet') {
+                try {
+                    await this.walletsService.topUpBalance(customerId, depositAmount, `استرجاع مقدم بسبب خطأ في إنشاء الطلب`);
+                    console.log(`  - [Rollback] Refunded deposit ${depositAmount} to wallet for customer ${customerId}`);
+                } catch (refundErr) {
+                    console.error('CRITICAL: Failed to refund deposit after order creation failure:', refundErr.message);
+                }
+            }
+            console.error(`❌ [OrdersService] FATAL ERROR in create:`, error);
             throw error;
         }
     }
+
+
+
+
 
     async updateStatus(orderId: number, status: string, userId?: number) {
         // Fetch Order with Vendor info using standard Join
@@ -543,7 +518,8 @@ export class OrdersService {
             [updatedOrder] = await this.databaseService.db
                 .update(orders)
                 .set({
-                    paymentStatus: 'pending_payment',
+                    status: 'confirmed', // Under Document Review -> Preparing Shipment (confirmed/processing)
+                    paymentStatus: 'paid', // Deposit already paid
                     updatedAt: new Date()
                 })
                 .where(eq(orders.id, orderId))
@@ -552,7 +528,7 @@ export class OrdersService {
             await this.databaseService.db
                 .update(installments)
                 .set({
-                    status: 'approved_awaiting_payment',
+                    status: 'active',
                     updatedAt: new Date()
                 })
                 .where(eq(installments.id, installment.id));
@@ -562,7 +538,7 @@ export class OrdersService {
                 order.customerId,
                 'kyc_approved',
                 'تمت الموافقة على طلب التقسيط',
-                `تمت الموافقة على طلب التقسيط للطلب رقم #${order.orderNumber}. تفضل بدفع المقدم للبدء.`,
+                `تمت الموافقة على طلب التقسيط للطلب رقم #${order.orderNumber}. جارٍ تجهيز طلبك.`,
                 order.id
             );
 
@@ -603,26 +579,14 @@ export class OrdersService {
                 }
             }
 
-            // Re-calculate the down payment paid and refund it to wallet
-            if (order.installmentPlanId) {
-                const [plan] = await this.databaseService.db.select().from(installmentPlans).where(eq(installmentPlans.id, order.installmentPlanId)).limit(1);
-                if (plan) {
-                    const interestAmount = Number(order.total) * (plan.interestRate || 0) / 100;
-                    const totalWithInterest = Number(order.total) + interestAmount;
-                    const dpPct = plan.downPaymentPercentage || 0;
-                    const downPaymentPaid = totalWithInterest * dpPct / 100;
-
-                    if (downPaymentPaid > 0) {
-                        await this.walletsService.topUpBalance(
-                            order.customerId,
-                            downPaymentPaid,
-                            `استرجاع مقدم الدفع لرفض طلب التقسيط #${order.orderNumber}`
-                        );
-                    }
-                }
+            // Refund deposit to wallet (Automated refund on rejection)
+            if (order.depositAmount && Number(order.depositAmount) > 0) {
+                await this.walletsService.topUpBalance(
+                    order.customerId,
+                    Number(order.depositAmount),
+                    `استرجاع مقدم الدفع لرفض طلب التقسيط #${order.orderNumber}`
+                );
             }
-
-            // No need to reverse points here because points are only awarded on 'paid' or 'delivered'
 
             // Notify Customer
             const message = reason ? `نعتذر، تم رفض طلب التقسيط للطلب رقم #${order.orderNumber}: ${reason}. تم استرجاع مبلغ المقدم إلى محفظتك.` : `نعتذر، تم رفض طلب التقسيط للطلب رقم #${order.orderNumber}. تم استرجاع مبلغ المقدم إلى محفظتك.`;
@@ -649,18 +613,9 @@ export class OrdersService {
             throw new BadRequestException('Order not found');
         }
 
-        if (order.paymentStatus !== 'pending_payment') {
+        // Modified: For deposit-first flow, this might be used if card payment failed initially
+        if (order.paymentStatus !== 'awaiting_deposit_payment') {
             throw new BadRequestException('This order is not ready for down payment');
-        }
-
-        const [installment] = await this.databaseService.db
-            .select()
-            .from(installments)
-            .where(eq(installments.orderId, orderId))
-            .limit(1);
-
-        if (!installment || installment.status !== 'approved_awaiting_payment') {
-            throw new BadRequestException('Installment is not in the correct state to pay the down payment');
         }
 
         const [customer] = await this.databaseService.db
@@ -669,30 +624,12 @@ export class OrdersService {
             .where(eq(users.id, customerId))
             .limit(1);
 
-        // Calculate Down Payment: Order Total - Financed Amount
-        // Since we didn't store the exact DP amount in `installments`, we reconstruct it (or we can just calculate total amount + interest - financed)
-        // Actually, the easiest way is: Total With Interest = (Financed Amount / (1 - DownPayment%)) -> wait, financed = total * (1 - dp)
-        // Let's rely on the original plan calculation or just look at `installment.totalAmount`. The `totalAmount` in DB is the `financedAmount`.
-        // Let's get the plan.
-
-        let downPaymentToPay = Number(order.total); // default fallback
-
-        if (order.installmentPlanId) {
-            const [plan] = await this.databaseService.db.select().from(installmentPlans).where(eq(installmentPlans.id, order.installmentPlanId)).limit(1);
-            if (plan) {
-                const interestAmount = Number(order.total) * (plan.interestRate || 0) / 100;
-                const totalWithInterest = Number(order.total) + interestAmount;
-                const dpPct = plan.downPaymentPercentage || 0;
-                downPaymentToPay = totalWithInterest * dpPct / 100;
-            }
-        }
-
-        const gateway = (order.paymentMethod === 'card' || !order.paymentMethod) ? 'stripe' : order.paymentMethod;
+        const gateway = (order.depositPaymentMethod === 'card' || !order.depositPaymentMethod) ? 'stripe' : order.depositPaymentMethod;
 
         const session = await this.paymentsService.createCheckoutSession(
-            gateway,
-            order.id, // Link to order for metadata
-            downPaymentToPay,
+            gateway as any,
+            order.id,
+            Number(order.depositAmount),
             customer.email!
         );
 

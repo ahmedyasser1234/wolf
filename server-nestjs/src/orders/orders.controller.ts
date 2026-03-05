@@ -55,13 +55,14 @@ export class OrdersController {
     @Post()
     async create(
         @Req() req: Request,
-        @Body() fullBody: any,
         @Body('shippingAddress') shippingAddress: any,
         @Body('paymentMethod') paymentMethod?: string,
         @Body('couponCode') couponCode?: string,
         @Body('walletAmountUsed') walletAmountUsed?: number,
         @Body('installmentPlanId') installmentPlanId?: number,
         @Body('kycData') kycData?: any,
+        @Body('depositPaymentMethod') depositPaymentMethod?: 'wallet' | 'card' | 'gift_card',
+        @Body('depositGiftCardCode') depositGiftCardCode?: string,
     ) {
         console.log('📩 [OrdersController] POST /api/orders RECEIVED');
         const userId = await this.getUserId(req);
@@ -71,11 +72,22 @@ export class OrdersController {
             couponCode,
             walletAmountUsed,
             installmentPlanId,
+            depositPaymentMethod,
             hasKyc: !!kycData,
             hasAddress: !!shippingAddress
         });
 
-        return this.ordersService.create(userId, shippingAddress, paymentMethod, couponCode, walletAmountUsed || 0, installmentPlanId, kycData);
+        return this.ordersService.create(
+            userId,
+            shippingAddress,
+            paymentMethod,
+            couponCode,
+            walletAmountUsed || 0,
+            installmentPlanId,
+            kycData,
+            depositPaymentMethod,
+            depositGiftCardCode
+        );
     }
 
     @Patch(':id/status')
