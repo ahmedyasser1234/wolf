@@ -158,6 +158,6 @@ export class WalletsService {
             .where(eq(walletTransactions.walletId, wallet.id))
             .orderBy(desc(walletTransactions.createdAt));
 
-        return { ...wallet, transactions };
+        return { wallet, transactions };
     }
 }

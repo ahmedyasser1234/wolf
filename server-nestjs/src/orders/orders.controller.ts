@@ -140,4 +140,12 @@ export class OrdersController {
 
         return this.ordersService.confirmDepositPayment(id, payload.id);
     }
+
+    @Post(':id/confirm-payment')
+    async confirmPayment(
+        @Param('id', ParseIntPipe) id: number,
+    ) {
+        // This is called by frontend on success redirect
+        return this.ordersService.confirmPayment(id);
+    }
 }

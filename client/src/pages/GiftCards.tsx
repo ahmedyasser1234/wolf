@@ -316,7 +316,7 @@ export default function GiftCards() {
                                     {paymentMethod === 'wallet' && (
                                         <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="p-4 bg-purple-900/20 border border-purple-800/30 rounded-2xl flex justify-between items-center">
                                             <span className="text-purple-400 font-bold">
-                                                {walletData?.balance ? `${Number(walletData.balance).toLocaleString()} AED` : '0 AED'}
+                                                {walletData?.wallet?.balance ? `${Number(walletData.wallet.balance).toLocaleString()} AED` : '0 AED'}
                                             </span>
                                             <span className="text-xs font-black text-purple-300 uppercase tracking-widest">
                                                 {language === 'ar' ? 'رصيدك المتاح' : 'Available Balance'}

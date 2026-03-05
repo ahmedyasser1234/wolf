@@ -412,7 +412,7 @@ export default function Checkout() {
 
                       {depositMethod === 'wallet' && (
                         <div className="mt-4 p-4 bg-blue-50 rounded-xl flex justify-between items-center">
-                          <span className="font-bold text-blue-700">{formatPrice(walletData?.balance || 0)}</span>
+                          <span className="font-bold text-blue-700">{formatPrice(walletData?.wallet?.balance || 0)}</span>
                           <span className="text-blue-600 font-bold">رصيدك الحالي</span>
                         </div>
                       )}

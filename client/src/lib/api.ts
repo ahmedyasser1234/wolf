@@ -77,6 +77,7 @@ export const endpoints = {
         updateStatus: (id: number, status: string) => api.patch(`/orders/${id}/status`, { status }).then(res => res.data),
         payOrder: (id: number, paymentMethod: string, giftCardCode?: string) =>
             api.post(`/orders/${id}/pay`, { paymentMethod, giftCardCode }).then(res => res.data),
+        confirmPayment: (id: number) => api.post(`/orders/${id}/confirm-payment`).then(res => res.data),
     },
 
     collections: {

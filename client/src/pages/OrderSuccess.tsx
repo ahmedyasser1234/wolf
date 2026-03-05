@@ -31,6 +31,16 @@ export default function OrderSuccess() {
             confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
         }, 250);
 
+        // --- NEW: Trigger Backend Confirmation ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('orderId');
+        if (orderId) {
+            import("@/lib/api").then(({ endpoints }) => {
+                endpoints.orders.confirmPayment(parseInt(orderId))
+                    .catch(e => console.error("Error confirming payment on success page:", e));
+            });
+        }
+
         return () => clearInterval(interval);
     }, []);
 

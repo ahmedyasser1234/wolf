@@ -334,8 +334,8 @@ export class OrdersService {
                     const isCash = paymentMethod === 'cash' || paymentMethod === 'cod' || paymentMethod === 'cashOnDelivery';
                     const orderStatus = isCash ? 'pending' : (isInstallment ? 'pending' : 'pending');
                     const orderPaymentStatus = isInstallment
-                        ? 'pending_kyc_review'
-                        : (paymentMethod === 'card' ? 'paid' : (paymentMethod === 'wallet' || paymentMethod === 'gift_card' ? 'paid' : 'pending'));
+                        ? (resolvedDepositPaymentMethod === 'card' ? 'awaiting_deposit_payment' : 'pending_kyc_review')
+                        : (paymentMethod === 'wallet' || paymentMethod === 'gift_card' ? 'paid' : 'pending');
 
                     console.log(`   - Pre-Insert Check [Vendor ${vendorId}]:`, {
                         orderNumber,
@@ -441,20 +441,25 @@ export class OrdersService {
                 stripeCheckoutUrl = session.url;
             }
 
-            // Notify admins
+            // Notify admins ONLY for orders with 'paid' or 'pending_kyc_review' (Internal success)
             for (const order of createdOrders) {
-                try {
-                    const isInstallment = !!installmentPlanId;
-                    await this.notificationsService.notifyAdmins(
-                        'new_order',
-                        isInstallment ? '📋 طلب تقسيط جديد' : '🛒 طلب جديد',
-                        isInstallment
-                            ? `طلب تقسيط جديد #${order.orderNumber} بمقدم ${depositAmount} - يحتاج مراجعة الأوراق`
-                            : `طلب جديد #${order.orderNumber} بقيمة ${order.total}`,
-                        order.id
-                    );
-                } catch (e) {
-                    console.error('Failed to notify admin:', e.message);
+                const isPaid = order.paymentStatus === 'paid';
+                const isInternalInstallment = order.installmentPlanId && order.paymentStatus === 'pending_kyc_review' && (order.depositPaymentMethod === 'wallet' || order.depositPaymentMethod === 'gift_card');
+
+                if (isPaid || isInternalInstallment) {
+                    try {
+                        const isInstallment = !!order.installmentPlanId;
+                        await this.notificationsService.notifyAdmins(
+                            'new_order',
+                            isInstallment ? '📋 طلب تقسيط جديد (مدفوع المقدم)' : '🛒 طلب جديد تم دفعه',
+                            isInstallment
+                                ? `طلب تقسيط جديد #${order.orderNumber} بمقدم ${order.depositAmount} (تم الدفع داخلياً)`
+                                : `طلب رقم #${order.orderNumber} تم دفعه بالكامل بقيمة ${order.total}`,
+                            order.id
+                        );
+                    } catch (e) {
+                        console.error('Failed to notify admin:', e.message);
+                    }
                 }
             }
 
@@ -512,6 +517,11 @@ export class OrdersService {
         // Prevent ANY backtracking (except cancelling, if allowed)
         if (newStep < currentStep && newStatusNormalized !== 'cancelled') {
             throw new BadRequestException('Cannot revert order to a previous status.');
+        }
+
+        // Feature: Refund deposit if installment order is cancelled and deposit was paid
+        if (newStatusNormalized === 'cancelled' && currentStatusNormalized !== 'cancelled') {
+            await this.refundOrderDeposit(orderId);
         }
 
         // Feature 2: Cancel Points if the order is cancelled and it previously earned points
@@ -579,6 +589,40 @@ export class OrdersService {
                 if (updatedOrder.paymentStatus === 'paid' || newStatusNormalized === 'delivered') {
                     await this.pointsService.earnPoints(updatedOrder.customerId, updatedOrder.total, updatedOrder.id);
                 }
+            }
+        }
+    }
+
+    async refundOrderDeposit(orderId: number) {
+        const [order] = await this.databaseService.db
+            .select()
+            .from(orders)
+            .where(eq(orders.id, orderId))
+            .limit(1);
+
+        if (!order) return;
+
+        const isInstallment = !!order.installmentPlanId;
+        const isPaidStatus = ['pending_kyc_review', 'paid'].includes(order.paymentStatus || '');
+        const hasDeposit = Number(order.depositAmount) > 0;
+
+        if (isInstallment && isPaidStatus && hasDeposit) {
+            // Check if already refunded via wallet transactions to prevent duplicates
+            // We use the referenceId convention 'refund_{orderId}'
+            const [existingRefund] = await this.databaseService.db
+                .select()
+                .from(walletTransactions)
+                .where(eq(walletTransactions.referenceId, `refund_${orderId}`))
+                .limit(1);
+
+            if (!existingRefund) {
+                await this.walletsService.topUpBalance(
+                    order.customerId,
+                    Number(order.depositAmount),
+                    `refund_${orderId}`,
+                    `استرجاع مقدم الدفع للطلب رقم #${order.orderNumber}`
+                );
+                console.log(`💰 [OrdersService] Successfully refunded deposit of ${order.depositAmount} for order #${orderId}`);
             }
         }
     }
@@ -672,14 +716,7 @@ export class OrdersService {
             }
 
             // Refund deposit to wallet (Automated refund on rejection)
-            if (order.depositAmount && Number(order.depositAmount) > 0) {
-                await this.walletsService.topUpBalance(
-                    order.customerId,
-                    Number(order.depositAmount),
-                    `refund_${orderId}`,
-                    `استرجاع مقدم الدفع لرفض طلب التقسيط #${order.orderNumber}`
-                );
-            }
+            await this.refundOrderDeposit(orderId);
 
             // Notify Customer
             const message = reason ? `نعتذر، تم رفض طلب التقسيط للطلب رقم #${order.orderNumber}: ${reason}. تم استرجاع مبلغ المقدم إلى محفظتك.` : `نعتذر، تم رفض طلب التقسيط للطلب رقم #${order.orderNumber}. تم استرجاع مبلغ المقدم إلى محفظتك.`;
@@ -758,6 +795,65 @@ export class OrdersService {
             `تم استلام مبلغ المقدم للطلب رقم #${order.orderNumber}. طلبك الآن قيد مراجعة الأوراق.`,
             order.id
         );
+
+        // Notify Admin specifically for installments success
+        try {
+            await this.notificationsService.notifyAdmins(
+                'new_order',
+                '📋 طلب تقسيط جديد - تم دفع المقدم',
+                `طلب تقسيط جديد #${order.orderNumber} بمقدم ${order.depositAmount} - يحتاج مراجعة الأوراق`,
+                order.id
+            );
+        } catch (e) {
+            console.error('Failed to notify admin on deposit confirmation:', e.message);
+        }
+
+        return { success: true, order: updatedOrder };
+    }
+
+    async confirmPayment(orderId: number) {
+        const [order] = await this.databaseService.db
+            .select()
+            .from(orders)
+            .where(eq(orders.id, orderId))
+            .limit(1);
+
+        if (!order) throw new BadRequestException('Order not found');
+
+        // Handle Installments Deposit Confirmation
+        if (order.installmentPlanId) {
+            if (order.paymentStatus === 'pending_kyc_review') {
+                return { success: true, alreadyPaid: true };
+            }
+            // Transition installment order to KYC review state (auto-confirming the card deposit)
+            return this.confirmDepositPayment(orderId, 0); // Using 0 as system ID
+        }
+
+        // Handle Regular Order Payment Confirmation
+        if (order.paymentStatus === 'paid') {
+            return { success: true, alreadyPaid: true };
+        }
+
+        const [updatedOrder] = await this.databaseService.db
+            .update(orders)
+            .set({
+                paymentStatus: 'paid',
+                updatedAt: new Date()
+            })
+            .where(eq(orders.id, orderId))
+            .returning();
+
+        // Notify Admin of SUCCESSFUL regular payment
+        try {
+            await this.notificationsService.notifyAdmins(
+                'new_order',
+                '🛒 طلب جديد تم دفعه (بوابة الدفع)',
+                `طلب رقم #${order.orderNumber} تم دفعه بنجاح عبر بوابة الدفع بقيمة ${order.total}`,
+                order.id
+            );
+        } catch (e) {
+            console.error('Failed to notify admin on payment confirmation:', e.message);
+        }
 
         return { success: true, order: updatedOrder };
     }

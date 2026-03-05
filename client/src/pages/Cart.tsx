@@ -540,7 +540,7 @@ export default function Cart() {
       <Dialog open={isSelectionModalOpen} onOpenChange={setIsSelectionModalOpen}>
         <DialogContent className="max-w-2xl rounded-[2.5rem] p-8 font-arabic" dir={language === 'ar' ? 'rtl' : 'ltr'}>
           <DialogHeader>
-            <DialogTitle className="text-3xl font-black text-center mb-6">
+            <DialogTitle className="text-3xl font-black text-center mb-6 text-black">
               {language === 'ar' ? 'اختر طريقة الدفع' : 'Choose Payment Method'}
             </DialogTitle>
           </DialogHeader>
@@ -558,8 +558,8 @@ export default function Cart() {
                 <Banknote size={32} />
               </div>
               <div className="text-center">
-                <h3 className="text-xl font-black mb-1">{language === 'ar' ? 'كاش / كامل المبلغ' : 'Cash / Full Amount'}</h3>
-                <p className="text-sm text-gray-500">{language === 'ar' ? 'دفع إجمالي الطلب نقداً أو بالبطاقة' : 'Pay full total via Cash or Card'}</p>
+                <h3 className="text-xl font-black mb-1 text-black">{language === 'ar' ? 'دفع اجمالى الطلب' : 'Pay Full Amount'}</h3>
+                <p className="text-sm text-gray-600 font-bold">{language === 'ar' ? 'دفع إجمالي الطلب نقداً أو بالبطاقة' : 'Pay full total via Cash or Card'}</p>
               </div>
             </div>
 
@@ -572,8 +572,8 @@ export default function Cart() {
                 <Clock size={32} />
               </div>
               <div className="text-center">
-                <h3 className="text-xl font-black mb-1">{language === 'ar' ? 'تقسيط مريح' : 'Easy Installments'}</h3>
-                <p className="text-sm text-gray-500">{language === 'ar' ? 'قسم مشترياتك على دفعات شهرية' : 'Split your purchase into monthly payments'}</p>
+                <h3 className="text-xl font-black mb-1 text-black">{language === 'ar' ? 'تقسيط مريح' : 'Easy Installments'}</h3>
+                <p className="text-sm text-gray-600 font-bold">{language === 'ar' ? 'قسم مشترياتك على دفعات شهرية' : 'Split your purchase into monthly payments'}</p>
               </div>
             </div>
           </div>
@@ -588,7 +588,7 @@ export default function Cart() {
                 className="overflow-hidden"
               >
                 <div className="pt-4 space-y-3">
-                  <p className="font-bold text-gray-600 mb-2">{language === 'ar' ? 'اختر خطة التقسيط:' : 'Select Installment Plan:'}</p>
+                  <p className="font-bold text-black mb-2">{language === 'ar' ? 'اختر خطة التقسيط:' : 'Select Installment Plan:'}</p>
                   <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto px-1">
                     {installmentPlans?.map((plan: any) => (
                       <div
@@ -597,17 +597,17 @@ export default function Cart() {
                         className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex justify-between items-center ${selectedPlanId === plan.id ? 'border-primary bg-primary/5' : 'border-gray-100 hover:border-gray-200 bg-white'}`}
                       >
                         <div className="flex flex-col">
-                          <span className="font-black text-lg">{language === 'ar' ? plan.nameAr : plan.nameEn}</span>
-                          <span className="text-sm text-gray-500">{plan.months} {language === 'ar' ? 'أشهر' : 'Months'} • {plan.interestRate}% {language === 'ar' ? 'فوائد' : 'Interest'}</span>
+                          <span className="font-black text-lg text-black">{language === 'ar' ? plan.nameAr : plan.nameEn}</span>
+                          <span className="text-sm text-gray-600 font-bold">{plan.months} {language === 'ar' ? 'أشهر' : 'Months'} • {plan.interestRate}% {language === 'ar' ? 'فوائد' : 'Interest'}</span>
                         </div>
                         <div className="flex flex-col text-left items-end">
                           <span className="font-black text-primary">{formatPrice((total * (1 + (plan.interestRate || 0) / 100)) / plan.months)}</span>
-                          <span className="text-xs text-gray-400">{language === 'ar' ? 'شهرياً' : 'per month'}</span>
+                          <span className="text-xs text-gray-600 font-bold">{language === 'ar' ? 'شهرياً' : 'per month'}</span>
                         </div>
                       </div>
                     ))}
                     {(!installmentPlans || installmentPlans.length === 0) && (
-                      <p className="text-center py-4 text-gray-400 italic">
+                      <p className="text-center py-4 text-black italic font-bold">
                         {language === 'ar' ? 'لا توجد خطط تقسيط متاحة لهذه المنتجات' : 'No installment plans available for these products'}
                       </p>
                     )}
