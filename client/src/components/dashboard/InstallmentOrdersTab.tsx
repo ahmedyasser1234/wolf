@@ -292,6 +292,7 @@ export default function InstallmentOrdersTab() {
                                         'card': language === 'ar' ? 'بطاقة بنكية' : 'Bank Card',
                                         'wallet': language === 'ar' ? 'المحفظة' : 'Wallet',
                                         'gift_card': language === 'ar' ? 'كارت هدية' : 'Gift Card',
+                                        'stripe': language === 'ar' ? 'بطاقة بنكية' : 'Bank Card',
                                     } as any)[kycModalOrder.depositPaymentMethod] || kycModalOrder.depositPaymentMethod}
                                 </div>
                             </div>

@@ -522,6 +522,7 @@ export default function AdminDashboard() {
   const { data: products, isLoading: productsLoading } = useQuery({
     queryKey: ['admin', 'products', productSearch],
     queryFn: async () => (await api.get('/admin/products', { params: { search: productSearch } })).data,
+    enabled: activeTab === 'products' // Only fetch if on products tab
   });
 
   // Scroll to top on tab change
@@ -541,6 +542,7 @@ export default function AdminDashboard() {
   const { data: customers, isLoading: customersLoading } = useQuery({
     queryKey: ['admin', 'customers'],
     queryFn: async () => (await api.get('/admin/customers')).data,
+    enabled: activeTab === 'customers' // Only fetch if on customers tab
   });
 
   const { data: adminConversations } = useQuery({
@@ -560,9 +562,7 @@ export default function AdminDashboard() {
   // const socket = useSocket();
   // const [onlineUsers, setOnlineUsers] = useState<Set<number>>(new Set());
 
-  const totalRevenue = adminOrders
-    ?.filter((o: any) => o.paymentStatus === 'paid')
-    .reduce((sum: number, order: any) => sum + Number(order.total), 0) || 0;
+  const totalRevenue = dashboardStats?.totalRevenue || 0;
 
 
 
@@ -1006,11 +1006,17 @@ export default function AdminDashboard() {
                                     {order.paymentMethod === 'cash' || order.paymentMethod === 'cod' || order.paymentMethod === 'cashOnDelivery' ? (language === 'ar' ? 'دفع عند الاستلام' : 'COD') :
                                       order.paymentMethod === 'wallet' ? (language === 'ar' ? 'محفظة' : 'Wallet') :
                                         order.paymentMethod === 'gift_card' ? (language === 'ar' ? 'بطاقة هدية' : 'Gift Card') :
-                                          (language === 'ar' ? 'بطاقة بنكية' : 'Bank Card')}
+                                          order.paymentMethod === 'installments' ? (language === 'ar' ? 'تقسيط' : 'Installments') :
+                                            (language === 'ar' ? 'بطاقة بنكية' : 'Bank Card')}
                                   </span>
                                   {order.paymentMethod === 'installments' && (
                                     <span className="px-2 py-0.5 bg-violet-900/40 text-violet-400 rounded-full text-[9px] font-black border border-violet-800/50">
-                                      {language === 'ar' ? 'تقسيط WOLF (بطاقة)' : 'WOLF Installments (Card)'}
+                                      {({
+                                        'card': language === 'ar' ? 'بطاقة' : 'Card',
+                                        'wallet': language === 'ar' ? 'محفظة' : 'Wallet',
+                                        'gift_card': language === 'ar' ? 'بطاقة هدية' : 'Gift Card',
+                                        'stripe': language === 'ar' ? 'بطاقة' : 'Card',
+                                      } as any)[order.depositPaymentMethod] || (language === 'ar' ? 'بطاقة' : 'Card')}
                                     </span>
                                   )}
                                 </div>
@@ -1461,6 +1467,7 @@ export default function AdminDashboard() {
                             'card': language === 'ar' ? 'بطاقة بنكية' : 'Bank Card',
                             'wallet': language === 'ar' ? 'المحفظة' : 'Wallet',
                             'gift_card': language === 'ar' ? 'كارت هدية' : 'Gift Card',
+                            'stripe': language === 'ar' ? 'بطاقة بنكية' : 'Bank Card',
                           } as any)[selectedOrder.depositPaymentMethod] || selectedOrder.depositPaymentMethod}
                         </span>
                       </div>

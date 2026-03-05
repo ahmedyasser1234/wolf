@@ -64,21 +64,15 @@ export class OrdersController {
         @Body('depositPaymentMethod') depositPaymentMethod?: 'wallet' | 'card' | 'gift_card',
         @Body('depositGiftCardCode') depositGiftCardCode?: string,
     ) {
-        console.log('📩 [OrdersController] POST /api/orders RECEIVED');
-        const userId = await this.getUserId(req);
-        console.log(`📦 [OrdersController] Creating order for User: ${userId}`);
-        console.log('   - Payload Summary:', {
+        console.log('📩 [OrdersController] POST /api/orders RECEIVED', {
             paymentMethod,
-            couponCode,
-            walletAmountUsed,
-            installmentPlanId,
             depositPaymentMethod,
-            hasKyc: !!kycData,
-            hasAddress: !!shippingAddress
+            isInstallment: !!installmentPlanId
         });
-
+        const userId = await this.getUserId(req);
         const language = (req.headers['x-language'] as string) || 'ar';
-        return this.ordersService.create(
+        const start = Date.now();
+        const result = await this.ordersService.create(
             userId,
             shippingAddress,
             paymentMethod,
@@ -90,6 +84,8 @@ export class OrdersController {
             depositGiftCardCode,
             language
         );
+        console.log(`⏱️ [OrdersController] Order created in ${Date.now() - start}ms`);
+        return result;
     }
 
     @Patch(':id/status')

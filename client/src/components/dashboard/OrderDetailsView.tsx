@@ -334,6 +334,7 @@ export default function OrderDetailsView({ orderId, onClose }: OrderDetailsViewP
                                                         'card': language === 'ar' ? 'بطاقة بنكية' : 'Bank Card',
                                                         'wallet': language === 'ar' ? 'المحفظة' : 'Wallet',
                                                         'gift_card': language === 'ar' ? 'كارت هدية' : 'Gift Card',
+                                                        'stripe': language === 'ar' ? 'بطاقة بنكية' : 'Bank Card',
                                                     } as any)[order.depositPaymentMethod] || order.depositPaymentMethod}
                                                 </span>
                                             </div>

@@ -91,7 +91,9 @@ export class AdminController {
         @Query('isInstallmentOnly') isInstallmentOnly?: string
     ) {
         await this.checkAdmin(req);
-        return this.adminService.getAllOrders(
+        console.log(`🔍 [AdminController] getOrders - limit: ${limit}, isInstallmentOnly: ${isInstallmentOnly}`);
+        const start = Date.now();
+        const result = await this.adminService.getAllOrders(
             search,
             dateFrom,
             dateTo,
@@ -99,6 +101,8 @@ export class AdminController {
             limit ? parseInt(limit) : 100,
             isInstallmentOnly === 'true'
         );
+        console.log(`⏱️ [AdminController] getOrders took ${Date.now() - start}ms for ${result.length} orders`);
+        return result;
     }
 
     @Get('products')

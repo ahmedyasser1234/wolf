@@ -2,7 +2,7 @@ import { scrypt, randomBytes } from 'node:crypto';
 import { Injectable, UnauthorizedException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { vendors, users, orders, products, categories, conversations, messages, cartItems, wishlist, notifications, productColors, reviews, shipping, offerItems, collections, coupons, offers, vendorReviews, vendorPayouts, vendorWallets, paymentGateways, installmentPlans, orderItems, accountStatusLogs } from '../database/schema';
-import { eq, and, desc, sql, ne } from 'drizzle-orm';
+import { eq, and, desc, sql, ne, inArray } from 'drizzle-orm';
 import * as xlsx from 'xlsx';
 
 import { NotificationsService } from '../notifications/notifications.service';
@@ -145,26 +145,16 @@ export class AdminService {
             .orderBy(desc(accountStatusLogs.changedAt));
     }
 
-    async getAllOrders(search?: string, dateFrom?: string, dateTo?: string, page = 1, limit = 100, isInstallmentOnly = false) {
-        let query = this.databaseService.db
-            .select({
-                order: orders,
-                customer: {
-                    name: users.name,
-                    email: users.email,
-                    phone: users.phone,
-                },
-                installmentPlan: installmentPlans,
-            })
-            .from(orders)
-            .leftJoin(users, eq(orders.customerId, users.id))
-            .leftJoin(installmentPlans, eq(orders.installmentPlanId, installmentPlans.id));
-
-        const conditions: any[] = [];
-
-        if (isInstallmentOnly) {
-            conditions.push(sql`${orders.installmentPlanId} IS NOT NULL`);
-        }
+    async getAllOrders(
+        search?: string,
+        dateFrom?: string,
+        dateTo?: string,
+        page = 1,
+        limit = 100,
+        isInstallmentOnly = false
+    ) {
+        const offset = (page - 1) * limit;
+        const conditions = [];
 
         if (search) {
             const searchPattern = `%${search.toLowerCase()}%`;
@@ -174,29 +164,42 @@ export class AdminService {
         }
 
         if (dateFrom) {
-            conditions.push(sql`${orders.createdAt} >= ${new Date(dateFrom).toISOString()}`);
+            conditions.push(sql`${orders.createdAt} >= ${dateFrom}`);
         }
-
         if (dateTo) {
-            // Include the whole day of dateTo
-            const toDate = new Date(dateTo);
-            toDate.setHours(23, 59, 59, 999);
-            conditions.push(sql`${orders.createdAt} <= ${toDate.toISOString()}`);
+            conditions.push(sql`${orders.createdAt} <= ${dateTo}::timestamp + interval '1 day'`);
+        }
+        if (isInstallmentOnly) {
+            conditions.push(sql`${orders.installmentPlanId} IS NOT NULL`);
         }
 
-        if (conditions.length > 0) {
-            query = query.where(and(...conditions)) as any;
-        }
+        console.time(`⏱️ [AdminService] getAllOrders MainQuery - limit: ${limit}`);
+        const query = this.databaseService.db
+            .select({
+                order: orders,
+                customer: {
+                    name: users.name,
+                    phone: users.phone,
+                    email: users.email,
+                },
+                installmentPlan: installmentPlans,
+            })
+            .from(orders)
+            .leftJoin(users, eq(orders.customerId, users.id))
+            .leftJoin(installmentPlans, eq(orders.installmentPlanId, installmentPlans.id))
+            .where(and(...conditions));
 
-        const offset = (page - 1) * limit;
         const rows = await query
             .orderBy(desc(orders.createdAt))
             .limit(limit)
             .offset(offset);
+        console.timeEnd(`⏱️ [AdminService] getAllOrders MainQuery - limit: ${limit}`);
+
+        if (rows.length === 0) return [];
 
         const orderIds = rows.map(r => r.order.id);
-        if (orderIds.length === 0) return [];
 
+        console.time(`⏱️ [AdminService] getAllOrders ItemsQuery - count: ${orderIds.length}`);
         const allItems = await this.databaseService.db
             .select({
                 item: orderItems,
@@ -208,19 +211,18 @@ export class AdminService {
             })
             .from(orderItems)
             .leftJoin(products, eq(orderItems.productId, products.id))
-            .where(sql`${orderItems.orderId} IN ${orderIds}`);
+            .where(inArray(orderItems.orderId, orderIds));
+        console.timeEnd(`⏱️ [AdminService] getAllOrders ItemsQuery - count: ${orderIds.length}`);
 
         // Efficient grouping by orderId
         const itemsMap = new Map<number, any[]>();
-        for (const i of allItems) {
-            if (!itemsMap.has(i.item.orderId)) {
-                itemsMap.set(i.item.orderId, []);
+        for (const row of allItems) {
+            if (!itemsMap.has(row.item.orderId)) {
+                itemsMap.set(row.item.orderId, []);
             }
-            itemsMap.get(i.item.orderId)!.push({
-                ...i.item,
-                productNameAr: i.product?.nameAr,
-                productNameEn: i.product?.nameEn,
-                productImage: (i.product?.images as string[])?.[0],
+            itemsMap.get(row.item.orderId)!.push({
+                ...row.item,
+                product: row.product,
             });
         }
 
@@ -286,9 +288,6 @@ export class AdminService {
 
     async getAllConversations(adminId: number) {
         // Return only conversations where the admin is a participant
-        // Admin acts as a user (customerId) when talking to vendors
-        // or potentially as a vendor (vendorId) if they manage a store directly (though less common for super admin)
-
         console.log(`AdminService: getAllConversations called for adminId: ${adminId}`);
 
         const results = await this.databaseService.db
@@ -354,7 +353,6 @@ export class AdminService {
         city?: string;
         commissionRate?: number;
     }) {
-        // Check if email already exists
         const existingUser = await this.databaseService.db
             .select()
             .from(users)
@@ -365,7 +363,6 @@ export class AdminService {
             throw new UnauthorizedException('Email already exists');
         }
 
-        // Generate unique storeSlug from English name
         const baseSlug = data.storeNameEn
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, '-')
@@ -374,7 +371,6 @@ export class AdminService {
         let storeSlug = baseSlug;
         let counter = 1;
 
-        // Ensure slug is unique
         while (true) {
             const existingVendor = await this.databaseService.db
                 .select()
@@ -387,12 +383,10 @@ export class AdminService {
             counter++;
         }
 
-        // Hash password
         const hashedPassword = await this.hashPassword(data.password);
         const openId = `vendor_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
         return await this.databaseService.db.transaction(async (tx) => {
-            // Create user
             const [newUser] = await tx.insert(users).values({
                 openId,
                 email: data.email,
@@ -404,7 +398,6 @@ export class AdminService {
                 lastSignedIn: new Date(),
             }).returning();
 
-            // Create vendor
             const [newVendor] = await tx.insert(vendors).values({
                 userId: newUser.id,
                 storeNameAr: data.storeNameAr,
@@ -415,7 +408,7 @@ export class AdminService {
                 cityAr: data.city,
                 cityEn: data.city,
                 commissionRate: data.commissionRate || 10,
-                status: 'approved', // Auto-approve admin-created vendors
+                status: 'approved',
             }).returning();
 
             return { user: newUser, vendor: newVendor };
@@ -423,14 +416,12 @@ export class AdminService {
     }
 
     async deleteVendor(vendorId: number) {
-        // 1. Find vendor to get userId
         const vendor = await this.databaseService.db.select().from(vendors).where(eq(vendors.id, vendorId)).limit(1);
         if (vendor.length === 0) return { success: false, message: 'Vendor not found' };
 
         const userId = vendor[0].userId;
 
         return await this.databaseService.db.transaction(async (tx) => {
-            // --- A. DELETE PRODUCTS & RELATED ENTITIES ---
             const vendorProducts = await tx
                 .select({ id: products.id })
                 .from(products)
@@ -439,55 +430,30 @@ export class AdminService {
             const productIds = vendorProducts.map(p => p.id);
 
             if (productIds.length > 0) {
-                // 1. Delete Product Colors
-                await tx.delete(productColors).where(sql`${productColors.productId} IN ${productIds}`);
-
-                // 2. Delete Product Reviews
-                await tx.delete(reviews).where(sql`${reviews.productId} IN ${productIds}`);
-
-                // 3. Delete Cart Items with these products
-                await tx.delete(cartItems).where(sql`${cartItems.productId} IN ${productIds}`);
-
-                // 4. Delete Wishlist items
-                await tx.delete(wishlist).where(sql`${wishlist.productId} IN ${productIds}`);
-
-                // 5. Delete Shipping rules for products
-                await tx.delete(shipping).where(sql`${shipping.productId} IN ${productIds}`);
-
-                // 6. Delete Offer Items
-                await tx.delete(offerItems).where(sql`${offerItems.productId} IN ${productIds}`);
-
-                // 7. FINALLY DELETE PRODUCTS
+                await tx.delete(productColors).where(inArray(productColors.productId, productIds));
+                await tx.delete(reviews).where(inArray(reviews.productId, productIds));
+                await tx.delete(cartItems).where(inArray(cartItems.productId, productIds));
+                await tx.delete(wishlist).where(inArray(wishlist.productId, productIds));
+                await tx.delete(shipping).where(inArray(shipping.productId, productIds));
+                await tx.delete(offerItems).where(inArray(offerItems.productId, productIds));
                 await tx.delete(products).where(eq(products.vendorId, vendorId));
             }
 
-            // --- B. DELETE COLLECTIONS ---
             await tx.delete(collections).where(eq(collections.vendorId, vendorId));
-
-            // --- C. DELETE COUPONS ---
             await tx.delete(coupons).where(eq(coupons.vendorId, vendorId));
 
-            // --- D. DELETE OFFERS ---
-            // First delete offer items linked to vendor's offers (if not covered above)
             const vendorOffers = await tx.select({ id: offers.id }).from(offers).where(eq(offers.vendorId, vendorId));
             const offerIds = vendorOffers.map(o => o.id);
             if (offerIds.length > 0) {
-                await tx.delete(offerItems).where(sql`${offerItems.offerId} IN ${offerIds}`);
+                await tx.delete(offerItems).where(inArray(offerItems.offerId, offerIds));
                 await tx.delete(offers).where(eq(offers.vendorId, vendorId));
             }
 
-            // --- E. DELETE SHIPPING RULES (Vendor Level) ---
             await tx.delete(shipping).where(eq(shipping.vendorId, vendorId));
-
-            // --- F. DELETE REVIEWS & RATINGS ---
             await tx.delete(vendorReviews).where(eq(vendorReviews.vendorId, vendorId));
-
-            // --- G. DELETE WALLET & PAYOUTS ---
             await tx.delete(vendorPayouts).where(eq(vendorPayouts.vendorId, vendorId));
-            // Wallet needs to be found first or deleted by vendorId if unique
             await tx.delete(vendorWallets).where(eq(vendorWallets.vendorId, vendorId));
 
-            // --- H. DELETE CHAT CONVERSATIONS ---
             const vendorConversations = await tx
                 .select({ id: conversations.id })
                 .from(conversations)
@@ -495,14 +461,11 @@ export class AdminService {
 
             const conversationIds = vendorConversations.map(c => c.id);
             if (conversationIds.length > 0) {
-                await tx.delete(messages).where(sql`${messages.conversationId} IN ${conversationIds}`);
+                await tx.delete(messages).where(inArray(messages.conversationId, conversationIds));
                 await tx.delete(conversations).where(eq(conversations.vendorId, vendorId));
             }
 
-            // --- I. DELETE VENDOR PROFILE ---
             await tx.delete(vendors).where(eq(vendors.id, vendorId));
-
-            // --- J. DELETE USER ACCOUNT ---
             await tx.delete(users).where(eq(users.id, userId));
 
             return { success: true, message: 'Vendor and all related data deleted successfully' };
@@ -514,9 +477,7 @@ export class AdminService {
         if (vendor.length === 0) return { success: false, message: 'Vendor not found' };
 
         return await this.databaseService.db.transaction(async (tx) => {
-            // Update vendor email
             await tx.update(vendors).set({ email: newEmail }).where(eq(vendors.id, vendorId));
-            // Update user email as well
             await tx.update(users).set({ email: newEmail }).where(eq(users.id, vendor[0].userId));
             return { success: true };
         });
@@ -530,10 +491,8 @@ export class AdminService {
                 .where(eq(vendors.id, vendorId))
                 .returning();
 
-            // Recalculate all product prices for this vendor
             const rateMultiplier = 1 + commissionRate / 100;
 
-            // We use sql helper for dynamic calculation in update
             await tx.execute(sql`
                 UPDATE products 
                 SET 
@@ -546,8 +505,6 @@ export class AdminService {
             return updated;
         });
     }
-
-
 
     async getCustomerDetails(id: number) {
         const customer = await this.databaseService.db
@@ -590,7 +547,6 @@ export class AdminService {
             throw new NotFoundException('Customer not found');
         }
 
-        // Block deletion if customer has active (non-cancelled, non-delivered) orders
         const activeOrders = await this.databaseService.db
             .select({ id: orders.id })
             .from(orders)
@@ -605,26 +561,9 @@ export class AdminService {
         }
 
         return await this.databaseService.db.transaction(async (tx) => {
-            // 1. Delete Cart Items
             await tx.delete(cartItems).where(eq(cartItems.customerId, id));
-
-            // 2. Delete Wishlist
             await tx.delete(wishlist).where(eq(wishlist.customerId, id));
-
-            // 3. Delete Notifications
             await tx.delete(notifications).where(eq(notifications.userId, id));
-
-            // 4. Delete Messages/Conversations logic?
-            // Conversations have customerId. Messages have senderId.
-            // If we delete the user, we should probably keep messages for record but they won't link to a name.
-            // Or we delete them. Let's keep them for now as they might be relevant for vendors.
-            // But we might want to anonymize? 
-            // For now, simple deletion of the user record is requested. 
-            // If there are foreign key constraints, this will fail. 
-            // Schema shows 'customerId' integer but no explicit foreign keys defined in Drizzle schema for 'conversations', 'orders', etc.
-            // So deletion of user row should usually work unless DB level constraints exist.
-
-            // 5. Delete the User
             await tx.delete(users).where(eq(users.id, id));
 
             return { success: true, message: 'Customer deleted successfully' };
@@ -632,7 +571,6 @@ export class AdminService {
     }
 
     async globalSearch(query: string) {
-        // ... previous globalSearch implementation ...
         const searchPattern = `%${query.toLowerCase()}%`;
 
         const [vendorsResults, productsResults, customersResults, ordersResults] = await Promise.all([
@@ -682,9 +620,7 @@ export class AdminService {
         };
     }
 
-    // --- Payment Gateways Logic ---
     async seedProductsCatalog() {
-        // 1. Create Categories
         const categoriesData = [
             { nameAr: 'إلكترونيات', nameEn: 'Electronics', slug: 'electronics' },
             { nameAr: 'عطور ومكياج', nameEn: 'Perfumes & Beauty', slug: 'beauty' },
@@ -704,7 +640,6 @@ export class AdminService {
             }
         }
 
-        // 2. Identify a Vendor (or create one if none exists)
         let [vendor] = await this.databaseService.db.select().from(vendors).limit(1);
 
         if (!vendor) {
@@ -726,7 +661,6 @@ export class AdminService {
             }).returning();
         }
 
-        // 3. Create Brands (Collections)
         const brands = [
             { nameAr: 'آبل', nameEn: 'Apple', slug: 'apple' },
             { nameAr: 'سامسونج', nameEn: 'Samsung', slug: 'samsung' },
@@ -748,7 +682,6 @@ export class AdminService {
             }
         }
 
-        // 4. Create Products (Dirhami Inspired)
         const productsList = [
             {
                 nameAr: 'مصفف الشعر دايسون إير راب',
@@ -1137,17 +1070,7 @@ export class AdminService {
             .where(eq(users.email, adminEmail))
             .limit(1);
 
-        const hashPassword = (password: string): Promise<string> => {
-            return new Promise((resolve, reject) => {
-                const salt = randomBytes(16).toString('hex');
-                scrypt(password, salt, 64, (err, derivedKey) => {
-                    if (err) reject(err);
-                    resolve(`${salt}:${derivedKey.toString('hex')}`);
-                });
-            });
-        };
-
-        const hashedPassword = await hashPassword(adminPassword);
+        const hashedPassword = await this.hashPassword(adminPassword);
         let message = '';
 
         if (existingAdmin) {
