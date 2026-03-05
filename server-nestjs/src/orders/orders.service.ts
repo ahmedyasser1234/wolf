@@ -192,7 +192,7 @@ export class OrdersService {
 
             if (depositAmount <= 0) throw new BadRequestException('مبلغ المقدم غير صحيح');
             if (!kycData) throw new BadRequestException('يجب رفع الأوراق المطلوبة قبل الدفع');
-            if (!depositPaymentMethod) throw new BadRequestException('يرجى اختيار طريقة دفع للمقدم');
+            // depositPaymentMethod is optional, defaults to 'card' at line 165
 
             // --- Process deposit payment ---
             if (depositPaymentMethod === 'wallet') {
@@ -592,8 +592,8 @@ export class OrdersService {
             .limit(1);
 
         if (!order) throw new BadRequestException('Order not found');
-        if (order.paymentStatus !== 'pending_kyc_review') {
-            throw new BadRequestException('This order is not pending KYC review');
+        if (!['pending_kyc_review', 'awaiting_deposit_payment'].includes(order.paymentStatus)) {
+            throw new BadRequestException(`هذا الطلب غير متاح للمراجعة حالياً (الحالة الحالية: ${order.paymentStatus})`);
         }
 
         const [installment] = await this.databaseService.db
