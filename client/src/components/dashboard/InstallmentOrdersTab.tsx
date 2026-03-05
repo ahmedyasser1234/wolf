@@ -76,7 +76,7 @@ export default function InstallmentOrdersTab() {
         paid: { label: language === 'ar' ? 'مدفوع' : 'Paid', color: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' },
         failed: { label: language === 'ar' ? 'مرفوض' : 'Rejected', color: 'bg-red-500/20 text-red-400 border border-red-500/30' },
         pending: { label: language === 'ar' ? 'معلق' : 'Pending', color: 'bg-gray-500/20 text-gray-400 border border-gray-500/30' },
-        awaiting_deposit_payment: { label: language === 'ar' ? 'بانتظار الدفع' : 'Awaiting Deposit', color: 'bg-blue-500/20 text-blue-400 border border-blue-500/30' },
+        awaiting_deposit_payment: { label: language === 'ar' ? 'تم الدفع / قيد المراجعة' : 'Paid / Under Review', color: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' },
     };
 
     if (isLoading) return (
@@ -180,7 +180,7 @@ export default function InstallmentOrdersTab() {
 
                                     {/* Right: Actions */}
                                     <div className="flex gap-3 flex-shrink-0">
-                                        {order.paymentStatus === 'pending_kyc_review' && (
+                                        {['pending_kyc_review', 'awaiting_deposit_payment'].includes(order.paymentStatus) && (
                                             <Button
                                                 onClick={() => setKycModalOrder(order)}
                                                 className="bg-amber-500 hover:bg-amber-400 text-black font-black rounded-2xl px-6 h-12 gap-2"

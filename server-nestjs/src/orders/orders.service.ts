@@ -334,7 +334,7 @@ export class OrdersService {
                     const isCash = paymentMethod === 'cash' || paymentMethod === 'cod' || paymentMethod === 'cashOnDelivery';
                     const orderStatus = isCash ? 'pending' : (isInstallment ? 'pending' : 'pending');
                     const orderPaymentStatus = isInstallment
-                        ? (resolvedDepositPaymentMethod === 'card' ? 'awaiting_deposit_payment' : 'pending_kyc_review')
+                        ? 'pending_kyc_review'
                         : (paymentMethod === 'card' ? 'paid' : (paymentMethod === 'wallet' || paymentMethod === 'gift_card' ? 'paid' : 'pending'));
 
                     console.log(`   - Pre-Insert Check [Vendor ${vendorId}]:`, {
