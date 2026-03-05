@@ -4,7 +4,7 @@ import { endpoints } from "@/lib/api";
 import api from "@/lib/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Trash2, ShoppingCart, ArrowRight, Minus, Plus, ShieldCheck, Truck, RotateCcw, ChevronLeft, Tag, Loader2 } from "lucide-react";
+import { Trash2, ShoppingCart, ArrowRight, Minus, Plus, ShieldCheck, Truck, RotateCcw, ChevronLeft, Tag, Loader2, Banknote, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/lib/i18n";
@@ -12,6 +12,7 @@ import { useState, useMemo, useEffect } from "react";
 
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export default function Cart() {
   const queryClient = useQueryClient();
@@ -101,13 +102,64 @@ export default function Cart() {
     }
   });
 
+  const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
+  const [selectedMethod, setSelectedMethod] = useState<'cash' | 'installments' | null>(null);
+  const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null);
+
   const handleCheckoutClick = () => {
     if (!user) {
       toast.info(language === 'ar' ? "يرجى تسجيل الدخول لإتمام عملية الشراء" : "Please login to complete checkout");
       setLocation("/login?redirect=/checkout");
       return;
     }
-    setLocation(`/checkout${appliedCoupon ? `?coupon=${appliedCoupon.code}` : ''}`);
+    setIsSelectionModalOpen(true);
+  };
+
+  const { data: installmentPlans } = useQuery({
+    queryKey: ['installmentPlans', 'active'],
+    queryFn: () => endpoints.installments.active(),
+    enabled: isSelectionModalOpen
+  });
+
+  const handleConfirmCheckout = () => {
+    if (!selectedMethod) {
+      toast.error(language === 'ar' ? "يرجى اختيار طريقة الدفع" : "Please select a payment method");
+      return;
+    }
+
+    if (selectedMethod === 'installments' && !selectedPlanId) {
+      toast.error(language === 'ar' ? "يرجى اختيار خطة التقسيط" : "Please select an installment plan");
+      return;
+    }
+
+    if (selectedMethod === 'cash') {
+      localStorage.removeItem('wolf_payment_intent');
+      setLocation(`/checkout${appliedCoupon ? `?coupon=${appliedCoupon.code}` : ''}`);
+    } else {
+      const plan = (installmentPlans as any[])?.find(p => p.id === selectedPlanId);
+      if (plan) {
+        // Calculate based on current subtotal after discounts
+        const grossTotal = total; // This is subtotal + shipping - discount
+        const interestAmount = grossTotal * (plan.interestRate || 0) / 100;
+        const totalWithInterest = grossTotal + interestAmount;
+        const downPayment = totalWithInterest * (plan.downPaymentPercentage || 0) / 100;
+
+        localStorage.setItem('wolf_payment_intent', JSON.stringify({
+          paymentMethod: 'installments',
+          planId: plan.id,
+          months: plan.months,
+          interestRate: plan.interestRate,
+          downPayment: downPayment,
+          total: totalWithInterest,
+          financedAmount: totalWithInterest - downPayment,
+          minQuantity: plan.minQuantity,
+          maxQuantity: plan.maxQuantity,
+          coupon: appliedCoupon?.code
+        }));
+        setLocation('/checkout');
+      }
+    }
+    setIsSelectionModalOpen(false);
   };
 
   const [couponCode, setCouponCode] = useState("");
@@ -484,6 +536,105 @@ export default function Cart() {
           </div>
         </div>
       </div>
+      {/* Checkout Choice Dialog */}
+      <Dialog open={isSelectionModalOpen} onOpenChange={setIsSelectionModalOpen}>
+        <DialogContent className="max-w-2xl rounded-[2.5rem] p-8 font-arabic" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+          <DialogHeader>
+            <DialogTitle className="text-3xl font-black text-center mb-6">
+              {language === 'ar' ? 'اختر طريقة الدفع' : 'Choose Payment Method'}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-4">
+            {/* Cash Option */}
+            <div
+              onClick={() => {
+                setSelectedMethod('cash');
+                setSelectedPlanId(null);
+              }}
+              className={`p-8 rounded-[2rem] border-2 cursor-pointer transition-all flex flex-col items-center gap-4 ${selectedMethod === 'cash' ? 'border-primary bg-primary/5 shadow-lg shadow-primary/10' : 'border-gray-100 hover:border-gray-200 bg-white'}`}
+            >
+              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${selectedMethod === 'cash' ? 'bg-primary text-white' : 'bg-gray-50 text-gray-400'}`}>
+                <Banknote size={32} />
+              </div>
+              <div className="text-center">
+                <h3 className="text-xl font-black mb-1">{language === 'ar' ? 'كاش / كامل المبلغ' : 'Cash / Full Amount'}</h3>
+                <p className="text-sm text-gray-500">{language === 'ar' ? 'دفع إجمالي الطلب نقداً أو بالبطاقة' : 'Pay full total via Cash or Card'}</p>
+              </div>
+            </div>
+
+            {/* Installments Option */}
+            <div
+              onClick={() => setSelectedMethod('installments')}
+              className={`p-8 rounded-[2rem] border-2 cursor-pointer transition-all flex flex-col items-center gap-4 ${selectedMethod === 'installments' ? 'border-primary bg-primary/5 shadow-lg shadow-primary/10' : 'border-gray-100 hover:border-gray-200 bg-white'}`}
+            >
+              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${selectedMethod === 'installments' ? 'bg-primary text-white' : 'bg-gray-50 text-gray-400'}`}>
+                <Clock size={32} />
+              </div>
+              <div className="text-center">
+                <h3 className="text-xl font-black mb-1">{language === 'ar' ? 'تقسيط مريح' : 'Easy Installments'}</h3>
+                <p className="text-sm text-gray-500">{language === 'ar' ? 'قسم مشترياتك على دفعات شهرية' : 'Split your purchase into monthly payments'}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Installment Plans List */}
+          <AnimatePresence>
+            {selectedMethod === 'installments' && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="pt-4 space-y-3">
+                  <p className="font-bold text-gray-600 mb-2">{language === 'ar' ? 'اختر خطة التقسيط:' : 'Select Installment Plan:'}</p>
+                  <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto px-1">
+                    {installmentPlans?.map((plan: any) => (
+                      <div
+                        key={plan.id}
+                        onClick={() => setSelectedPlanId(plan.id)}
+                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex justify-between items-center ${selectedPlanId === plan.id ? 'border-primary bg-primary/5' : 'border-gray-100 hover:border-gray-200 bg-white'}`}
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-black text-lg">{language === 'ar' ? plan.nameAr : plan.nameEn}</span>
+                          <span className="text-sm text-gray-500">{plan.months} {language === 'ar' ? 'أشهر' : 'Months'} • {plan.interestRate}% {language === 'ar' ? 'فوائد' : 'Interest'}</span>
+                        </div>
+                        <div className="flex flex-col text-left items-end">
+                          <span className="font-black text-primary">{formatPrice((total * (1 + (plan.interestRate || 0) / 100)) / plan.months)}</span>
+                          <span className="text-xs text-gray-400">{language === 'ar' ? 'شهرياً' : 'per month'}</span>
+                        </div>
+                      </div>
+                    ))}
+                    {(!installmentPlans || installmentPlans.length === 0) && (
+                      <p className="text-center py-4 text-gray-400 italic">
+                        {language === 'ar' ? 'لا توجد خطط تقسيط متاحة لهذه المنتجات' : 'No installment plans available for these products'}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <DialogFooter className="mt-8 flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setIsSelectionModalOpen(false)}
+              className="h-14 rounded-full flex-1 font-bold text-lg"
+            >
+              {language === 'ar' ? 'إلغاء' : 'Cancel'}
+            </Button>
+            <Button
+              onClick={handleConfirmCheckout}
+              disabled={!selectedMethod || (selectedMethod === 'installments' && !selectedPlanId)}
+              className="h-14 rounded-full flex-[2] bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-lg shadow-primary/20"
+            >
+              {language === 'ar' ? 'متابعة' : 'Continue'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
