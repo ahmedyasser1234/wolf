@@ -88,6 +88,7 @@ export class OrdersService {
         kycData?: any,
         depositPaymentMethod?: 'wallet' | 'card' | 'gift_card',
         depositGiftCardCode?: string,
+        language = 'ar',
     ) {
         console.log(`📦 [OrdersService] CREATE ORDER START:`, {
             customerId,
@@ -269,7 +270,11 @@ export class OrdersService {
                 if (!giftCard) throw new BadRequestException('كود كارت الهدية غير صحيح');
                 if (giftCard.isRedeemed) throw new BadRequestException('هذا الكارت تم استخدامه بالفعل');
                 if (Number(giftCard.amount) < grossTotal) {
-                    throw new BadRequestException(`قيمة الكارت (${giftCard.amount}) أقل من إجمالي الطلب (${grossTotal})`);
+                    throw new BadRequestException(
+                        language === 'ar'
+                            ? `رصيد البطاقة (${giftCard.amount}) أقل من إجمالي الطلب (${grossTotal}). يرجى شحن البطاقة في محفظتك أولاً لاستخدام الرصيد مع طرق دفع أخرى.`
+                            : `Card balance (${giftCard.amount}) is less than total (${grossTotal}). Please redeem the card to your wallet first to use it with other payment methods.`
+                    );
                 }
 
                 const newBalance = Number(giftCard.amount) - grossTotal;

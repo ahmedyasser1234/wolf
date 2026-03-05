@@ -52,14 +52,14 @@ export default function InstallmentOrdersTab() {
     // Only show installment orders that have been paid (deposit confirmed)
     const installmentOrders = (allOrders || []).filter((o: any) =>
         o.installmentPlanId &&
-        !['pending_payment', 'awaiting_deposit_payment'].includes(o.paymentStatus)
+        !['pending_payment'].includes(o.paymentStatus)
     );
 
     const filteredOrders = filterStatus === 'all'
         ? installmentOrders
         : installmentOrders.filter((o: any) => {
             if (filterStatus === 'pending_review') {
-                return o.paymentStatus === 'pending_kyc_review';
+                return ['pending_kyc_review', 'awaiting_deposit_payment'].includes(o.paymentStatus);
             }
             if (filterStatus === 'cancelled') {
                 return ['failed', 'rejected'].includes(o.paymentStatus) || o.status === 'cancelled';
@@ -76,6 +76,7 @@ export default function InstallmentOrdersTab() {
         paid: { label: language === 'ar' ? 'مدفوع' : 'Paid', color: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' },
         failed: { label: language === 'ar' ? 'مرفوض' : 'Rejected', color: 'bg-red-500/20 text-red-400 border border-red-500/30' },
         pending: { label: language === 'ar' ? 'معلق' : 'Pending', color: 'bg-gray-500/20 text-gray-400 border border-gray-500/30' },
+        awaiting_deposit_payment: { label: language === 'ar' ? 'بانتظار الدفع' : 'Awaiting Deposit', color: 'bg-blue-500/20 text-blue-400 border border-blue-500/30' },
     };
 
     if (isLoading) return (

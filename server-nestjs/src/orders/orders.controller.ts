@@ -77,6 +77,7 @@ export class OrdersController {
             hasAddress: !!shippingAddress
         });
 
+        const language = (req.headers['x-language'] as string) || 'ar';
         return this.ordersService.create(
             userId,
             shippingAddress,
@@ -86,7 +87,8 @@ export class OrdersController {
             installmentPlanId,
             kycData,
             depositPaymentMethod,
-            depositGiftCardCode
+            depositGiftCardCode,
+            language
         );
     }
 

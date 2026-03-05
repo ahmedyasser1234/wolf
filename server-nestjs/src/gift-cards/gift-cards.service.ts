@@ -35,7 +35,6 @@ export class GiftCardsService {
 
         return allCards.filter(c =>
             (c.senderEmail && c.senderEmail.toLowerCase() === userEmail.toLowerCase()) ||
-            (c.recipientEmail && c.recipientEmail.toLowerCase() === userEmail.toLowerCase()) ||
             c.redeemedByUserId === userId
         );
     }
@@ -103,9 +102,9 @@ export class GiftCardsService {
                 isActive: false
             });
 
-            const session = await this.paymentsService.createCheckoutSession(
+            const session = await this.paymentsService.createGiftCardCheckoutSession(
                 'stripe',
-                card.id, // Using gift card ID as order ID for session
+                card.id,
                 amount,
                 user.email!
             );

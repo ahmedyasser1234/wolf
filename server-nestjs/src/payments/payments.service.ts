@@ -92,6 +92,48 @@ export class PaymentsService {
         }
     }
 
+    async createGiftCardCheckoutSession(gatewayName: string, giftCardId: number, amount: number, customerEmail: string) {
+        const config = await this.getGatewayConfig(gatewayName);
+
+        if (!config) {
+            throw new BadRequestException(`بوابة الدفع ${gatewayName} غير مهيأة بعد`);
+        }
+
+        if (gatewayName === 'stripe') {
+            const stripe = new Stripe(config.secretKey, {
+                apiVersion: '2023-10-16' as any,
+            });
+
+            const session = await stripe.checkout.sessions.create({
+                payment_method_types: ['card'],
+                line_items: [
+                    {
+                        price_data: {
+                            currency: 'sar',
+                            product_data: {
+                                name: `شراء بطاقة هدية`,
+                            },
+                            unit_amount: Math.round(amount * 100),
+                        },
+                        quantity: 1,
+                    },
+                ],
+                mode: 'payment',
+                success_url: `${this.configService.get('FRONTEND_URL')}/profile?gift_card_success=${giftCardId}`,
+                cancel_url: `${this.configService.get('FRONTEND_URL')}/profile?gift_card_cancel=true`,
+                customer_email: customerEmail,
+                metadata: {
+                    giftCardId: giftCardId.toString(),
+                    type: 'gift_card'
+                },
+            });
+
+            return { url: session.url };
+        }
+
+        throw new BadRequestException(`بوابة الدفع ${gatewayName} غير مدعومة بعد لشراء بطاقات الهدايا`);
+    }
+
     private async handleStripePayment(config: any, orderId: number, amount: number, customerEmail: string) {
         const stripe = new Stripe(config.secretKey, {
             apiVersion: '2023-10-16' as any,

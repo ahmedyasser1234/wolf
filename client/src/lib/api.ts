@@ -175,7 +175,7 @@ export const endpoints = {
     },
     wallets: {
         getMyWallet: () => api.get('/wallets/my-wallet').then(res => res.data),
-        redeem: (code: string) => api.post('/wallets/redeem', { code }).then(res => res.data),
+        redeem: (code: string) => api.post('/gift-cards/redeem', { code }).then(res => res.data),
         topUp: (amount: number, referenceId: string) => api.post('/wallets/top-up', { amount, referenceId }).then(res => res.data),
         confirmTopUp: (transactionId: number) => api.post('/wallets/confirm-top-up', { transactionId }).then(res => res.data),
     },
