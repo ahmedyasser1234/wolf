@@ -1,44 +1,48 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/NotFound";
 import { Route, Switch, Link, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "@/pages/Home";
-import Login from "@/pages/Login";
-import Register from "@/pages/Register";
-import Products from "@/pages/Products";
-import ProductDetail from "@/pages/ProductDetail";
-import Cart from "@/pages/Cart";
-import Checkout from "@/pages/Checkout";
-import Orders from "@/pages/Orders";
-import OrderDetails from "@/pages/OrderDetails";
-import OrderSuccess from "@/pages/OrderSuccess";
-import Notifications from "@/pages/Notifications";
-import AdminDashboard from "@/pages/AdminDashboard";
-import AdminLogin from "@/pages/AdminLogin";
-import PrivacyPolicy from "@/pages/legal/PrivacyPolicy";
-import TermsOfService from "@/pages/legal/TermsOfService";
-import ReturnPolicy from "@/pages/legal/ReturnPolicy";
-import ShippingPolicy from "@/pages/legal/ShippingPolicy";
-import AboutUs from "@/pages/AboutUs";
-import ContactUs from "@/pages/ContactUs";
-import AdminRegister from "@/pages/AdminRegister.tsx";
-import Wishlist from "@/pages/Wishlist";
-import Profile from "@/pages/Profile";
-import SharedWishlist from "@/pages/SharedWishlist";
-import FAQ from "@/pages/FAQ";
-import SearchResults from "@/pages/SearchResults";
-import CategoriesPage from "@/pages/CategoriesPage";
-import CategoryGroupsPage from "@/pages/CategoryGroupsPage";
-import GroupProductsPage from "@/pages/GroupProductsPage";
-import GiftCards from "@/pages/GiftCards";
-import WalletPage from "@/pages/Wallet";
 import { useAuth } from "@/_core/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { endpoints } from "@/lib/api";
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import React, { Suspense, lazy } from "react";
+import { Loader2 } from "lucide-react";
 
+// Lazy load pages for better performance
+const Home = lazy(() => import("@/pages/Home"));
+const Login = lazy(() => import("@/pages/Login"));
+const Register = lazy(() => import("@/pages/Register"));
+const Products = lazy(() => import("@/pages/Products"));
+const ProductDetail = lazy(() => import("@/pages/ProductDetail"));
+const Cart = lazy(() => import("@/pages/Cart"));
+const Checkout = lazy(() => import("@/pages/Checkout"));
+const Orders = lazy(() => import("@/pages/Orders"));
+const OrderDetails = lazy(() => import("@/pages/OrderDetails"));
+const OrderSuccess = lazy(() => import("@/pages/OrderSuccess"));
+const Notifications = lazy(() => import("@/pages/Notifications"));
+const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
+const AdminLogin = lazy(() => import("@/pages/AdminLogin"));
+const AdminRegister = lazy(() => import("@/pages/AdminRegister"));
+const PrivacyPolicy = lazy(() => import("@/pages/legal/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("@/pages/legal/TermsOfService"));
+const ReturnPolicy = lazy(() => import("@/pages/legal/ReturnPolicy"));
+const ShippingPolicy = lazy(() => import("@/pages/legal/ShippingPolicy"));
+const AboutUs = lazy(() => import("@/pages/AboutUs"));
+const ContactUs = lazy(() => import("@/pages/ContactUs"));
+const Wishlist = lazy(() => import("@/pages/Wishlist"));
+const Profile = lazy(() => import("@/pages/Profile"));
+const FAQ = lazy(() => import("@/pages/FAQ"));
+const SearchResults = lazy(() => import("@/pages/SearchResults"));
+const CategoriesPage = lazy(() => import("@/pages/CategoriesPage"));
+const CategoryGroupsPage = lazy(() => import("@/pages/CategoryGroupsPage"));
+const GroupProductsPage = lazy(() => import("@/pages/GroupProductsPage"));
+const GiftCards = lazy(() => import("@/pages/GiftCards"));
+const WalletPage = lazy(() => import("@/pages/Wallet"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
+
+// Static common components
 import { Button } from "@/components/ui/button";
 import { Heart, ShoppingCart, User, Menu, X, ChevronLeft, Search, ShoppingBag, LayoutDashboard, MessageSquare, Facebook, Instagram, Twitter, MessageCircle, Wallet, RefreshCw, CreditCard, Mail, Phone, Clock } from "lucide-react";
 import { useState, useEffect, useRef, useMemo } from "react";
@@ -579,83 +583,92 @@ function Footer() {
 
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/search" component={SearchResults} />
-      <Route path="/login" component={Login} />
-      <Route path="/register" component={Register} />
+    <Suspense fallback={
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
+        <Loader2 className="w-12 h-12 text-primary animate-spin" />
+        <p className="text-sm font-bold text-gray-400 animate-pulse uppercase tracking-[0.2em]">
+          Wolf Techno
+        </p>
+      </div>
+    }>
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/search" component={SearchResults} />
+        <Route path="/login" component={Login} />
+        <Route path="/register" component={Register} />
 
-      {/* Product Routes */}
-      <Route path={"/products"} component={Products} />
-      <Route path={"/products/:id"} component={ProductDetail} />
+        {/* Product Routes */}
+        <Route path={"/products"} component={Products} />
+        <Route path={"/products/:id"} component={ProductDetail} />
 
-      {/* Category Browse Flow */}
-      <Route path="/categories" component={CategoriesPage} />
-      <Route path="/categories/:categorySlug" component={CategoryGroupsPage} />
-      <Route path="/groups/:groupSlug" component={GroupProductsPage} />
-      <Route path={"/gift-cards"}>
-        <ProtectedRoute component={GiftCards} />
-      </Route>
+        {/* Category Browse Flow */}
+        <Route path="/categories" component={CategoriesPage} />
+        <Route path="/categories/:categorySlug" component={CategoryGroupsPage} />
+        <Route path="/groups/:groupSlug" component={GroupProductsPage} />
+        <Route path={"/gift-cards"}>
+          <ProtectedRoute component={GiftCards} />
+        </Route>
 
-      <Route path={"/notifications"}>
-        <ProtectedRoute component={Notifications} />
-      </Route>
+        <Route path={"/notifications"}>
+          <ProtectedRoute component={Notifications} />
+        </Route>
 
-      <Route path={"/wallet"}>
-        <ProtectedRoute component={WalletPage} />
-      </Route>
+        <Route path={"/wallet"}>
+          <ProtectedRoute component={WalletPage} />
+        </Route>
 
-      <Route path={"/orders"}>
-        <ProtectedRoute component={Orders} />
-      </Route>
+        <Route path={"/orders"}>
+          <ProtectedRoute component={Orders} />
+        </Route>
 
-      <Route path={"/orders/:id"}>
-        <ProtectedRoute component={OrderDetails} />
-      </Route>
+        <Route path={"/orders/:id"}>
+          <ProtectedRoute component={OrderDetails} />
+        </Route>
 
-      <Route path={"/wishlist"}>
-        <ProtectedRoute component={Wishlist} />
-      </Route>
+        <Route path={"/wishlist"}>
+          <ProtectedRoute component={Wishlist} />
+        </Route>
 
-      <Route path={"/cart"}>
-        <ProtectedRoute component={Cart} />
-      </Route>
+        <Route path={"/cart"}>
+          <ProtectedRoute component={Cart} />
+        </Route>
 
-      <Route path={"/checkout"}>
-        <ProtectedRoute component={Checkout} />
-      </Route>
-      <Route path={"/checkout/success"}>
-        <ProtectedRoute component={OrderSuccess} />
-      </Route>
-      <Route path={"/checkout/cancel"}>
-        <ProtectedRoute component={Checkout} />
-      </Route>
+        <Route path={"/checkout"}>
+          <ProtectedRoute component={Checkout} />
+        </Route>
+        <Route path={"/checkout/success"}>
+          <ProtectedRoute component={OrderSuccess} />
+        </Route>
+        <Route path={"/checkout/cancel"}>
+          <ProtectedRoute component={Checkout} />
+        </Route>
 
-      {/* Admin Auth */}
-      <Route path="/admin/login" component={AdminLogin} />
-      <Route path="/admin/register" component={AdminRegister} />
-      <Route path="/wolf-techno-super-admin-auth" component={AdminLogin} />
+        {/* Admin Auth */}
+        <Route path="/admin/login" component={AdminLogin} />
+        <Route path="/admin/register" component={AdminRegister} />
+        <Route path="/wolf-techno-super-admin-auth" component={AdminLogin} />
 
-      {/* Profile & Dashboard Routes */}
-      <Route path="/admin-dashboard">
-        <ProtectedRoute component={AdminDashboard} adminOnly />
-      </Route>
-      <Route path={"/profile"}>
-        <ProtectedRoute component={Profile} />
-      </Route>
+        {/* Profile & Dashboard Routes */}
+        <Route path="/admin-dashboard">
+          <ProtectedRoute component={AdminDashboard} adminOnly />
+        </Route>
+        <Route path={"/profile"}>
+          <ProtectedRoute component={Profile} />
+        </Route>
 
-      {/* Legal & Static Routes */}
-      <Route path={"/privacy"} component={PrivacyPolicy} />
-      <Route path={"/terms"} component={TermsOfService} />
-      <Route path={"/returns"} component={ReturnPolicy} />
-      <Route path={"/shipping"} component={ShippingPolicy} />
-      <Route path={"/about-us"} component={AboutUs} />
-      <Route path={"/contact-us"} component={ContactUs} />
-      <Route path={"/faq"} component={FAQ} />
-      <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
-      <Route component={NotFound} />
-    </Switch>
+        {/* Legal & Static Routes */}
+        <Route path={"/privacy"} component={PrivacyPolicy} />
+        <Route path={"/terms"} component={TermsOfService} />
+        <Route path={"/returns"} component={ReturnPolicy} />
+        <Route path={"/shipping"} component={ShippingPolicy} />
+        <Route path={"/about-us"} component={AboutUs} />
+        <Route path={"/contact-us"} component={ContactUs} />
+        <Route path={"/faq"} component={FAQ} />
+        <Route path={"/404"} component={NotFound} />
+        {/* Final fallback route */}
+        <Route component={NotFound} />
+      </Switch>
+    </Suspense>
   );
 }
 
