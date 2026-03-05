@@ -649,7 +649,11 @@ export const giftCards = pgTable("giftCards", {
     isRedeemed: boolean("isRedeemed").default(false),
     redeemedByUserId: integer("redeemedByUserId"),
     redeemedAt: timestamp("redeemedAt"),
+    paymentMethod: text("paymentMethod"), // 'wallet', 'card'
+    paymentStatus: text("paymentStatus").default('pending'), // 'pending', 'paid', 'failed'
+    isActive: boolean("isActive").default(false),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export const installments = pgTable("installments", {

@@ -430,6 +430,8 @@ export default function AdminDashboard() {
   const [orderDateTo, setOrderDateTo] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isAdminOrderModalOpen, setIsAdminOrderModalOpen] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [newStatus, setNewStatus] = useState("");
   const [showProfilePassword, setShowProfilePassword] = useState(false);
 
   // Fetch customer details when detailsCustomerId changes
@@ -463,6 +465,22 @@ export default function AdminDashboard() {
 
 
 
+
+  const updateCustomerStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: number; status: string }) =>
+      endpoints.admin.updateCustomerStatus(id, status),
+    onSuccess: (_, variables) => {
+      const statusLabel = variables.status === 'blocked'
+        ? (language === 'ar' ? 'تم حظر المستخدم' : 'User blocked')
+        : (language === 'ar' ? 'تم تفعيل المستخدم' : 'User activated');
+      toast.success(statusLabel);
+      queryClient.invalidateQueries({ queryKey: ['admin', 'customers'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'customer', variables.id] });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || (language === 'ar' ? 'فشل تحديث الحالة' : 'Failed to update status'));
+    }
+  });
 
   const handleDeleteCustomer = async () => {
     if (!customerToDelete) return;
@@ -930,7 +948,7 @@ export default function AdminDashboard() {
                           <th className="py-4 px-6 font-black text-white text-center">{language === 'ar' ? 'التاريخ' : 'Date'}</th>
                           <th className="py-4 px-6 font-black text-white text-center">{t('amount')}</th>
                           <th className="py-4 px-6 font-black text-white text-center">{language === 'ar' ? 'وسيلة الدفع' : 'Payment Method'}</th>
-                          <th className="py-4 px-6 font-black text-white text-center">{language === 'ar' ? 'حالة الدفع' : 'Payment Status'}</th>
+                          <th className="py-4 px-6 font-black text-white text-center">{language === 'ar' ? 'حالة الطلب' : 'Order Status'}</th>
                           <th className="py-4 px-6 font-black text-white text-center">{t('deliveryStatus')}</th>
                           <th className="py-4 px-6 font-black text-white text-end">{t('actions')}</th>
                         </tr>
@@ -971,16 +989,21 @@ export default function AdminDashboard() {
                               </div>
                             </td>
                             <td className="py-4 px-6 text-center">
-                              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${order.paymentStatus === 'paid' ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800/50' :
-                                order.paymentStatus === 'failed' ? 'bg-red-900/40 text-red-400 border-red-800/50' :
-                                  (order.paymentStatus === 'pending_kyc_review' || order.paymentStatus === 'pending_payment') ? 'bg-amber-900/40 text-amber-500 border-amber-800/50' :
-                                    'bg-blue-900/40 text-blue-400 border-blue-800/50'
-                                }`}>
-                                {order.paymentStatus === 'paid' ? (language === 'ar' ? 'تم الدفع ✅' : 'Paid ✅') :
-                                  (order.paymentStatus === 'pending_kyc_review' || order.paymentStatus === 'pending_payment') ? (language === 'ar' ? 'مراجعة أوراق 📋' : 'Reviewing Docs 📋') :
-                                    order.paymentStatus === 'failed' ? (language === 'ar' ? 'فشل الدفع' : 'Failed') :
-                                      (language === 'ar' ? 'معلق' : 'Pending')}
+                              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${order.installmentPlanId ? 'bg-purple-900/40 text-purple-400 border-purple-800/50' : 'bg-blue-900/40 text-blue-400 border-blue-800/50'}`}>
+                                {order.installmentPlanId ? (language === 'ar' ? 'تقسيط' : 'Installment') : (language === 'ar' ? 'كاش' : 'Cash')}
                               </span>
+                              <div className="mt-1">
+                                <span className={`text-[9px] font-bold ${order.paymentStatus === 'paid' ? 'text-emerald-500' :
+                                  order.paymentStatus === 'failed' ? 'text-red-500' :
+                                    (order.paymentStatus === 'pending_kyc_review' || order.paymentStatus === 'pending_payment') ? 'text-amber-500' :
+                                      'text-blue-400'
+                                  }`}>
+                                  {order.paymentStatus === 'paid' ? (language === 'ar' ? 'مدفوع' : 'Paid') :
+                                    (order.paymentStatus === 'pending_kyc_review' || order.paymentStatus === 'pending_payment') ? (language === 'ar' ? 'مراجعة' : 'Review') :
+                                      order.paymentStatus === 'failed' ? (language === 'ar' ? 'فشل' : 'Failed') :
+                                        (language === 'ar' ? 'معلق' : 'Pending')}
+                                </span>
+                              </div>
                             </td>
                             <td className="py-4 px-6 text-center">
                               <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${order.status === 'delivered' ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800/50' :
@@ -1133,6 +1156,7 @@ export default function AdminDashboard() {
                         <tr className="border-b border-gray-800 bg-gray-900">
                           <th className="py-4 px-6 font-black text-white text-start">{t('customer')}</th>
                           <th className="py-4 px-6 font-black text-white text-start">{t('emailContact')}</th>
+                          <th className="py-4 px-6 font-black text-white text-center">{language === 'ar' ? 'الحالة' : 'Status'}</th>
                           <th className="py-4 px-6 font-black text-white text-center">{t('lastSeen')}</th>
                           <th className="py-4 px-6 font-black text-white text-center">{t('mobileNumber')}</th>
                           <th className="py-4 px-6 font-black text-white text-end">{t('actions')}</th>
@@ -1169,14 +1193,54 @@ export default function AdminDashboard() {
                                       <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full animate-pulse shadow-sm"></span>
                                     )}
                                   </div>
-                                  <span>{c.name || t('customerUnknown')}</span>
+                                  <div className="flex flex-col">
+                                    <span>{c.name || t('customerUnknown')}</span>
+                                    {c.status === 'blocked' && (
+                                      <span className="text-[10px] text-red-500 font-bold uppercase">{language === 'ar' ? 'محظور' : 'Blocked'}</span>
+                                    )}
+                                  </div>
                                 </div>
                               </td>
                               <td className="py-4 px-6 text-white text-start">{c.email}</td>
+                              <td className="py-4 px-6 text-center">
+                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${c.status === 'blocked' ? 'bg-red-900/40 text-red-400 border-red-800/50' : 'bg-emerald-900/40 text-emerald-400 border-emerald-800/50'}`}>
+                                  {c.status === 'blocked' ? (language === 'ar' ? 'محظور' : 'Blocked') : (language === 'ar' ? 'نشط' : 'Active')}
+                                </span>
+                              </td>
                               <td className="py-4 px-6 text-white text-xs text-center">{c.lastSignedIn ? new Date(c.lastSignedIn).toLocaleDateString() : t('never')}</td>
                               <td className="py-4 px-6 text-white text-center">{c.phone || '-'}</td>
                               <td className="py-4 px-6 text-end">
                                 <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                                  {c.status === 'blocked' ? (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      disabled={updateCustomerStatusMutation.isPending && updateCustomerStatusMutation.variables?.id === c.id}
+                                      className="text-emerald-400 hover:text-emerald-500 hover:bg-emerald-900/30 rounded-lg"
+                                      onClick={() => updateCustomerStatusMutation.mutate({ id: c.id, status: 'active' })}
+                                      title={language === 'ar' ? 'تفعيل الحساب' : 'Activate Account'}
+                                    >
+                                      {updateCustomerStatusMutation.isPending && updateCustomerStatusMutation.variables?.id === c.id ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                      ) : (
+                                        <UserCheck className="w-4 h-4" />
+                                      )}
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="text-amber-400 hover:text-amber-500 hover:bg-amber-900/30 rounded-lg"
+                                      onClick={() => showConfirm(
+                                        language === 'ar' ? 'حظر العميل' : 'Block Customer',
+                                        language === 'ar' ? `هل أنت متأكد من حظر العميل ${c.name}؟ لن يتمكن من تسجيل الدخول.` : `Are you sure you want to block ${c.name}? They will not be able to log in.`,
+                                        () => updateCustomerStatusMutation.mutate({ id: c.id, status: 'blocked' })
+                                      )}
+                                      title={language === 'ar' ? 'حظر الحساب' : 'Block Account'}
+                                    >
+                                      <XCircle className="w-4 h-4" />
+                                    </Button>
+                                  )}
                                   <Button
                                     variant="ghost"
                                     size="icon"
@@ -1318,27 +1382,38 @@ export default function AdminDashboard() {
               <div className="bg-gray-900 p-4 rounded-2xl flex flex-col gap-4 text-start">
                 <div className="flex justify-between items-center">
                   <div className="space-y-1">
-                    <p className="text-white font-medium">
-                      {t('paymentMethod')}: {({
-                        'card': language === 'ar' ? 'بطاقة بنكية' : 'Bank Card',
-                        'cash': language === 'ar' ? 'دفع عند الاستلام' : 'Cash on Delivery',
-                        'cod': language === 'ar' ? 'دفع عند الاستلام' : 'Cash on Delivery',
-                        'cashOnDelivery': language === 'ar' ? 'دفع عند الاستلام' : 'Cash on Delivery',
-                        'installments': language === 'ar' ? 'تقسيط' : 'Installments',
-                        'wallet': language === 'ar' ? 'المحفظة الإلكترونية' : 'Wallet',
-                        'gift_card': language === 'ar' ? 'بطاقة هدية' : 'Gift Card',
-                        'stripe': language === 'ar' ? 'بطاقة بنكية' : 'Bank Card',
-                      } as any)[selectedOrder.paymentMethod] || selectedOrder.paymentMethod}
-                    </p>
-                    <p className="text-white font-medium">{t('paymentStatus')}: {({
+                    {selectedOrder.installmentPlanId ? (
+                      <p className="text-white font-medium">
+                        {language === 'ar' ? 'نظام التقسيط:' : 'Installment System:'} <span className="text-purple-400">
+                          {selectedOrder.installmentPlan?.name || (language === 'ar' ? 'مفعل' : 'Active')}
+                        </span>
+                      </p>
+                    ) : (
+                      <p className="text-white font-medium">
+                        {t('paymentMethod')}: {({
+                          'card': language === 'ar' ? 'بطاقة بنكية' : 'Bank Card',
+                          'cash': language === 'ar' ? 'دفع عند الاستلام' : 'Cash on Delivery',
+                          'cod': language === 'ar' ? 'دفع عند الاستلام' : 'Cash on Delivery',
+                          'cashOnDelivery': language === 'ar' ? 'دفع عند الاستلام' : 'Cash on Delivery',
+                          'installments': language === 'ar' ? 'تقسيط' : 'Installments',
+                          'wallet': language === 'ar' ? 'المحفظة الإلكترونية' : 'Wallet',
+                          'gift_card': language === 'ar' ? 'بطاقة هدية' : 'Gift Card',
+                          'stripe': language === 'ar' ? 'بطاقة بنكية' : 'Bank Card',
+                        } as any)[selectedOrder.paymentMethod] || selectedOrder.paymentMethod}
+                      </p>
+                    )}
+                    <p className="text-white font-medium">{language === 'ar' ? 'حالة الدفع' : 'Payment Status'}: {({
                       'paid': language === 'ar' ? 'تم الدفع ✅' : 'Paid ✅',
+                      'confirmed': language === 'ar' ? 'تم التأكيد ✅' : 'Confirmed ✅',
                       'pending': language === 'ar' ? 'قيد الانتظار' : 'Pending',
                       'pending_kyc_review': language === 'ar' ? 'مراجعة أوراق 📋' : 'KYC Review 📋',
                       'pending_payment': language === 'ar' ? 'انتظار الدفع' : 'Awaiting Payment',
+                      'awaiting_deposit_payment': language === 'ar' ? 'بانتظار دفع المقدم' : 'Awaiting Deposit',
                       'failed': language === 'ar' ? 'فشل الدفع ❌' : 'Failed ❌',
-                      'refunded': language === 'ar' ? 'مُستردّ' : 'Refunded',
-                      'on_delivery': language === 'ar' ? 'يُدفع عند الاستلام' : 'Pay on Delivery',
-                    } as any)[selectedOrder.paymentStatus] || selectedOrder.paymentStatus}</p>
+                      'cancelled': language === 'ar' ? 'ملغى' : 'Cancelled',
+                      'shipped': language === 'ar' ? 'تم الشحن' : 'Shipped',
+                      'delivered': language === 'ar' ? 'تم التسليم' : 'Delivered',
+                    } as any)[selectedOrder.paymentStatus || selectedOrder.status] || selectedOrder.status}</p>
                   </div>
                   <div className="text-right">
                     <span className={`px-3 py-1 rounded-full text-xs font-black ${selectedOrder.installmentPlanId ? 'bg-purple-900 text-purple-300 border border-purple-700' : 'bg-blue-900 text-blue-300 border border-blue-700'}`}>
@@ -1348,11 +1423,11 @@ export default function AdminDashboard() {
                 </div>
 
                 {selectedOrder.depositAmount && (
-                  <div className="pt-3 border-t border-gray-800">
+                  <div className="pt-3 border-t border-gray-800 bg-emerald-900/10 p-3 rounded-xl border border-emerald-500/20">
                     <div className="flex justify-between items-center">
-                      <div className="text-sm font-bold text-gray-400">
-                        {language === 'ar' ? 'طريقة دفع المقدم:' : 'Deposit Payment Method:'}
-                        <span className="text-white ml-2">
+                      <div className="text-sm font-bold text-gray-300">
+                        {language === 'ar' ? 'طريقة دفع المقدم:' : 'Down-Payment Method:'}
+                        <span className="text-emerald-400 ml-2">
                           {({
                             'card': language === 'ar' ? 'بطاقة بنكية' : 'Bank Card',
                             'wallet': language === 'ar' ? 'المحفظة' : 'Wallet',
@@ -1361,8 +1436,8 @@ export default function AdminDashboard() {
                         </span>
                       </div>
                       <div className="text-sm font-bold text-emerald-400">
-                        {language === 'ar' ? 'المبلغ المدفوع كـ مقدم:' : 'Amount Paid as Deposit:'}
-                        <span className="text-lg ml-2">{selectedOrder.depositAmount} {t('currency')}</span>
+                        {language === 'ar' ? 'مبلغ المقدم:' : 'Down-Payment Amount:'}
+                        <span className="text-lg ml-2">{Number(selectedOrder.depositAmount).toFixed(2)} {t('currency')}</span>
                       </div>
                     </div>
                   </div>
@@ -1444,9 +1519,46 @@ export default function AdminDashboard() {
             <Button variant="outline" className="rounded-xl font-bold" onClick={() => setIsAdminOrderModalOpen(false)}>
               {t('close')}
             </Button>
-            <Button className="bg-blue-600 hover:bg-blue-700 rounded-xl font-bold">
-              {t('updateOrderStatus')}
-            </Button>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Select
+                value={newStatus || selectedOrder.status}
+                onValueChange={(val) => setNewStatus(val)}
+              >
+                <SelectTrigger className="w-full sm:w-[180px] rounded-xl font-bold bg-gray-900 border-gray-700">
+                  <SelectValue placeholder={t('updateOrderStatus')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">{language === 'ar' ? 'قيد الانتظار' : 'Pending'}</SelectItem>
+                  <SelectItem value="confirmed">{language === 'ar' ? 'تم التأكيد' : 'Confirmed'}</SelectItem>
+                  <SelectItem value="shipped">{language === 'ar' ? 'تم الشحن' : 'Shipped'}</SelectItem>
+                  <SelectItem value="delivered">{language === 'ar' ? 'تم التسليم' : 'Delivered'}</SelectItem>
+                  <SelectItem value="cancelled">{language === 'ar' ? 'ملغى' : 'Cancelled'}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                className="bg-blue-600 hover:bg-blue-700 rounded-xl font-bold whitespace-nowrap"
+                disabled={updatingStatus}
+                onClick={async () => {
+                  if (!newStatus) {
+                    toast.error(language === 'ar' ? 'يرجى اختيار حالة جديدة' : 'Please select a new status');
+                    return;
+                  }
+                  setUpdatingStatus(true);
+                  try {
+                    await api.patch(`/orders/${selectedOrder.id}/status`, { status: newStatus });
+                    toast.success(language === 'ar' ? 'تم تحديث الحالة بنجاح' : 'Status updated successfully');
+                    queryClient.invalidateQueries({ queryKey: ['admin-orders-full'] });
+                    setIsAdminOrderModalOpen(false);
+                  } catch (err) {
+                    toast.error(language === 'ar' ? 'فشل تحديث الحالة' : 'Failed to update status');
+                  } finally {
+                    setUpdatingStatus(false);
+                  }
+                }}
+              >
+                {updatingStatus ? <Loader2 className="w-4 h-4 animate-spin" /> : t('updateOrderStatus')}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

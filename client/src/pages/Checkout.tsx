@@ -186,6 +186,8 @@ export default function Checkout() {
       }
     }
 
+    const isInstallment = formData.paymentMethod === 'installments';
+
     placeOrderMutation.mutate({
       shippingAddress: {
         name: `${formData.firstName} ${formData.lastName}`,
@@ -195,12 +197,12 @@ export default function Checkout() {
         country: formData.country,
         zipCode: formData.zipCode
       },
-      paymentMethod: formData.paymentMethod,
+      paymentMethod: isInstallment ? 'installments' : depositMethod,
       couponCode: appliedCoupon?.code || undefined,
-      installmentPlanId: formData.paymentMethod === 'installments' ? formData.installmentPlanId : undefined,
+      installmentPlanId: isInstallment ? formData.installmentPlanId : undefined,
       kycData: kycData,
-      depositPaymentMethod: formData.paymentMethod === 'installments' ? depositMethod : undefined,
-      depositGiftCardCode: formData.paymentMethod === 'installments' ? depositGiftCardCode : undefined,
+      depositPaymentMethod: isInstallment ? depositMethod : undefined,
+      depositGiftCardCode: (isInstallment || depositMethod === 'gift_card') ? depositGiftCardCode : undefined,
     });
   };
 

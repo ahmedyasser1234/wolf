@@ -16,6 +16,18 @@ export default function InstallmentOrdersTab() {
     const [rejectReason, setRejectReason] = useState('');
     const [filterStatus, setFilterStatus] = useState<'pending_kyc_review' | 'pending_payment' | 'paid' | 'all'>('pending_kyc_review');
 
+    const confirmPaymentMutation = useMutation({
+        mutationFn: async (orderId: number) => {
+            return (await api.post(`/orders/${orderId}/confirm-deposit`)).data;
+        },
+        onSuccess: () => {
+            toast.success(language === 'ar' ? 'تم تأكيد الدفع بنجاح' : 'Payment confirmed successfully');
+            queryClient.invalidateQueries({ queryKey: ['admin', 'installment-orders'] });
+            queryClient.invalidateQueries({ queryKey: ['admin-orders-full'] });
+        },
+        onError: () => toast.error(language === 'ar' ? 'فشلت عملية التأكيد' : 'Confirmation failed'),
+    });
+
     const { data: allOrders, isLoading } = useQuery({
         queryKey: ['admin', 'installment-orders'],
         queryFn: async () => (await api.get('/admin/orders')).data,
@@ -32,6 +44,7 @@ export default function InstallmentOrdersTab() {
             setKycModalOrder(null);
             setRejectReason('');
             queryClient.invalidateQueries({ queryKey: ['admin', 'installment-orders'] });
+            queryClient.invalidateQueries({ queryKey: ['admin-orders-full'] });
         },
         onError: () => toast.error(language === 'ar' ? 'فشلت العملية' : 'Operation failed'),
     });
@@ -41,13 +54,20 @@ export default function InstallmentOrdersTab() {
 
     const filteredOrders = filterStatus === 'all'
         ? installmentOrders
-        : installmentOrders.filter((o: any) => o.paymentStatus === filterStatus);
+        : installmentOrders.filter((o: any) => {
+            if (filterStatus === 'pending_payment') {
+                return o.paymentStatus === 'pending_payment' || o.paymentStatus === 'awaiting_deposit_payment';
+            }
+            return o.paymentStatus === filterStatus;
+        });
 
     const pendingCount = installmentOrders.filter((o: any) => o.paymentStatus === 'pending_kyc_review').length;
+    const awaitingPaymentCount = installmentOrders.filter((o: any) => o.paymentStatus === 'pending_payment' || o.paymentStatus === 'awaiting_deposit_payment').length;
 
     const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
         pending_kyc_review: { label: language === 'ar' ? 'قيد المراجعة' : 'Under Review', color: 'bg-amber-500/20 text-amber-400 border border-amber-500/30' },
         pending_payment: { label: language === 'ar' ? 'بانتظار الدفعة الأولى' : 'Awaiting Down Payment', color: 'bg-blue-500/20 text-blue-400 border border-blue-500/30' },
+        awaiting_deposit_payment: { label: language === 'ar' ? 'بانتظار دفع المقدم' : 'Awaiting Down Payment', color: 'bg-blue-500/20 text-blue-400 border border-blue-500/30' },
         paid: { label: language === 'ar' ? 'مدفوع' : 'Paid', color: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' },
         failed: { label: language === 'ar' ? 'مرفوض' : 'Rejected', color: 'bg-red-500/20 text-red-400 border border-red-500/30' },
         pending: { label: language === 'ar' ? 'معلق' : 'Pending', color: 'bg-gray-500/20 text-gray-400 border border-gray-500/30' },
@@ -96,6 +116,9 @@ export default function InstallmentOrdersTab() {
                             {f.label}
                             {f.key === 'pending_kyc_review' && pendingCount > 0 && (
                                 <span className="ms-2 bg-amber-500 text-black text-xs rounded-full px-1.5 py-0.5">{pendingCount}</span>
+                            )}
+                            {f.key === 'pending_payment' && awaitingPaymentCount > 0 && (
+                                <span className="ms-2 bg-blue-500 text-white text-xs rounded-full px-1.5 py-0.5">{awaitingPaymentCount}</span>
                             )}
                         </button>
                     ))}
@@ -173,10 +196,20 @@ export default function InstallmentOrdersTab() {
                                                 {language === 'ar' ? 'مراجعة الطلب' : 'Review Request'}
                                             </Button>
                                         )}
-                                        {order.paymentStatus === 'pending_payment' && (
-                                            <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-2xl px-4 py-2">
-                                                <CreditCard className="w-4 h-4 text-blue-400" />
-                                                <span className="text-xs font-black text-blue-400">{language === 'ar' ? 'بانتظار دفع المقدم' : 'Awaiting down payment'}</span>
+                                        {(order.paymentStatus === 'pending_payment' || order.paymentStatus === 'awaiting_deposit_payment') && (
+                                            <div className="flex items-center gap-3">
+                                                <Button
+                                                    onClick={() => confirmPaymentMutation.mutate(order.id)}
+                                                    disabled={confirmPaymentMutation.isPending}
+                                                    className="bg-blue-600 hover:bg-blue-500 text-white font-black rounded-2xl px-5 h-12 gap-2"
+                                                >
+                                                    {confirmPaymentMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                                                    {language === 'ar' ? 'تأكيد الدفع' : 'Confirm Payment'}
+                                                </Button>
+                                                <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-2xl px-4 py-2">
+                                                    <CreditCard className="w-4 h-4 text-blue-400" />
+                                                    <span className="text-xs font-black text-blue-400">{language === 'ar' ? 'بانتظار دفع المقدم' : 'Awaiting down payment'}</span>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
@@ -199,8 +232,13 @@ export default function InstallmentOrdersTab() {
                                 <span className="text-sm font-bold text-amber-400">#{kycModalOrder.orderNumber}</span>
                             </div>
                             <div className="text-right">
-                                <p className="text-xs text-gray-500 font-bold">{language === 'ar' ? 'إجمالي الطلب' : 'Order Total'}</p>
-                                <p className="text-xl font-black text-primary">{Number(kycModalOrder.total).toFixed(2)} {t('currency')}</p>
+                                <p className="text-xs text-gray-500 font-bold">{language === 'ar' ? 'حالة الطلب' : 'Order Status'}</p>
+                                <p className="text-xl font-black text-primary">{({
+                                    'confirmed': language === 'ar' ? 'تم التأكيد' : 'Confirmed',
+                                    'pending_kyc_review': language === 'ar' ? 'مراجعة أوراق' : 'KYC Review',
+                                    'pending_payment': language === 'ar' ? 'بانتظار الدفع' : 'Awaiting Payment',
+                                    'paid': language === 'ar' ? 'مدفوع' : 'Paid',
+                                } as any)[kycModalOrder.status] || kycModalOrder.status}</p>
                             </div>
                         </div>
 

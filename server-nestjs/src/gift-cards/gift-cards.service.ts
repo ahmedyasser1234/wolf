@@ -1,14 +1,16 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { giftCards, customerWallets, walletTransactions } from '../database/schema';
+import { giftCards, customerWallets, walletTransactions, users } from '../database/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { WalletsService } from '../wallets/wallets.service';
+import { PaymentsService } from '../payments/payments.service';
 
 @Injectable()
 export class GiftCardsService {
     constructor(
         private databaseService: DatabaseService,
-        private walletsService: WalletsService
+        private walletsService: WalletsService,
+        private paymentsService: PaymentsService
     ) { }
 
     async findAll() {
@@ -27,24 +29,83 @@ export class GiftCardsService {
         senderEmail?: string;
         message?: string;
         style?: string;
+        paymentMethod?: string;
+        paymentStatus?: string;
+        isActive?: boolean;
     }) {
         const code = data.code || this.generateCode();
         const [card] = await this.databaseService.db.insert(giftCards).values({
             ...data,
             code,
+            isActive: data.isActive ?? true, // Default to active if not specified (e.g. admin creation)
             createdAt: new Date(),
         }).returning();
         return card;
+    }
+
+    async purchaseGiftCard(userId: number, data: { amount: number, recipientName?: string, paymentMethod: 'wallet' | 'card' }) {
+        const [user] = await this.databaseService.db.select().from(users).where(eq(users.id, userId)).limit(1);
+        if (!user) throw new NotFoundException('User not found');
+
+        const amount = Number(data.amount);
+        if (amount <= 0) throw new BadRequestException('المبلغ غير صحيح');
+
+        if (data.paymentMethod === 'wallet') {
+            const [wallet] = await this.databaseService.db.select().from(customerWallets).where(eq(customerWallets.userId, userId)).limit(1);
+            if (!wallet || Number(wallet.balance) < amount) {
+                throw new BadRequestException('رصيد المحفظة غير كافٍ');
+            }
+
+            return await this.databaseService.db.transaction(async (tx) => {
+                // Deduct from wallet
+                await this.walletsService.deductBalance(userId, amount, `شراء كارت هدية بقيمة ${amount}`);
+
+                // Create active gift card
+                return await this.createGiftCard({
+                    amount,
+                    recipientName: data.recipientName,
+                    senderName: user.name,
+                    senderEmail: user.email,
+                    paymentMethod: 'wallet',
+                    paymentStatus: 'paid',
+                    isActive: true
+                });
+            });
+        } else {
+            // Card payment: Create inactive gift card and return Stripe session
+            const card = await this.createGiftCard({
+                amount,
+                recipientName: data.recipientName,
+                senderName: user.name,
+                senderEmail: user.email,
+                paymentMethod: 'card',
+                paymentStatus: 'pending',
+                isActive: false
+            });
+
+            const session = await this.paymentsService.createCheckoutSession(
+                'stripe',
+                card.id, // Using gift card ID as order ID for session
+                amount,
+                user.email!
+            );
+
+            return { ...card, checkoutUrl: session.url };
+        }
     }
 
     async redeemGiftCard(code: string, userId: number) {
         const [card] = await this.databaseService.db
             .select()
             .from(giftCards)
-            .where(and(eq(giftCards.code, code), eq(giftCards.isRedeemed, false)))
+            .where(and(
+                eq(giftCards.code, code.toUpperCase()),
+                eq(giftCards.isRedeemed, false),
+                eq(giftCards.isActive, true)
+            ))
             .limit(1);
 
-        if (!card) throw new NotFoundException('بطاقة الهدية غير صالحة أو تم استخدامها بالفعل');
+        if (!card) throw new NotFoundException('بطاقة الهدية غير صالحة، معطلة أو تم استخدامها بالفعل');
 
         return await this.databaseService.db.transaction(async (tx) => {
             // Mark as redeemed
@@ -70,6 +131,32 @@ export class GiftCardsService {
             .returning();
         if (!deleted) throw new NotFoundException('Gift card not found');
         return { success: true };
+    }
+
+    async confirmPurchase(giftCardId: number) {
+        const [giftCard] = await this.databaseService.db
+            .select()
+            .from(giftCards)
+            .where(eq(giftCards.id, giftCardId))
+            .limit(1);
+
+        if (!giftCard) throw new NotFoundException('Gift card not found');
+
+        if (giftCard.paymentStatus === 'paid' && giftCard.isActive) return giftCard;
+
+        // In a real production environment, we should verify the payment with Stripe/Gateway
+        // For now, we update the status based on the confirmation call
+        const [updated] = await this.databaseService.db
+            .update(giftCards)
+            .set({
+                paymentStatus: 'paid',
+                isActive: true,
+                updatedAt: new Date()
+            })
+            .where(eq(giftCards.id, giftCardId))
+            .returning();
+
+        return updated;
     }
 
     private generateCode() {

@@ -244,6 +244,12 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
                                             </Button>
                                         )}
                                         <div className="relative">
+                                            <div className={cn(
+                                                "text-[10px] font-black px-4 py-1.5 rounded-full border mb-1 text-center",
+                                                STATUS_LABELS[order.status]?.color || "bg-gray-800 text-white"
+                                            )}>
+                                                {language === 'ar' ? 'حالة الطلب' : 'Order Status'}
+                                            </div>
                                             <select
                                                 className={cn(
                                                     "text-base md:text-xs font-black px-4 md:px-6 py-2.5 md:py-3 rounded-2xl border-none outline-none cursor-pointer appearance-none transition-all duration-300 hover:opacity-80 w-fit",

@@ -120,4 +120,22 @@ export class OrdersController {
         const userId = await this.getUserId(req);
         return this.ordersService.getDownPaymentCheckoutUrl(id, userId);
     }
+
+    @Post(':id/confirm-deposit')
+    async confirmDepositPayment(
+        @Req() req: Request,
+        @Param('id', ParseIntPipe) id: number,
+    ) {
+        const authHeader = req.headers.authorization;
+        const cookieToken = req.cookies?.[COOKIE_NAME];
+        const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : cookieToken;
+        if (!token) throw new UnauthorizedException();
+
+        const payload = await this.authService.verifySession(token);
+        if (!payload || payload.role !== 'admin') {
+            throw new UnauthorizedException('Only admins can confirm deposit payments');
+        }
+
+        return this.ordersService.confirmDepositPayment(id, payload.id);
+    }
 }

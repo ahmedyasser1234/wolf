@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { endpoints } from "@/lib/api";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/lib/i18n";
 import {
     Gift, Copy, Check, Share2, ChevronRight,
-    Sparkles, Heart, ArrowLeft, Loader2, MessageCircle
+    Sparkles, Heart, ArrowLeft, Loader2, MessageCircle,
+    CreditCard, Wallet
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ interface PurchaseResult {
     code: string;
     amount: number;
     recipientName?: string;
+    checkoutUrl?: string;
 }
 
 function AnimatedCard({ amount, recipientName, language }: { amount: number; recipientName: string; language: string }) {
@@ -168,13 +170,23 @@ export default function GiftCards() {
     const [amount, setAmount] = useState<number>(100);
     const [customAmount, setCustomAmount] = useState('');
     const [recipientName, setRecipientName] = useState('');
+    const [paymentMethod, setPaymentMethod] = useState<'card' | 'wallet'>('card');
     const [result, setResult] = useState<PurchaseResult | null>(null);
+
+    const { data: walletData } = useQuery({
+        queryKey: ['/api/wallets/my-wallet'],
+        queryFn: () => endpoints.wallets.getMyWallet()
+    });
 
     const finalAmount = customAmount ? Number(customAmount) : amount;
 
     const purchaseMutation = useMutation({
-        mutationFn: () => endpoints.giftCards.purchase(finalAmount, recipientName || undefined),
+        mutationFn: () => endpoints.giftCards.purchase(finalAmount, recipientName || undefined, paymentMethod),
         onSuccess: (data: PurchaseResult) => {
+            if (data.checkoutUrl) {
+                window.location.href = data.checkoutUrl;
+                return;
+            }
             setResult(data);
         },
         onError: (err: any) => {
@@ -277,6 +289,40 @@ export default function GiftCards() {
                                         placeholder={language === 'ar' ? 'مثال: محمد، سارة...' : 'e.g. John, Sara...'}
                                         className="h-14 bg-gray-800 border-gray-700 text-white rounded-2xl px-5 text-lg placeholder:text-gray-600 focus-visible:ring-purple-500"
                                     />
+                                </div>
+
+                                {/* Payment Method Selection */}
+                                <div className="space-y-4">
+                                    <label className="text-sm font-black text-gray-300 uppercase tracking-widest">
+                                        {language === 'ar' ? 'طريقة الدفع' : 'Payment Method'}
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {[
+                                            { id: 'card', label: language === 'ar' ? 'بطاقة بنكية' : 'Bank Card', Icon: CreditCard },
+                                            { id: 'wallet', label: language === 'ar' ? 'المحفظة' : 'Wallet', Icon: Wallet },
+                                        ].map((m) => (
+                                            <button
+                                                key={m.id}
+                                                type="button"
+                                                onClick={() => setPaymentMethod(m.id as any)}
+                                                className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${paymentMethod === m.id ? 'border-purple-600 bg-purple-600/10 shadow-lg shadow-purple-500/10' : 'border-gray-800 bg-gray-800/50 hover:border-gray-700 text-gray-400'}`}
+                                            >
+                                                <m.Icon className={`w-6 h-6 ${paymentMethod === m.id ? 'text-purple-500' : 'text-gray-500'}`} />
+                                                <span className={`text-xs font-black uppercase tracking-wider ${paymentMethod === m.id ? 'text-white' : 'text-gray-500'}`}>{m.label}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {paymentMethod === 'wallet' && (
+                                        <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="p-4 bg-purple-900/20 border border-purple-800/30 rounded-2xl flex justify-between items-center">
+                                            <span className="text-purple-400 font-bold">
+                                                {walletData?.balance ? `${Number(walletData.balance).toLocaleString()} AED` : '0 AED'}
+                                            </span>
+                                            <span className="text-xs font-black text-purple-300 uppercase tracking-widest">
+                                                {language === 'ar' ? 'رصيدك المتاح' : 'Available Balance'}
+                                            </span>
+                                        </motion.div>
+                                    )}
                                 </div>
 
                                 {/* How it works */}

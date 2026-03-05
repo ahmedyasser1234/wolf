@@ -89,7 +89,14 @@ export class OrdersService {
         depositPaymentMethod?: 'wallet' | 'card' | 'gift_card',
         depositGiftCardCode?: string,
     ) {
-        console.log(`📦 [OrdersService] NEW deposit-first flow. Customer: ${customerId}, Method: ${paymentMethod}, InstallPlan: ${installmentPlanId}`);
+        console.log(`📦 [OrdersService] CREATE ORDER START:`, {
+            customerId,
+            paymentMethod,
+            installmentPlanId,
+            depositPaymentMethod,
+            depositGiftCardCode,
+            walletAmountUsed
+        });
 
         const cart = await this.databaseService.db
             .select()
@@ -224,7 +231,42 @@ export class OrdersService {
                 // The webhook will flip it to 'pending_kyc_review' after payment confirmation.
                 // SIMPLIFICATION: We create the order and return checkoutUrl; webhook updates payment status.
                 resolvedDepositPaymentMethod = 'card';
-                // We'll proceed to order creation below; stripeCheckoutUrl set after order inserted.
+            }
+        } else {
+            // ============================================================
+            // REGULAR ORDER FLOW: Process full payment if wallet/gift_card
+            // ============================================================
+            const grossTotal = Array.from(vendorGroups.values()).reduce((sum, g) => sum + g.subtotal, 0);
+
+            if (paymentMethod === 'wallet') {
+                const [wallet] = await this.databaseService.db
+                    .select()
+                    .from(customerWallets)
+                    .where(eq(customerWallets.userId, customerId))
+                    .limit(1);
+                if (!wallet || Number(wallet.balance) < grossTotal) {
+                    throw new BadRequestException(`رصيد المحفظة غير كافٍ. الرصيد المتاح: ${wallet?.balance || 0}, المطلوب: ${grossTotal}`);
+                }
+                await this.walletsService.deductBalance(customerId, grossTotal, `طلب شراء - ${paymentMethod}`);
+                console.log(`  - [Payment] Deducted ${grossTotal} from wallet for customer ${customerId}`);
+
+            } else if (paymentMethod === 'gift_card') {
+                if (!depositGiftCardCode) throw new BadRequestException('يرجى إدخال كود كارت الهدية');
+                const [giftCard] = await this.databaseService.db
+                    .select()
+                    .from(giftCards)
+                    .where(eq(giftCards.code, depositGiftCardCode.toUpperCase()))
+                    .limit(1);
+                if (!giftCard) throw new BadRequestException('كود كارت الهدية غير صحيح');
+                if (giftCard.isRedeemed) throw new BadRequestException('هذا الكارت تم استخدامه بالفعل');
+                if (Number(giftCard.amount) < grossTotal) {
+                    throw new BadRequestException(`قيمة الكارت (${giftCard.amount}) أقل من إجمالي الطلب (${grossTotal})`);
+                }
+                await this.databaseService.db
+                    .update(giftCards)
+                    .set({ isRedeemed: true, redeemedByUserId: customerId, redeemedAt: new Date() })
+                    .where(eq(giftCards.id, giftCard.id));
+                console.log(`  - [Payment] Gift card ${depositGiftCardCode} redeemed for full payment`);
             }
         }
 
@@ -262,7 +304,7 @@ export class OrdersService {
                     const finalSubtotal = group.subtotal - totalDiscount;
                     const orderTotal = finalSubtotal + shippingCost;
                     const commission = (finalSubtotal * commissionRate) / 100;
-                    const orderNumber = `ORD-${Date.now()}-${vendorId}`;
+                    const orderNumber = `ORD-${Date.now()}-${vendorId || 0}`;
 
                     // Determine status/paymentStatus based on order type
                     const isInstallment = !!installmentPlanId;
@@ -270,7 +312,16 @@ export class OrdersService {
                     const orderStatus = isCash ? 'pending_confirmation' : (isInstallment ? 'pending' : 'pending_confirmation');
                     const orderPaymentStatus = isInstallment
                         ? (resolvedDepositPaymentMethod === 'card' ? 'awaiting_deposit_payment' : 'pending_kyc_review')
-                        : 'pending';
+                        : (paymentMethod === 'card' ? 'pending_payment' : (paymentMethod === 'wallet' || paymentMethod === 'gift_card' ? 'paid' : 'pending'));
+
+                    console.log(`   - Pre-Insert Check [Vendor ${vendorId}]:`, {
+                        orderNumber,
+                        isInstallment,
+                        resolvedDepositPaymentMethod,
+                        finalPaymentMethod: isInstallment ? 'installments' : paymentMethod,
+                        orderStatus,
+                        orderPaymentStatus
+                    });
 
                     const [newOrder] = await tx
                         .insert(orders)
@@ -344,12 +395,24 @@ export class OrdersService {
             });
 
             // For card deposit: create gateway session now that we have orderId
+            // For card deposit: create gateway session now that we have orderId
             if (installmentPlanId && resolvedDepositPaymentMethod === 'card' && createdOrders.length > 0) {
                 const [customer] = await this.databaseService.db.select().from(users).where(eq(users.id, customerId)).limit(1);
                 const session = await this.paymentsService.createCheckoutSession(
                     'stripe',
                     createdOrders[0].id,
                     depositAmount,
+                    customer.email!
+                );
+                stripeCheckoutUrl = session.url;
+            } else if (!installmentPlanId && paymentMethod === 'card' && createdOrders.length > 0) {
+                // Regular order card payment
+                const [customer] = await this.databaseService.db.select().from(users).where(eq(users.id, customerId)).limit(1);
+                const grandTotal = createdOrders.reduce((sum, o) => sum + Number(o.total), 0);
+                const session = await this.paymentsService.createCheckoutSession(
+                    'stripe',
+                    createdOrders[0].id, // For multi-vendor simple fix use first order id, but webhook should handle grouped
+                    grandTotal,
                     customer.email!
                 );
                 stripeCheckoutUrl = session.url;
@@ -518,8 +581,8 @@ export class OrdersService {
             [updatedOrder] = await this.databaseService.db
                 .update(orders)
                 .set({
-                    status: 'confirmed', // Under Document Review -> Preparing Shipment (confirmed/processing)
-                    paymentStatus: 'paid', // Deposit already paid
+                    status: 'confirmed', // Under Document Review -> Preparing Shipment
+                    paymentStatus: 'paid', // Deposit was already paid
                     updatedAt: new Date()
                 })
                 .where(eq(orders.id, orderId))
@@ -634,5 +697,38 @@ export class OrdersService {
         );
 
         return { checkoutUrl: session.url };
+    }
+
+    async confirmDepositPayment(orderId: number, adminUserId: number) {
+        const [order] = await this.databaseService.db
+            .select()
+            .from(orders)
+            .where(eq(orders.id, orderId))
+            .limit(1);
+
+        if (!order) throw new BadRequestException('Order not found');
+        if (order.paymentStatus !== 'awaiting_deposit_payment') {
+            throw new BadRequestException('Order is not awaiting deposit payment');
+        }
+
+        const [updatedOrder] = await this.databaseService.db
+            .update(orders)
+            .set({
+                paymentStatus: 'pending_kyc_review',
+                updatedAt: new Date()
+            })
+            .where(eq(orders.id, orderId))
+            .returning();
+
+        // Notify Customer
+        await this.notificationsService.notify(
+            order.customerId,
+            'deposit_received',
+            'تم استلام مقدم الدفع',
+            `تم استلام مبلغ المقدم للطلب رقم #${order.orderNumber}. طلبك الآن قيد مراجعة الأوراق.`,
+            order.id
+        );
+
+        return { success: true, order: updatedOrder };
     }
 }
