@@ -24,6 +24,14 @@ export class GiftCardsController {
         return this.giftCardsService.deleteGiftCard(id);
     }
 
+    // Customer: List my gift cards
+    @UseGuards(JwtAuthGuard)
+    @Get('my-cards')
+    async findMyCards(@Request() req) {
+        const userId = req.user.id;
+        return this.giftCardsService.findMyCards(userId);
+    }
+
     // Customer: Redeem a gift card code to wallet
     @UseGuards(JwtAuthGuard)
     @Post('redeem')

@@ -22,7 +22,7 @@ import {
     User, ShoppingBag, Heart, LogOut, Settings, Bell, ChevronLeft,
     Loader2, Eye, EyeOff, Plus, Camera, Store, MapPin,
     Share2, Truck, Image as ImageIcon, X, Package, Award, ChevronRight,
-    Wallet, CreditCard, History
+    Wallet, CreditCard, History, Gift, Ticket
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import UserPointsView from "@/components/account/UserPointsView";
@@ -68,6 +68,12 @@ export default function Profile() {
     const { data: walletData, refetch: refetchWallet } = useQuery({
         queryKey: ["wallet"],
         queryFn: () => endpoints.wallets.getMyWallet(),
+        enabled: !!user,
+    });
+
+    const { data: myGiftCards } = useQuery({
+        queryKey: ["my-gift-cards"],
+        queryFn: () => endpoints.giftCards.getMyCards(),
         enabled: !!user,
     });
 
@@ -304,6 +310,97 @@ export default function Profile() {
                     {user.role === 'customer' && (
                         <section>
                             <UserPointsView />
+                        </section>
+                    )}
+
+                    {/* My Gift Cards - Only for Customers */}
+                    {user.role === 'customer' && (
+                        <section>
+                            <div className="flex items-center justify-between mb-6 px-4">
+                                <h2 className="text-2xl font-black text-gray-900 flex items-center gap-2">
+                                    <div className="w-10 h-10 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center shrink-0">
+                                        <Gift size={20} />
+                                    </div>
+                                    {language === 'ar' ? "بطاقات الهدايا الخاصة بي" : "My Gift Cards"}
+                                </h2>
+                            </div>
+                            <Card className="rounded-[2.5rem] border-0 shadow-sm overflow-hidden bg-white">
+                                <CardContent className="p-0">
+                                    {(!myGiftCards || myGiftCards.length === 0) ? (
+                                        <div className="p-12 text-center text-gray-400 font-bold space-y-4">
+                                            <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                                <Ticket size={28} className="text-gray-300" />
+                                            </div>
+                                            <p>{language === 'ar' ? "لم تقم بشراء أي بطاقة هدية بعد" : "You haven't purchased any gift cards yet"}</p>
+                                            <Link href="/gift-cards">
+                                                <Button className="mt-2 bg-purple-600 hover:bg-purple-700 text-white rounded-full h-12 px-8 font-black shadow-lg shadow-purple-600/20">
+                                                    {language === 'ar' ? "شراء بطاقة هدية" : "Buy Gift Card"}
+                                                </Button>
+                                            </Link>
+                                        </div>
+                                    ) : (
+                                        <div className="divide-y divide-gray-50">
+                                            {myGiftCards.map((card: any) => {
+                                                const statusKey =
+                                                    card.isRedeemed ? 'redeemed' :
+                                                        (!card.isActive ? 'pending' : 'active');
+
+                                                const statusTranslations: any = {
+                                                    active: {
+                                                        ar: "متاحة للاستخدام",
+                                                        en: "Available",
+                                                        color: "bg-emerald-100 text-emerald-700"
+                                                    },
+                                                    redeemed: {
+                                                        ar: "تم الاستخدام",
+                                                        en: "Redeemed",
+                                                        color: "bg-gray-100 text-gray-500"
+                                                    },
+                                                    pending: {
+                                                        ar: "بانتظار الدفع",
+                                                        en: "Pending Payment",
+                                                        color: "bg-amber-100 text-amber-700"
+                                                    }
+                                                };
+                                                const currentStatus = statusTranslations[statusKey];
+
+                                                return (
+                                                    <div key={card.id} className={`p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-colors ${statusKey === 'active' ? 'hover:bg-purple-50/50' : 'hover:bg-gray-50'}`}>
+                                                        <div className="flex items-center gap-4">
+                                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${statusKey === 'active' ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-400'}`}>
+                                                                <Gift size={20} />
+                                                            </div>
+                                                            <div>
+                                                                <div className="flex items-center gap-2 mb-1">
+                                                                    <p className="font-black text-gray-900 font-mono tracking-widest text-lg">
+                                                                        {card.code}
+                                                                    </p>
+                                                                    <div className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${currentStatus.color}`}>
+                                                                        {currentStatus[language]}
+                                                                    </div>
+                                                                </div>
+                                                                <p className="text-xs text-gray-500 font-bold">
+                                                                    {language === 'ar' ? 'تم الشراء في:' : 'Purchased on:'} {new Date(card.createdAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US')}
+                                                                </p>
+                                                                {card.recipientName && (
+                                                                    <p className="text-xs text-purple-600 font-bold mt-1">
+                                                                        {language === 'ar' ? `إهداء إلى: ${card.recipientName}` : `Gifted to: ${card.recipientName}`}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-start sm:text-end w-full sm:w-auto">
+                                                            <p className={`font-black text-2xl ${statusKey === 'active' ? 'text-purple-600' : 'text-gray-400'}`}>
+                                                                {formatPrice(card.amount)}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
                         </section>
                     )}
 

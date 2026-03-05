@@ -20,6 +20,26 @@ export class GiftCardsService {
             .orderBy(desc(giftCards.createdAt));
     }
 
+    async findMyCards(userId: number) {
+        const [user] = await this.databaseService.db.select().from(users).where(eq(users.id, userId)).limit(1);
+        if (!user) throw new NotFoundException('User not found');
+
+        // Allow fetching cards where the user is either the sender, recipient, or the one who redeemed it
+        const userEmail = user.email || '';
+
+        // Use raw SQL with or() for complex matching. We haven't imported 'or' from drizzle-orm but we can fetch all and filter for now to avoid import issues if not present
+        const allCards = await this.databaseService.db
+            .select()
+            .from(giftCards)
+            .orderBy(desc(giftCards.createdAt));
+
+        return allCards.filter(c =>
+            (c.senderEmail && c.senderEmail.toLowerCase() === userEmail.toLowerCase()) ||
+            (c.recipientEmail && c.recipientEmail.toLowerCase() === userEmail.toLowerCase()) ||
+            c.redeemedByUserId === userId
+        );
+    }
+
     async createGiftCard(data: {
         code?: string;
         amount: number;
@@ -98,14 +118,13 @@ export class GiftCardsService {
         const [card] = await this.databaseService.db
             .select()
             .from(giftCards)
-            .where(and(
-                eq(giftCards.code, code.toUpperCase()),
-                eq(giftCards.isRedeemed, false),
-                eq(giftCards.isActive, true)
-            ))
+            .where(eq(giftCards.code, code.toUpperCase()))
             .limit(1);
 
-        if (!card) throw new NotFoundException('بطاقة الهدية غير صالحة، معطلة أو تم استخدامها بالفعل');
+        if (!card) throw new NotFoundException('رقم بطاقة الهدية غير صحيح');
+        if (card.isRedeemed) throw new BadRequestException('تم استخدام بطاقة الهدية هذه مسبقاً');
+        if (!card.isActive) throw new BadRequestException('بطاقة الهدية غير مفعلة أو بانتظار الدفع');
+
 
         return await this.databaseService.db.transaction(async (tx) => {
             // Mark as redeemed

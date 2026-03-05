@@ -218,11 +218,20 @@ export class OrdersService {
                 if (Number(giftCard.amount) < depositAmount) {
                     throw new BadRequestException(`قيمة الكارت (${giftCard.amount}) أقل من المقدم المطلوب (${depositAmount})`);
                 }
+
+                const newBalance = Number(giftCard.amount) - depositAmount;
+                const isFullyRedeemed = newBalance <= 0;
+
                 await this.databaseService.db
                     .update(giftCards)
-                    .set({ isRedeemed: true, redeemedByUserId: customerId, redeemedAt: new Date() })
+                    .set({
+                        amount: newBalance,
+                        isRedeemed: isFullyRedeemed,
+                        redeemedByUserId: isFullyRedeemed ? customerId : null,
+                        redeemedAt: isFullyRedeemed ? new Date() : null
+                    })
                     .where(eq(giftCards.id, giftCard.id));
-                console.log(`  - [Deposit] Gift card ${depositGiftCardCode} redeemed for deposit`);
+                console.log(`  - [Deposit] Gift card ${depositGiftCardCode} used for deposit. Remaining: ${newBalance}`);
 
             } else if (depositPaymentMethod === 'card') {
                 // For card payments we create a gateway session.
@@ -262,11 +271,20 @@ export class OrdersService {
                 if (Number(giftCard.amount) < grossTotal) {
                     throw new BadRequestException(`قيمة الكارت (${giftCard.amount}) أقل من إجمالي الطلب (${grossTotal})`);
                 }
+
+                const newBalance = Number(giftCard.amount) - grossTotal;
+                const isFullyRedeemed = newBalance <= 0;
+
                 await this.databaseService.db
                     .update(giftCards)
-                    .set({ isRedeemed: true, redeemedByUserId: customerId, redeemedAt: new Date() })
+                    .set({
+                        amount: newBalance,
+                        isRedeemed: isFullyRedeemed,
+                        redeemedByUserId: isFullyRedeemed ? customerId : null,
+                        redeemedAt: isFullyRedeemed ? new Date() : null
+                    })
                     .where(eq(giftCards.id, giftCard.id));
-                console.log(`  - [Payment] Gift card ${depositGiftCardCode} redeemed for full payment`);
+                console.log(`  - [Payment] Gift card ${depositGiftCardCode} used for full payment. Remaining: ${newBalance}`);
             }
         }
 

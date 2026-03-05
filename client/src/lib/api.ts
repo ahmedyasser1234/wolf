@@ -179,6 +179,7 @@ export const endpoints = {
         topUp: (amount: number, referenceId: string) => api.post('/wallets/top-up', { amount, referenceId }).then(res => res.data),
         confirmTopUp: (transactionId: number) => api.post('/wallets/confirm-top-up', { transactionId }).then(res => res.data),
     },
+
     points: {
         getMyPoints: () => api.get('/points/my-points').then(res => res.data),
     },
@@ -204,6 +205,7 @@ export const endpoints = {
         redeem: (code: string) => api.post('/gift-cards/redeem', { code }).then(res => res.data),
         purchase: (amount: number, recipientName?: string, paymentMethod?: string) => api.post('/gift-cards/purchase', { amount, recipientName, paymentMethod }).then(res => res.data),
         confirm: (giftCardId: number) => api.post('/gift-cards/confirm', { giftCardId }).then(res => res.data),
+        getMyCards: () => api.get('/gift-cards/my-cards').then(res => res.data),
     },
     vendors: {
         getDashboard: () => api.get('/vendors/dashboard').then(res => res.data),
