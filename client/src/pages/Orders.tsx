@@ -75,6 +75,9 @@ export default function Orders() {
   });
 
   const filteredOrders = orders?.filter((order: any) => {
+    // Hide placeholder installment orders (Awaiting Deposit)
+    if (order.installmentPlanId && ['awaiting_deposit_payment', 'pending_payment'].includes(order.paymentStatus)) return false;
+
     if (selectedStatus === "all") return true;
     return order.status === selectedStatus;
   });

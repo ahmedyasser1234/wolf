@@ -263,7 +263,11 @@ export default function Profile() {
                                         </div>
                                     ) : (
                                         <div className="divide-y divide-gray-50">
-                                            {orders.slice(0, 3).map((order: any) => {
+                                            {orders.filter((order: any) => {
+                                                // Hide placeholder installment orders
+                                                if (order.installmentPlanId && ['awaiting_deposit_payment', 'pending_payment'].includes(order.paymentStatus)) return false;
+                                                return true;
+                                            }).slice(0, 3).map((order: any) => {
                                                 const statusKey = order.status?.toLowerCase();
                                                 const translatedStatus = orderStatusTranslations[statusKey] || order.status;
                                                 const statusColors: Record<string, string> = {

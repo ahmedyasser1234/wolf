@@ -892,6 +892,9 @@ export default function AdminDashboard() {
                   {/* Mobile Order Cards */}
                   <div className="md:hidden space-y-4 p-4">
                     {adminOrders?.filter((order: any) => {
+                      // Hide placeholder installment orders (Awaiting Deposit)
+                      if (order.installmentPlanId && ['awaiting_deposit_payment', 'pending_payment'].includes(order.paymentStatus)) return false;
+
                       const name = (order.customer?.name || order.shippingAddress?.name || '').toLowerCase();
                       const num = (order.orderNumber || '').toLowerCase();
                       const q = orderSearch.toLowerCase();
@@ -957,6 +960,9 @@ export default function AdminDashboard() {
                       </thead>
                       <tbody>
                         {adminOrders?.filter((order: any) => {
+                          // Hide placeholder installment orders (Awaiting Deposit)
+                          if (order.installmentPlanId && ['awaiting_deposit_payment', 'pending_payment'].includes(order.paymentStatus)) return false;
+
                           const name = (order.customer?.name || order.shippingAddress?.name || '').toLowerCase();
                           const num = (order.orderNumber || '').toLowerCase();
                           const q = orderSearch.toLowerCase();
