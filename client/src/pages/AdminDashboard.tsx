@@ -1519,46 +1519,49 @@ export default function AdminDashboard() {
             <Button variant="outline" className="rounded-xl font-bold" onClick={() => setIsAdminOrderModalOpen(false)}>
               {t('close')}
             </Button>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <Select
-                value={newStatus || selectedOrder.status}
-                onValueChange={(val) => setNewStatus(val)}
-              >
-                <SelectTrigger className="w-full sm:w-[180px] rounded-xl font-bold bg-gray-900 border-gray-700">
-                  <SelectValue placeholder={t('updateOrderStatus')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">{language === 'ar' ? 'قيد الانتظار' : 'Pending'}</SelectItem>
-                  <SelectItem value="confirmed">{language === 'ar' ? 'تم التأكيد' : 'Confirmed'}</SelectItem>
-                  <SelectItem value="shipped">{language === 'ar' ? 'تم الشحن' : 'Shipped'}</SelectItem>
-                  <SelectItem value="delivered">{language === 'ar' ? 'تم التسليم' : 'Delivered'}</SelectItem>
-                  <SelectItem value="cancelled">{language === 'ar' ? 'ملغى' : 'Cancelled'}</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button
-                className="bg-blue-600 hover:bg-blue-700 rounded-xl font-bold whitespace-nowrap"
-                disabled={updatingStatus}
-                onClick={async () => {
-                  if (!newStatus) {
-                    toast.error(language === 'ar' ? 'يرجى اختيار حالة جديدة' : 'Please select a new status');
-                    return;
-                  }
-                  setUpdatingStatus(true);
-                  try {
-                    await api.patch(`/orders/${selectedOrder.id}/status`, { status: newStatus });
-                    toast.success(language === 'ar' ? 'تم تحديث الحالة بنجاح' : 'Status updated successfully');
-                    queryClient.invalidateQueries({ queryKey: ['admin-orders-full'] });
-                    setIsAdminOrderModalOpen(false);
-                  } catch (err) {
-                    toast.error(language === 'ar' ? 'فشل تحديث الحالة' : 'Failed to update status');
-                  } finally {
-                    setUpdatingStatus(false);
-                  }
-                }}
-              >
-                {updatingStatus ? <Loader2 className="w-4 h-4 animate-spin" /> : t('updateOrderStatus')}
-              </Button>
-            </div>
+            {selectedOrder && (
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Select
+                  value={newStatus || selectedOrder?.status || ''}
+                  onValueChange={(val) => setNewStatus(val)}
+                >
+                  <SelectTrigger className="w-full sm:w-[180px] rounded-xl font-bold bg-gray-900 border-gray-700">
+                    <SelectValue placeholder={t('updateOrderStatus')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">{language === 'ar' ? 'قيد الانتظار' : 'Pending'}</SelectItem>
+                    <SelectItem value="confirmed">{language === 'ar' ? 'تم التأكيد' : 'Confirmed'}</SelectItem>
+                    <SelectItem value="shipped">{language === 'ar' ? 'تم الشحن' : 'Shipped'}</SelectItem>
+                    <SelectItem value="delivered">{language === 'ar' ? 'تم التسليم' : 'Delivered'}</SelectItem>
+                    <SelectItem value="cancelled">{language === 'ar' ? 'ملغى' : 'Cancelled'}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  className="bg-blue-600 hover:bg-blue-700 rounded-xl font-bold whitespace-nowrap"
+                  disabled={updatingStatus}
+                  onClick={async () => {
+                    if (!newStatus) {
+                      toast.error(language === 'ar' ? 'يرجى اختيار حالة جديدة' : 'Please select a new status');
+                      return;
+                    }
+                    if (!selectedOrder?.id) return;
+                    setUpdatingStatus(true);
+                    try {
+                      await api.patch(`/orders/${selectedOrder.id}/status`, { status: newStatus });
+                      toast.success(language === 'ar' ? 'تم تحديث الحالة بنجاح' : 'Status updated successfully');
+                      queryClient.invalidateQueries({ queryKey: ['admin-orders-full'] });
+                      setIsAdminOrderModalOpen(false);
+                    } catch (err) {
+                      toast.error(language === 'ar' ? 'فشل تحديث الحالة' : 'Failed to update status');
+                    } finally {
+                      setUpdatingStatus(false);
+                    }
+                  }}
+                >
+                  {updatingStatus ? <Loader2 className="w-4 h-4 animate-spin" /> : t('updateOrderStatus')}
+                </Button>
+              </div>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

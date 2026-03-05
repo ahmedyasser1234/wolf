@@ -29,18 +29,22 @@ export class AllExceptionsFilter implements ExceptionFilter {
     };
 
     // LOG THE ERROR FOR THE DEVELOPER
-    console.error(`🚨 [AllExceptionsFilter] ERROR EXCEPTION DETECTED:`);
-    console.error(`   - Path: ${request.method} ${request.url}`);
-    console.error(`   - User-Agent: ${request.headers['user-agent']}`);
-    console.error(`   - Origin: ${request.headers['origin'] || 'N/A'}`);
-    console.error(`   - Status: ${httpStatus}`);
-    console.error(`   - Body Sent:`, JSON.stringify(request.body, null, 2));
-    console.error(`   - Error Message:`, responseBody.message);
-
-    if (exception instanceof Error) {
-      console.error(`   - Stack Trace:`, exception.stack);
+    if (httpStatus === HttpStatus.UNAUTHORIZED || httpStatus === HttpStatus.FORBIDDEN || httpStatus === HttpStatus.NOT_FOUND) {
+      console.warn(`⚠️ [AllExceptionsFilter] ${httpStatus} - ${request.method} ${request.url} - ${request.headers['user-agent']}`);
     } else {
-      console.error(`   - Full Exception Object:`, exception);
+      console.error(`🚨 [AllExceptionsFilter] ERROR EXCEPTION DETECTED:`);
+      console.error(`   - Path: ${request.method} ${request.url}`);
+      console.error(`   - User-Agent: ${request.headers['user-agent']}`);
+      console.error(`   - Origin: ${request.headers['origin'] || 'N/A'}`);
+      console.error(`   - Status: ${httpStatus}`);
+      console.error(`   - Body Sent:`, JSON.stringify(request.body, null, 2));
+      console.error(`   - Error Message:`, responseBody.message);
+
+      if (exception instanceof Error) {
+        console.error(`   - Stack Trace:`, exception.stack);
+      } else {
+        console.error(`   - Full Exception Object:`, exception);
+      }
     }
 
     httpAdapter.reply(ctx.getResponse(), responseBody, httpStatus);
