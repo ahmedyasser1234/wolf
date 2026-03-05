@@ -432,23 +432,9 @@ export default function Checkout() {
                       if (isCardMain || isCardTopUp) {
                         return (
                           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8">
-                              <div className="md:col-span-2 space-y-2">
-                                <label className="font-bold text-gray-700 text-sm">{t('cardName')}</label>
-                                <Input name="cardName" value={formData.cardName} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold focus-visible:ring-primary text-base" />
-                              </div>
-                              <div className="md:col-span-2 space-y-2">
-                                <label className="font-bold text-gray-700 text-sm">{t('cardNumber')}</label>
-                                <Input name="cardNumber" value={formData.cardNumber} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold focus-visible:ring-primary text-base" placeholder="0000 0000 0000 0000" />
-                              </div>
-                              <div className="space-y-2">
-                                <label className="font-bold text-gray-700 text-sm">{t('cardExpiry')}</label>
-                                <Input name="cardExpiry" value={formData.cardExpiry} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold focus-visible:ring-primary text-base" placeholder="MM / YY" />
-                              </div>
-                              <div className="space-y-2">
-                                <label className="font-bold text-gray-700 text-sm">{t('cardCVC')}</label>
-                                <Input name="cardCVC" value={formData.cardCVC} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold focus-visible:ring-primary text-base" placeholder="***" type="password" maxLength={3} />
-                              </div>
+                            <div className="bg-gray-50 p-6 rounded-2xl border-2 border-gray-100 text-center">
+                              <CreditCard className="mx-auto mb-4 text-gray-400 w-12 h-12" />
+                              <p className="font-bold text-gray-600">{language === 'ar' ? 'سيتم تحويلك لصفحة الدفع الآمنة عند تأكيد الطلب' : 'You will be redirected to the secure payment page upon confirmation'}</p>
                             </div>
                           </motion.div>
                         );
@@ -561,16 +547,9 @@ export default function Checkout() {
                             setStep("kyc");
                             return;
                           }
-                          const isCardMain = formData.paymentMethod === 'card' || paymentMethods.find(m => m.id === formData.paymentMethod)?.isCard;
-                          if (isCardMain && !formData.cardNumber) {
-                            toast.error(language === 'ar' ? "يرجى إكمال بيانات البطاقة" : "Please complete card details"); return;
-                          }
                           const walletBal = walletData?.wallet?.balance ?? 0;
                           if (formData.paymentMethod === 'wallet' && walletBal < total && !formData.topUpMethod) {
                             toast.error(language === 'ar' ? "يرجى اختيار طريقة دفع للمتبقي" : "Please select payment method for the remainder"); return;
-                          }
-                          if (formData.paymentMethod === 'wallet' && formData.topUpMethod === 'card' && !formData.cardNumber) {
-                            toast.error(language === 'ar' ? "يرجى إكمال بيانات البطاقة للمبلغ المتبقي" : "Please complete card details for the remainder"); return;
                           }
                           setStep("review");
                         }}
