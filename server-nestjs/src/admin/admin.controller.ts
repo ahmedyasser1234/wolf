@@ -63,10 +63,27 @@ export class AdminController {
         return this.adminService.getAllCustomers();
     }
 
+    @Patch('customers/:id/status')
+    async updateCustomerStatus(
+        @Req() req: Request,
+        @Param('id') id: string,
+        @Body('status') status: string
+    ) {
+        const payload = await this.checkAdmin(req);
+        const adminUser = await this.authService.findUserByOpenId(payload.openId);
+        if (!adminUser) throw new UnauthorizedException('Admin not found');
+        return this.adminService.updateCustomerStatus(+id, status, adminUser.id);
+    }
+
     @Get('orders')
-    async getOrders(@Req() req: Request) {
+    async getOrders(
+        @Req() req: Request,
+        @Query('search') search?: string,
+        @Query('dateFrom') dateFrom?: string,
+        @Query('dateTo') dateTo?: string
+    ) {
         await this.checkAdmin(req);
-        return this.adminService.getAllOrders();
+        return this.adminService.getAllOrders(search, dateFrom, dateTo);
     }
 
     @Get('products')
@@ -127,8 +144,14 @@ export class AdminController {
 
     @Delete('customers/:id')
     async deleteCustomer(@Req() req: Request, @Param('id') id: string) {
-        const adminPayload = await this.checkAdmin(req);
-        return this.adminService.deleteCustomer(+id, adminPayload.email);
+        await this.checkAdmin(req);
+        return this.adminService.deleteCustomer(+id);
+    }
+
+    @Get('customers/:id/status-logs')
+    async getCustomerStatusLogs(@Req() req: Request, @Param('id') id: string) {
+        await this.checkAdmin(req);
+        return this.adminService.getCustomerStatusLogs(+id);
     }
 
     @Get('search')

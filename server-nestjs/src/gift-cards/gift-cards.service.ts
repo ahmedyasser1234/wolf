@@ -19,6 +19,7 @@ export class GiftCardsService {
     }
 
     async createGiftCard(data: {
+        code?: string;
         amount: number;
         recipientName?: string;
         recipientEmail?: string;
@@ -27,7 +28,7 @@ export class GiftCardsService {
         message?: string;
         style?: string;
     }) {
-        const code = this.generateCode();
+        const code = data.code || this.generateCode();
         const [card] = await this.databaseService.db.insert(giftCards).values({
             ...data,
             code,

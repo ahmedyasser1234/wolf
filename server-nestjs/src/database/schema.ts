@@ -22,12 +22,14 @@ export const users = pgTable("users", {
     address: text("address"),
     password: text("password"),
     loginMethod: text("loginMethod"),
+    status: text("status").default("active").notNull(), // active, blocked, deactivated
     role: text("role").default("customer").notNull(),
     avatar: text("avatar"),
     measurements: jsonb("measurements").$type<any>(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().notNull(),
     lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
+    isDuplicate: boolean("isDuplicate").default(false).notNull(), // Feature 5
 });
 
 export type User = typeof users.$inferSelect;
@@ -683,4 +685,15 @@ export const installmentPlans = pgTable("installmentPlans", {
     updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 }, (table) => ({
     collectionIdIdx: index("installment_plans_collectionId_idx").on(table.collectionId),
+}));
+
+export const accountStatusLogs = pgTable("accountStatusLogs", {
+    id: serial("id").primaryKey(),
+    customerId: integer("customerId").notNull(),
+    adminId: integer("adminId").notNull(),
+    oldStatus: text("oldStatus").notNull(),
+    newStatus: text("newStatus").notNull(),
+    changedAt: timestamp("changedAt").defaultNow().notNull(),
+}, (table) => ({
+    customerIdIdx: index("accountStatusLogs_customerId_idx").on(table.customerId),
 }));

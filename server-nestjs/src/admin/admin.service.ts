@@ -1,8 +1,8 @@
 import { scrypt, randomBytes } from 'node:crypto';
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { vendors, users, orders, products, categories, conversations, messages, cartItems, wishlist, notifications, productColors, reviews, shipping, offerItems, collections, coupons, offers, vendorReviews, vendorPayouts, vendorWallets, paymentGateways, installmentPlans, orderItems } from '../database/schema';
-import { eq, and, desc, sql } from 'drizzle-orm';
+import { vendors, users, orders, products, categories, conversations, messages, cartItems, wishlist, notifications, productColors, reviews, shipping, offerItems, collections, coupons, offers, vendorReviews, vendorPayouts, vendorWallets, paymentGateways, installmentPlans, orderItems, accountStatusLogs } from '../database/schema';
+import { eq, and, desc, sql, ne } from 'drizzle-orm';
 import * as xlsx from 'xlsx';
 
 import { NotificationsService } from '../notifications/notifications.service';
@@ -96,8 +96,57 @@ export class AdminService {
             .orderBy(desc(users.lastSignedIn));
     }
 
-    async getAllOrders() {
-        const rows = await this.databaseService.db
+    async updateCustomerStatus(customerId: number, status: string, adminId: number) {
+        if (!['active', 'blocked', 'deactivated'].includes(status)) {
+            throw new BadRequestException('Invalid status');
+        }
+
+        // Get current status for audit log
+        const [currentUser] = await this.databaseService.db
+            .select({ status: users.status })
+            .from(users)
+            .where(eq(users.id, customerId));
+
+        if (!currentUser) {
+            throw new NotFoundException('Customer not found');
+        }
+
+        const [updatedUser] = await this.databaseService.db
+            .update(users)
+            .set({ status })
+            .where(eq(users.id, customerId))
+            .returning();
+
+        // Write audit log
+        await this.databaseService.db.insert(accountStatusLogs).values({
+            customerId,
+            adminId,
+            oldStatus: currentUser.status,
+            newStatus: status,
+        });
+
+        return { success: true, user: updatedUser };
+    }
+
+
+    async getCustomerStatusLogs(customerId: number) {
+        return await this.databaseService.db
+            .select({
+                id: accountStatusLogs.id,
+                oldStatus: accountStatusLogs.oldStatus,
+                newStatus: accountStatusLogs.newStatus,
+                changedAt: accountStatusLogs.changedAt,
+                adminName: users.name,
+                adminEmail: users.email,
+            })
+            .from(accountStatusLogs)
+            .leftJoin(users, eq(accountStatusLogs.adminId, users.id))
+            .where(eq(accountStatusLogs.customerId, customerId))
+            .orderBy(desc(accountStatusLogs.changedAt));
+    }
+
+    async getAllOrders(search?: string, dateFrom?: string, dateTo?: string) {
+        let query = this.databaseService.db
             .select({
                 order: orders,
                 customer: {
@@ -109,8 +158,33 @@ export class AdminService {
             })
             .from(orders)
             .leftJoin(users, eq(orders.customerId, users.id))
-            .leftJoin(installmentPlans, eq(orders.installmentPlanId, installmentPlans.id))
-            .orderBy(desc(orders.createdAt));
+            .leftJoin(installmentPlans, eq(orders.installmentPlanId, installmentPlans.id));
+
+        const conditions: any[] = [];
+
+        if (search) {
+            const searchPattern = `%${search.toLowerCase()}%`;
+            conditions.push(
+                sql`lower(${orders.orderNumber}) LIKE ${searchPattern} OR lower(${users.name}) LIKE ${searchPattern}`
+            );
+        }
+
+        if (dateFrom) {
+            conditions.push(sql`${orders.createdAt} >= ${new Date(dateFrom).toISOString()}`);
+        }
+
+        if (dateTo) {
+            // Include the whole day of dateTo
+            const toDate = new Date(dateTo);
+            toDate.setHours(23, 59, 59, 999);
+            conditions.push(sql`${orders.createdAt} <= ${toDate.toISOString()}`);
+        }
+
+        if (conditions.length > 0) {
+            query = query.where(and(...conditions)) as any;
+        }
+
+        const rows = await query.orderBy(desc(orders.createdAt));
 
         const orderIds = rows.map(r => r.order.id);
         if (orderIds.length === 0) return [];
@@ -453,16 +527,7 @@ export class AdminService {
         };
     }
 
-    async deleteCustomer(id: number, adminEmail: string) {
-        // Strict check: Only main admin can delete
-        // Hardcoded for now as per plan. 
-        // In production, this should likely be an env var or a database flag 'isSuperAdmin'
-        const MAIN_ADMIN_EMAIL = 'admin@fustan.com';
-
-        if (adminEmail !== MAIN_ADMIN_EMAIL) {
-            throw new UnauthorizedException('Only the main admin can delete customers.');
-        }
-
+    async deleteCustomer(id: number) {
         const customer = await this.databaseService.db
             .select()
             .from(users)
@@ -470,9 +535,21 @@ export class AdminService {
             .limit(1);
 
         if (customer.length === 0) {
-            // Return success even if not found to be idempotent, or throw error? 
-            // Throwing error is better for UI feedback.
-            throw new UnauthorizedException('Customer not found');
+            throw new NotFoundException('Customer not found');
+        }
+
+        // Block deletion if customer has active (non-cancelled, non-delivered) orders
+        const activeOrders = await this.databaseService.db
+            .select({ id: orders.id })
+            .from(orders)
+            .where(and(
+                eq(orders.customerId, id),
+                ne(orders.status, 'cancelled'),
+                ne(orders.status, 'delivered'),
+            ));
+
+        if (activeOrders.length > 0) {
+            throw new BadRequestException('Cannot delete customer with active orders');
         }
 
         return await this.databaseService.db.transaction(async (tx) => {
@@ -933,16 +1010,30 @@ export class AdminService {
     // --- Excel Export/Import Logic ---
     async exportCustomers() {
         const customersList = await this.databaseService.db
-            .select()
+            .select({
+                id: users.id,
+                name: users.name,
+                email: users.email,
+                phone: users.phone,
+                createdAt: users.createdAt,
+                status: users.status,
+                totalOrders: sql<number>`COUNT(DISTINCT CASE WHEN ${orders.status} != 'cancelled' THEN ${orders.id} END)`.as('totalOrders'),
+                totalSpent: sql<number>`SUM(CASE WHEN ${orders.status} != 'cancelled' THEN ${orders.total} ELSE 0 END)`.as('totalSpent'),
+            })
             .from(users)
+            .leftJoin(orders, eq(users.id, orders.customerId))
             .where(eq(users.role, 'customer'))
+            .groupBy(users.id)
             .orderBy(desc(users.createdAt));
 
         const formattedData = customersList.map(c => ({
             'Name (الاسم)': c.name || '',
             'Email (البريد الإلكتروني)': c.email || '',
             'Phone (رقم الهاتف)': c.phone || '',
-            'Join Date (تاريخ التسجيل)': new Date(c.createdAt).toLocaleDateString('en-AE')
+            'Join Date (تاريخ التسجيل)': new Date(c.createdAt).toLocaleDateString('en-AE'),
+            'Total Orders (إجمالي الطلبات)': Number(c.totalOrders) || 0,
+            'Total Spent (إجمالي المدفوعات)': Number(c.totalSpent) || 0,
+            'Account Status (حالة الحساب)': c.status === 'active' ? 'نشط' : c.status === 'blocked' ? 'محظور' : 'معطل',
         }));
 
         const worksheet = xlsx.utils.json_to_sheet(formattedData);
@@ -952,6 +1043,9 @@ export class AdminService {
             { wch: 35 }, // Email
             { wch: 20 }, // Phone
             { wch: 25 }, // Join Date
+            { wch: 25 }, // Total Orders
+            { wch: 25 }, // Total Spent
+            { wch: 25 }, // Account Status
         ];
 
         const workbook = xlsx.utils.book_new();

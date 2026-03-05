@@ -31,4 +31,18 @@ export class GiftCardsController {
         const userId = req.user.id;
         return this.giftCardsService.redeemGiftCard(code, userId);
     }
+
+    // Customer: Purchase a new gift card
+    @UseGuards(JwtAuthGuard)
+    @Post('purchase')
+    async purchase(@Request() req, @Body() data: { amount: number, recipientName?: string }) {
+        // Here we just create the card directly. In a real app we'd likely verify payment first.
+        // For now, this replicates the admin's create behavior but for a logged-in user.
+        return this.giftCardsService.createGiftCard({
+            amount: data.amount,
+            recipientName: data.recipientName,
+            senderName: req.user.name,
+            senderEmail: req.user.email,
+        });
+    }
 }

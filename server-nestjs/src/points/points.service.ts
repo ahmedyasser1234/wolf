@@ -68,6 +68,33 @@ export class PointsService {
         });
     }
 
+    async reversePoints(userId: number, orderTotal: number, orderId: number) {
+        const pointsToReverse = Math.floor(orderTotal * this.POINTS_PER_CURRENCY);
+        if (pointsToReverse <= 0) return;
+
+        const current = await this.getOrCreatePoints(userId);
+
+        // Prevent negative points balance if they already spent them
+        const actualDeduction = Math.min(pointsToReverse, current.points);
+        if (actualDeduction <= 0) return;
+
+        return await this.databaseService.db.transaction(async (tx) => {
+            await tx.update(userPoints)
+                .set({
+                    points: current.points - actualDeduction,
+                    updatedAt: new Date(),
+                })
+                .where(eq(userPoints.id, current.id));
+
+            await tx.insert(pointsTransactions).values({
+                userId,
+                amount: -actualDeduction,
+                type: 'spend',
+                description: `إلغاء نقاط مكافأة لاسترجاع الطلب رقم #${orderId}`,
+            });
+        });
+    }
+
     async spendPoints(userId: number, amount: number, description: string) {
         const current = await this.getOrCreatePoints(userId);
         if (current.points < amount) {

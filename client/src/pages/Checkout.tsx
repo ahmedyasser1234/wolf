@@ -42,7 +42,7 @@ export default function Checkout() {
     phone: user?.phone || "",
     address: user?.address || "",
     city: "",
-    country: "UAE",
+    country: "United Arab Emirates",
     zipCode: "",
     paymentMethod: intent?.paymentMethod || "card",
     cardName: "",
@@ -56,6 +56,8 @@ export default function Checkout() {
   const [kycData, setKycData] = useState<any>(null);
   const [orderResult, setOrderResult] = useState<any>(null);
   const [giftCardCode, setGiftCardCode] = useState("");
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
 
   // Show toast if starting at KYC
   useEffect(() => {
@@ -112,9 +114,24 @@ export default function Checkout() {
     return items.reduce((sum: number, item: any) => sum + (Number(item.quantity) * Number(item.product?.price || 0)), 0);
   }, [items]);
 
-  const total = subtotal; // Shipping and discounts would be added/subtracted here
-  const couponCode = ""; // Simplified for now
+  const total = subtotal; // Shipping would be added here
+
+  const discountAmount = appliedCoupon ? (total * appliedCoupon.discountPercent) / 100 : 0;
+  const finalTotal = total - discountAmount;
+
   const gateways = (gatewaysData as any[]) || [];
+
+  const validateCouponMutation = useMutation({
+    mutationFn: (code: string) => endpoints.coupons.validate(code),
+    onSuccess: (data) => {
+      setAppliedCoupon(data);
+      toast.success(language === 'ar' ? 'تم تطبيق كود الخصم بنجاح' : 'Coupon applied successfully');
+    },
+    onError: (err: any) => {
+      setAppliedCoupon(null);
+      toast.error(err.response?.data?.message || (language === 'ar' ? 'كود الخصم غير صالح' : 'Invalid coupon code'));
+    }
+  });
 
   // Mutations
   const placeOrderMutation = useMutation({
@@ -168,10 +185,10 @@ export default function Checkout() {
 
     const walletBal = walletData?.wallet?.balance ?? 0;
     const isWallet = formData.paymentMethod === 'wallet';
-    const walletAmountUsed = isWallet ? Math.min(walletBal, total) : 0;
+    const walletAmountUsed = isWallet ? Math.min(walletBal, finalTotal) : 0;
     const topUpMethod = formData.topUpMethod;
 
-    if (isWallet && walletBal < total && !topUpMethod) {
+    if (isWallet && walletBal < finalTotal && !topUpMethod) {
       toast.error(language === 'ar' ? 'يرجى اختيار طريقة دفع للمبلغ المتبقي' : 'Please select payment method for the remainder');
       return;
     }
@@ -213,7 +230,7 @@ export default function Checkout() {
         zipCode: formData.zipCode
       },
       paymentMethod: formData.paymentMethod,
-      couponCode: couponCode || undefined,
+      couponCode: appliedCoupon?.code || undefined,
       installmentPlanId: formData.paymentMethod === 'installments' ? formData.installmentPlanId : undefined,
       kycData: !!kycData ? "PRESENT" : "MISSING"
     });
@@ -228,7 +245,7 @@ export default function Checkout() {
         zipCode: formData.zipCode
       },
       paymentMethod: formData.paymentMethod,
-      couponCode: couponCode || undefined,
+      couponCode: appliedCoupon?.code || undefined,
       installmentPlanId: formData.paymentMethod === 'installments' ? formData.installmentPlanId : undefined,
       kycData: kycData,
       walletAmountUsed,
@@ -382,8 +399,44 @@ export default function Checkout() {
                         <Input name="city" value={formData.city} onChange={handleInputChange} className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-black font-bold w-full focus-visible:ring-primary text-base" />
                       </div>
                       <div className="space-y-2">
-                        <label className="font-bold text-gray-700 text-sm">{t('uae')}</label>
-                        <Input name="country" value={formData.country} readOnly className="h-14 rounded-2xl bg-gray-50 border-none px-6 text-gray-400 w-full text-base" />
+                        <label className="font-bold text-gray-700 text-sm">{language === 'ar' ? 'الدولة' : 'Country'}</label>
+                        <select
+                          name="country"
+                          value={formData.country}
+                          onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                          className="h-14 w-full rounded-2xl bg-gray-50 border-none px-6 text-black font-bold focus-visible:ring-primary text-base appearance-none cursor-pointer"
+                          style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
+                        >
+                          <option value="United Arab Emirates">🇦🇪 الإمارات العربية المتحدة - UAE</option>
+                          <option value="Saudi Arabia">🇸🇦 المملكة العربية السعودية - Saudi Arabia</option>
+                          <option value="Kuwait">🇰🇼 الكويت - Kuwait</option>
+                          <option value="Qatar">🇶🇦 قطر - Qatar</option>
+                          <option value="Bahrain">🇧🇭 البحرين - Bahrain</option>
+                          <option value="Oman">🇴🇲 عُمان - Oman</option>
+                          <option value="Egypt">🇪🇬 مصر - Egypt</option>
+                          <option value="Jordan">🇯🇴 الأردن - Jordan</option>
+                          <option value="Lebanon">🇱🇧 لبنان - Lebanon</option>
+                          <option value="Iraq">🇮🇶 العراق - Iraq</option>
+                          <option value="Yemen">🇾🇪 اليمن - Yemen</option>
+                          <option value="Libya">🇱🇾 ليبيا - Libya</option>
+                          <option value="Tunisia">🇹🇳 تونس - Tunisia</option>
+                          <option value="Algeria">🇩🇿 الجزائر - Algeria</option>
+                          <option value="Morocco">🇲🇦 المغرب - Morocco</option>
+                          <option value="Sudan">🇸🇩 السودان - Sudan</option>
+                          <option value="Syria">🇸🇾 سوريا - Syria</option>
+                          <option value="Palestine">🇵🇸 فلسطين - Palestine</option>
+                          <option disabled>──────────────</option>
+                          <option value="United States">🇺🇸 United States</option>
+                          <option value="United Kingdom">🇬🇧 United Kingdom</option>
+                          <option value="Canada">🇨🇦 Canada</option>
+                          <option value="Australia">🇦🇺 Australia</option>
+                          <option value="Germany">🇩🇪 Germany</option>
+                          <option value="France">🇫🇷 France</option>
+                          <option value="Turkey">🇹🇷 Turkey</option>
+                          <option value="India">🇮🇳 India</option>
+                          <option value="Pakistan">🇵🇰 Pakistan</option>
+                          <option value="Other">🌍 {language === 'ar' ? 'دولة أخرى' : 'Other'}</option>
+                        </select>
                       </div>
                       <div className="sm:col-span-2 space-y-2">
                         <label className="font-bold text-gray-700 text-sm">{t('phone')}</label>
@@ -519,7 +572,7 @@ export default function Checkout() {
                                   <span>{language === 'ar' ? 'مقدم الدفع:' : 'Down Payment:'}</span>
                                 </div>
                                 <div className="flex justify-between items-center text-primary pt-1">
-                                  <span className="text-lg font-black">{formatPrice((total * (1 - plan.downPaymentPercentage / 100)) / plan.months)}</span>
+                                  <span className="text-lg font-black">{formatPrice((finalTotal * (1 - plan.downPaymentPercentage / 100)) / plan.months)}</span>
                                   <span>{language === 'ar' ? 'القسط الشهري:' : 'Monthly Payment:'}</span>
                                 </div>
                               </div>
@@ -548,7 +601,7 @@ export default function Checkout() {
                             return;
                           }
                           const walletBal = walletData?.wallet?.balance ?? 0;
-                          if (formData.paymentMethod === 'wallet' && walletBal < total && !formData.topUpMethod) {
+                          if (formData.paymentMethod === 'wallet' && walletBal < finalTotal && !formData.topUpMethod) {
                             toast.error(language === 'ar' ? "يرجى اختيار طريقة دفع للمتبقي" : "Please select payment method for the remainder"); return;
                           }
                           setStep("review");
@@ -647,35 +700,71 @@ export default function Checkout() {
                   </div>
                 ))}
               </div>
-              <div className="flex justify-between items-center bg-gray-50 p-6 rounded-[2rem] mt-8">
-                <span className="font-black text-primary text-3xl tracking-tighter">{formatPrice(total)}</span>
-                <span className="text-gray-900 font-black text-xl">المجموع</span>
-              </div>
-
-              {formData.paymentMethod === 'installments' && (() => {
-                const intentRaw = localStorage.getItem('wolf_payment_intent');
-                if (!intentRaw) return null;
-                const intent = JSON.parse(intentRaw);
-                return (
-                  <div className="mt-6 space-y-3 bg-purple-50 p-6 rounded-[2rem] border-2 border-purple-100">
-                    <div className="flex justify-between items-center text-sm font-bold text-purple-700">
-                      <span>{formatPrice(intent.total)}</span>
-                      <span>الإجمالي بالفوائد</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm font-black text-purple-900 pt-3 border-t border-purple-200">
-                      <span>{formatPrice(intent.downPayment)}</span>
-                      <span>الدفعة الأولى (تُدفع الآن)</span>
-                    </div>
-                    <div className="flex justify-between items-center text-xs font-bold text-purple-500">
-                      <span>{formatPrice(intent.financedAmount)}</span>
-                      <span>المبلغ المتبقي للأقساط</span>
-                    </div>
-                  </div>
-                );
-              })()}
             </div>
+
+            {/* Coupon Section */}
+            <div className="mt-6 mb-8 w-full">
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    if (appliedCoupon) {
+                      setAppliedCoupon(null);
+                      setCouponInput("");
+                    } else if (couponInput.trim()) {
+                      validateCouponMutation.mutate(couponInput);
+                    }
+                  }}
+                  disabled={validateCouponMutation.isPending || (!appliedCoupon && !couponInput.trim())}
+                  variant={appliedCoupon ? "destructive" : "default"}
+                  className="h-12 px-6 rounded-xl font-bold shrink-0"
+                >
+                  {validateCouponMutation.isPending ? <Loader2 className="animate-spin h-4 w-4" /> : appliedCoupon ? (language === 'ar' ? 'إزالة' : 'Remove') : (language === 'ar' ? 'تطبيق' : 'Apply')}
+                </Button>
+                <Input
+                  value={couponInput}
+                  onChange={(e) => setCouponInput(e.target.value)}
+                  placeholder={language === 'ar' ? 'كود الخصم (إن وجد)' : 'Discount code (if any)'}
+                  disabled={!!appliedCoupon}
+                  className="h-12 bg-gray-50 border-gray-100 rounded-xl font-mono text-center flex-1 font-bold text-gray-900 focus-visible:ring-primary"
+                />
+              </div>
+            </div>
+
+            {appliedCoupon && (
+              <div className="flex justify-between items-center bg-green-50/50 p-4 rounded-xl mt-4 border border-green-100 mb-4">
+                <span className="font-bold text-green-600 text-lg">-{formatPrice(discountAmount)}</span>
+                <span className="text-green-700 font-bold">{language === 'ar' ? `الخصم (${appliedCoupon.discountPercent}%)` : `Discount (${appliedCoupon.discountPercent}%)`}</span>
+              </div>
+            )}
+
+            <div className="flex justify-between items-center bg-gray-50 p-6 rounded-[2rem] mt-4">
+              <span className="font-black text-primary text-3xl tracking-tighter">{formatPrice(finalTotal)}</span>
+              <span className="text-gray-900 font-black text-xl">المجموع</span>
+            </div>
+
+            {formData.paymentMethod === 'installments' && (() => {
+              const intentRaw = localStorage.getItem('wolf_payment_intent');
+              if (!intentRaw) return null;
+              const intent = JSON.parse(intentRaw);
+              return (
+                <div className="mt-6 space-y-3 bg-purple-50 p-6 rounded-[2rem] border-2 border-purple-100">
+                  <div className="flex justify-between items-center text-sm font-bold text-purple-700">
+                    <span>{formatPrice(intent.total)}</span>
+                    <span>الإجمالي بالفوائد</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm font-black text-purple-900 pt-3 border-t border-purple-200">
+                    <span>{formatPrice(intent.downPayment)}</span>
+                    <span>الدفعة الأولى (تُدفع الآن)</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs font-bold text-purple-500">
+                    <span>{formatPrice(intent.financedAmount)}</span>
+                    <span>المبلغ المتبقي للأقساط</span>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
-        </div >
+        </div>
       </div >
     </div >
   );

@@ -71,7 +71,7 @@ export const endpoints = {
         clear: () => api.post('/cart/clear').then(res => res.data),
     },
     orders: {
-        list: () => api.get('/orders').then(res => res.data),
+        list: (params?: Record<string, any>) => api.get('/orders', { params }).then(res => res.data),
         get: (id: number) => api.get(`/orders/${id}`).then(res => res.data),
         create: (data: any) => api.post('/orders', data).then(res => res.data),
         updateStatus: (id: number, status: string) => api.patch(`/orders/${id}/status`, { status }).then(res => res.data),
@@ -135,6 +135,9 @@ export const endpoints = {
     },
     admin: {
         getCustomers: () => api.get('/admin/customers').then(res => res.data),
+        updateCustomerStatus: (id: number, status: string) => api.patch(`/admin/customers/${id}/status`, { status }).then(res => res.data),
+        deleteCustomer: (id: number) => api.delete(`/admin/customers/${id}`).then(res => res.data),
+        getCustomerStatusLogs: (id: number) => api.get(`/admin/customers/${id}/status-logs`).then(res => res.data),
         getOrders: () => api.get('/admin/orders').then(res => res.data),
         getProducts: (search?: string) => api.get('/admin/products', { params: { search } }).then(res => res.data),
         globalSearch: (q: string) => api.get('/admin/search', { params: { q } }).then(res => res.data),

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Clock, Loader2, Package, ShoppingCart, Eye, CheckCircle, XCircle, FileText, ScanFace, CreditCard } from "lucide-react";
+import { Clock, Loader2, Package, ShoppingCart, Eye, CheckCircle, XCircle, FileText, ScanFace, CreditCard, Search, Filter } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -23,10 +23,18 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
     const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
     const [kycModalOrder, setKycModalOrder] = useState<any | null>(null);
     const [rejectReason, setRejectReason] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [dateFrom, setDateFrom] = useState('');
+    const [dateTo, setDateTo] = useState('');
 
     const { data: ordersData, isLoading } = useQuery({
-        queryKey: ['vendor', 'orders', vendorId],
-        queryFn: () => endpoints.orders.list(),
+        queryKey: ['vendor', 'orders', vendorId, searchQuery, dateFrom, dateTo],
+        queryFn: () => endpoints.orders.list({
+            vendorId, // if vendorId is strictly required by list
+            search: searchQuery,
+            dateFrom,
+            dateTo
+        }),
         enabled: !!vendorId,
     });
 
@@ -104,6 +112,60 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
                 <div className={language === 'ar' ? 'text-right' : 'text-left'}>
                     <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white mb-2">{language === 'ar' ? "إدارة الطلبات" : "Order Management"}</h2>
                     <p className="text-white font-bold text-xs sm:text-sm md:text-base">{language === 'ar' ? "تابع وحمل وأدر طلبات عملائك بكل سهولة" : "Track and manage your customer orders easily"}</p>
+                </div>
+            </div>
+
+            {/* Filters Section */}
+            <div className="bg-gray-900 border border-gray-800 rounded-[2rem] p-6 mb-8 flex flex-col md:flex-row gap-4 items-end">
+                <div className="w-full md:w-1/3">
+                    <label className="text-xs font-black tracking-widest text-gray-400 uppercase mb-2 block">
+                        {language === 'ar' ? 'بحث (رقم الطلب، اسم العميل)' : 'Search (Order ID, Customer Name)'}
+                    </label>
+                    <div className="relative">
+                        <Search className={`absolute ${language === 'ar' ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500`} />
+                        <input
+                            type="text"
+                            placeholder={language === 'ar' ? "ابحث هنا..." : "Search here..."}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className={`w-full bg-gray-950 border border-gray-800 rounded-xl py-3 ${language === 'ar' ? 'pr-12 pl-4' : 'pl-12 pr-4'} text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors`}
+                        />
+                    </div>
+                </div>
+
+                <div className="w-full md:w-1/4">
+                    <label className="text-xs font-black tracking-widest text-gray-400 uppercase mb-2 block">
+                        {language === 'ar' ? 'من تاريخ' : 'From Date'}
+                    </label>
+                    <input
+                        type="date"
+                        value={dateFrom}
+                        onChange={(e) => setDateFrom(e.target.value)}
+                        className="w-full bg-gray-950 border border-gray-800 rounded-xl py-3 px-4 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors [color-scheme:dark]"
+                    />
+                </div>
+
+                <div className="w-full md:w-1/4">
+                    <label className="text-xs font-black tracking-widest text-gray-400 uppercase mb-2 block">
+                        {language === 'ar' ? 'إلى تاريخ' : 'To Date'}
+                    </label>
+                    <input
+                        type="date"
+                        value={dateTo}
+                        onChange={(e) => setDateTo(e.target.value)}
+                        className="w-full bg-gray-950 border border-gray-800 rounded-xl py-3 px-4 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors [color-scheme:dark]"
+                    />
+                </div>
+
+                <div className="w-full md:w-auto flex-shrink-0">
+                    <Button
+                        variant="ghost"
+                        onClick={() => { setSearchQuery(''); setDateFrom(''); setDateTo(''); }}
+                        className="w-full h-12 text-gray-400 hover:text-white"
+                    >
+                        <Filter className="w-4 h-4 mr-2" />
+                        {language === 'ar' ? 'مسح الفلاتر' : 'Clear Filters'}
+                    </Button>
                 </div>
             </div>
 

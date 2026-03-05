@@ -93,6 +93,19 @@ export class AuthService {
             throw new UnauthorizedException('User already exists');
         }
 
+        // Feature 5: Detect Duplicate Accounts
+        let isDuplicate = false;
+        if (data.phone) {
+            const possibleDuplicatePhone = await this.databaseService.db
+                .select()
+                .from(users)
+                .where(eq(users.phone, data.phone))
+                .limit(1);
+            if (possibleDuplicatePhone.length > 0) {
+                isDuplicate = true;
+            }
+        }
+
         const hashedPassword = await this.hashPassword(data.password);
         const openId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -108,6 +121,7 @@ export class AuthService {
                 address: data.address,
                 loginMethod: 'email',
                 lastSignedIn: new Date(),
+                isDuplicate,
             }).returning();
 
             if (data.role === 'vendor') {
@@ -182,6 +196,10 @@ export class AuthService {
             throw new UnauthorizedException(
                 `This account is registered as a ${currentRole}. Please use the correct login page.`
             );
+        }
+
+        if (user.status === 'blocked') {
+            throw new UnauthorizedException('This account has been blocked by the administrator.');
         }
 
         // Check Vendor Status
@@ -262,6 +280,10 @@ export class AuthService {
                 await this.databaseService.db.update(users)
                     .set({ lastSignedIn: new Date() })
                     .where(eq(users.id, userId));
+            }
+
+            if (user[0].status === 'blocked') {
+                throw new UnauthorizedException('This account has been blocked by the administrator.');
             }
 
             const sessionToken = await this.createSessionToken(userId, userOpenId, userName, userRole, email);

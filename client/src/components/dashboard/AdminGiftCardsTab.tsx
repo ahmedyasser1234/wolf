@@ -30,7 +30,6 @@ export default function AdminGiftCardsTab({
     const [editingCoupon, setEditingCoupon] = useState<any>(null);
     const [code, setCode] = useState("");
     const [discountAmount, setDiscountAmount] = useState<string>("");
-    const [maxUses, setMaxUses] = useState<string>("");
 
     const { data: giftCards, isLoading } = useQuery({
         queryKey: ['admin', 'gift-cards'],
@@ -62,14 +61,13 @@ export default function AdminGiftCardsTab({
     const resetForm = () => {
         setCode("");
         setDiscountAmount("");
-        setMaxUses("");
         setEditingCoupon(null);
     };
 
     const handleSubmit = () => {
         const data = {
             amount: Number(discountAmount),
-            maxUses: maxUses ? Number(maxUses) : null,
+            code: code ? code : undefined,
         };
         createCard.mutate(data);
     };
@@ -78,7 +76,6 @@ export default function AdminGiftCardsTab({
         setEditingCoupon(card);
         setCode(card.code || "");
         setDiscountAmount(card.amount?.toString() || "");
-        setMaxUses("");
         setIsModalOpen(true);
     };
 
@@ -235,18 +232,6 @@ export default function AdminGiftCardsTab({
                                         placeholder="100.00"
                                         className="h-14 bg-gray-950 border-gray-800 text-white rounded-2xl px-6 font-black text-lg focus:ring-emerald-500"
                                     />
-                                </div>
-
-                                <div className="space-y-2 text-start">
-                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">{language === 'ar' ? 'عدد مرات الاستخدام' : 'Max Usage Count'}</label>
-                                    <Input
-                                        type="number"
-                                        value={maxUses}
-                                        onChange={(e) => setMaxUses(e.target.value)}
-                                        placeholder="1"
-                                        className="h-14 bg-gray-950 border-gray-800 text-white rounded-2xl px-6 font-black text-lg focus:ring-emerald-500"
-                                    />
-                                    <p className="text-[10px] text-gray-500 font-bold px-1">{language === 'ar' ? "* اتركه فارغاً للاستخدام غير المحدود" : "* Leave empty for unlimited use"}</p>
                                 </div>
                             </div>
                         </div>

@@ -80,10 +80,20 @@ export default function OrderDetailsView({ orderId, onClose }: OrderDetailsViewP
                                 {language === 'ar' ? "تفاصيل الطلب" : "Order Details"}
                                 <span className="text-base sm:text-lg text-slate-400 font-bold">#{order.orderNumber}</span>
                             </h2>
-                            <p className="text-slate-500 text-[10px] sm:text-sm font-bold flex items-center gap-2 mt-0.5">
-                                <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
-                                {format(new Date(order.createdAt), "dd MMMM yyyy, h:mm a", { locale: language === 'ar' ? ar : undefined })}
-                            </p>
+                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-1">
+                                <p className="text-slate-500 text-[10px] sm:text-xs font-bold flex items-center gap-1.5 bg-slate-100/50 px-2 py-1 rounded w-fit">
+                                    <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                                    <span>{language === 'ar' ? "تاريخ الطلب:" : "Order Date:"}</span>
+                                    {format(new Date(order.createdAt), "dd MMM yyyy, h:mm a", { locale: language === 'ar' ? ar : undefined })}
+                                </p>
+                                {order.updatedAt && (
+                                    <p className="text-slate-500 text-[10px] sm:text-xs font-bold flex items-center gap-1.5 bg-slate-100/50 px-2 py-1 rounded w-fit">
+                                        <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                                        <span>{language === 'ar' ? "آخر تحديث:" : "Last Updated:"}</span>
+                                        {format(new Date(order.updatedAt), "dd MMM yyyy, h:mm a", { locale: language === 'ar' ? ar : undefined })}
+                                    </p>
+                                )}
+                            </div>
                         </div>
                     </div>
                     <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
@@ -255,18 +265,59 @@ export default function OrderDetailsView({ orderId, onClose }: OrderDetailsViewP
                                     {language === 'ar' ? "معلومات الدفع" : "Payment Info"}
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent className="pt-4 flex items-center justify-between">
+                            <CardContent className="pt-4 flex items-center justify-between gap-4 flex-wrap">
                                 <div className="flex flex-col">
                                     <span className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{language === 'ar' ? "طريقة الدفع" : "Payment Method"}</span>
-                                    <span className="font-black text-slate-900 capitalize">{order.paymentMethod || "Card"}</span>
+                                    <span className="font-black text-slate-900">
+                                        {language === 'ar' ? ({
+                                            'card': 'بطاقة ائتمان',
+                                            'cash': 'دفع عند الاستلام',
+                                            'installments': 'تقسيط WOLF',
+                                            'wallet': 'المحفظة الإلكترونية',
+                                            'gift_card': 'بطاقة هدية',
+                                        } as any)[order.paymentMethod] || order.paymentMethod : ({
+                                            'card': 'Credit Card',
+                                            'cash': 'Cash on Delivery',
+                                            'installments': 'WOLF Installments',
+                                            'wallet': 'Wallet',
+                                            'gift_card': 'Gift Card',
+                                        } as any)[order.paymentMethod] || order.paymentMethod}
+                                    </span>
                                 </div>
+                                {/* Installment plan info if applicable */}
+                                {order.paymentMethod === 'installments' && order.installmentPlan && (
+                                    <div className="flex flex-col">
+                                        <span className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{language === 'ar' ? "خطة التقسيط" : "Installment Plan"}</span>
+                                        <span className="font-black text-slate-900 text-sm">
+                                            {language === 'ar' ? order.installmentPlan.name : order.installmentPlan.name} — {order.installmentPlan.months} {language === 'ar' ? 'شهر' : 'months'}
+                                        </span>
+                                    </div>
+                                )}
                                 <div className="flex flex-col items-end">
                                     <span className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{language === 'ar' ? "حالة الدفع" : "Payment Status"}</span>
-                                    <Badge variant={(order.paymentStatus === 'paid' ? 'default' : 'secondary') as any} className={cn(
+                                    <Badge className={cn(
                                         "capitalize font-bold",
-                                        order.paymentStatus === 'paid' ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" : "bg-slate-100 text-slate-700"
+                                        order.paymentStatus === 'paid' ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" :
+                                            order.paymentStatus === 'pending_kyc_review' ? "bg-amber-100 text-amber-700" :
+                                                order.paymentStatus === 'failed' ? "bg-red-100 text-red-700" :
+                                                    order.paymentStatus === 'refunded' ? "bg-blue-100 text-blue-700" :
+                                                        "bg-slate-100 text-slate-700"
                                     )}>
-                                        {order.paymentStatus}
+                                        {language === 'ar' ? ({
+                                            'pending': 'قيد الانتظار',
+                                            'paid': 'تم الدفع',
+                                            'pending_kyc_review': 'مراجعة الأوراق',
+                                            'failed': 'فشل الدفع',
+                                            'refunded': 'مُستردّ',
+                                            'on_delivery': 'يُدفع عند الاستلام',
+                                        } as any)[order.paymentStatus] || order.paymentStatus : ({
+                                            'pending': 'Pending',
+                                            'paid': 'Paid',
+                                            'pending_kyc_review': 'KYC Under Review',
+                                            'failed': 'Failed',
+                                            'refunded': 'Refunded',
+                                            'on_delivery': 'Pay on Delivery',
+                                        } as any)[order.paymentStatus] || order.paymentStatus}
                                     </Badge>
                                 </div>
                             </CardContent>

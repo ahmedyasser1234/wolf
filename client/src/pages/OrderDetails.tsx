@@ -356,6 +356,20 @@ export default function OrderDetails() {
                                 }`}>
                                 {order.paymentStatus === 'paid' ? (language === 'ar' ? 'مدفوع' : 'Paid') : (language === 'ar' ? 'غير مدفوع' : 'Unpaid')}
                             </div>
+                            <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
+                                <div className="flex items-center gap-2 text-sm text-gray-500">
+                                    <Clock className="w-4 h-4" />
+                                    <span className="font-bold">{language === 'ar' ? 'تاريخ الطلب:' : 'Order Date:'}</span>
+                                    <span>{new Date(order.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                </div>
+                                {order.updatedAt && (
+                                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                                        <Clock className="w-4 h-4" />
+                                        <span className="font-bold">{language === 'ar' ? 'آخر تحديث:' : 'Last Updated:'}</span>
+                                        <span>{new Date(order.updatedAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                    </div>
+                                )}
+                            </div>
                         </CardContent>
                     </Card>
 

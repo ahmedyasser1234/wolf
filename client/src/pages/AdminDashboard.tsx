@@ -895,9 +895,11 @@ export default function AdminDashboard() {
                             <td className="py-4 px-6 font-black text-white text-center">{Number(order.total).toFixed(2)} {t('currency')}</td>
                             <td className="py-4 px-6 text-center">
                               <span className="px-3 py-1 bg-gray-800 text-gray-300 rounded-full text-[10px] font-black uppercase tracking-wider border border-gray-700">
-                                {order.paymentMethod === 'cod' || order.paymentMethod === 'cashOnDelivery' ? (language === 'ar' ? 'دفع عند الاستلام' : 'COD') :
+                                {order.paymentMethod === 'cash' || order.paymentMethod === 'cod' || order.paymentMethod === 'cashOnDelivery' ? (language === 'ar' ? 'دفع عند الاستلام' : 'COD') :
                                   order.paymentMethod === 'installments' ? (language === 'ar' ? 'تقسيط' : 'Installments') :
-                                    order.paymentMethod === 'wallet' ? (language === 'ar' ? 'محفظة' : 'Wallet') : (language === 'ar' ? 'بطاقة' : 'Card')}
+                                    order.paymentMethod === 'wallet' ? (language === 'ar' ? 'محفظة' : 'Wallet') :
+                                      order.paymentMethod === 'gift_card' ? (language === 'ar' ? 'بطاقة هدية' : 'Gift Card') :
+                                        (language === 'ar' ? 'بطاقة' : 'Card')}
                               </span>
                             </td>
                             <td className="py-4 px-6 text-center">
@@ -1248,8 +1250,23 @@ export default function AdminDashboard() {
             <div className="py-4 space-y-6 max-h-[70vh] overflow-y-auto">
               <div className="bg-gray-900 p-4 rounded-2xl flex justify-between items-center text-start">
                 <div>
-                  <p className="text-white font-medium">{t('paymentMethod')}: {selectedOrder.paymentMethod === 'stripe' ? t('creditCard') : t('cashOnDelivery')}</p>
-                  <p className="text-white font-medium">{t('paymentStatus')}: {selectedOrder.paymentStatus === 'paid' ? t('paid') : t('pending')}</p>
+                  <p className="text-white font-medium">{t('paymentMethod')}: {({
+                    'card': language === 'ar' ? 'بطاقة ائتمان' : 'Credit Card',
+                    'cash': language === 'ar' ? 'دفع عند الاستلام' : 'Cash on Delivery',
+                    'cod': language === 'ar' ? 'دفع عند الاستلام' : 'Cash on Delivery',
+                    'installments': language === 'ar' ? 'تقسيط WOLF' : 'WOLF Installments',
+                    'wallet': language === 'ar' ? 'المحفظة الإلكترونية' : 'Wallet',
+                    'gift_card': language === 'ar' ? 'بطاقة هدية' : 'Gift Card',
+                    'stripe': language === 'ar' ? 'بطاقة ائتمان' : 'Credit Card',
+                  } as any)[selectedOrder.paymentMethod] || selectedOrder.paymentMethod}</p>
+                  <p className="text-white font-medium">{t('paymentStatus')}: {({
+                    'paid': language === 'ar' ? 'تم الدفع ✅' : 'Paid ✅',
+                    'pending': language === 'ar' ? 'قيد الانتظار' : 'Pending',
+                    'pending_kyc_review': language === 'ar' ? 'مراجعة الأوراق 📋' : 'KYC Under Review 📋',
+                    'failed': language === 'ar' ? 'فشل الدفع ❌' : 'Failed ❌',
+                    'refunded': language === 'ar' ? 'مُستردّ' : 'Refunded',
+                    'on_delivery': language === 'ar' ? 'يُدفع عند الاستلام' : 'Pay on Delivery',
+                  } as any)[selectedOrder.paymentStatus] || selectedOrder.paymentStatus}</p>
                 </div>
               </div>
 

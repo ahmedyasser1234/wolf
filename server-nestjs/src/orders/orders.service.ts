@@ -2,7 +2,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { orders, orderItems, products, cartItems, notifications, vendors, coupons, offers, offerItems, users, walletTransactions, customerWallets, installmentPlans, installments } from '../database/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CouponsService } from '../coupons/coupons.service';
 import { WalletsService } from '../wallets/wallets.service';
@@ -81,6 +81,14 @@ export class OrdersService {
             .where(eq(cartItems.customerId, customerId));
 
         if (cart.length === 0) throw new BadRequestException('السلة فارغة');
+
+        // Feature 8: Block deactivated or blocked customers from placing orders
+        const [customerRecord] = await this.databaseService.db
+            .select({ status: users.status })
+            .from(users)
+            .where(eq(users.id, customerId));
+        if (customerRecord?.status === 'blocked') throw new BadRequestException('حسابك موقوف ولا يمكنك إتمام الطلب.');
+        if (customerRecord?.status === 'deactivated') throw new BadRequestException('حسابك معطّل مؤقتاً ولا يمكنك إتمام الطلب. يرجى التواصل مع الدعم.');
 
         // Group items by vendor
         const vendorGroups = new Map<number, { items: any[], subtotal: number, vendorUserId: number }>();
@@ -377,6 +385,13 @@ export class OrdersService {
 
                 console.log(`  - [CartCleanup] Deleting cart items for customer ${customerId}`);
                 await tx.delete(cartItems).where(eq(cartItems.customerId, customerId));
+                if (coupon) {
+                    console.log(`  - [Coupons] Incrementing usedCount for coupon: ${coupon.code}`);
+                    await tx.update(coupons)
+                        .set({ usedCount: sql`${coupons.usedCount} + 1` })
+                        .where(eq(coupons.id, coupon.id));
+                }
+
             });
 
             // Notify Admins of new order(s)
@@ -430,6 +445,11 @@ export class OrdersService {
         // Prevent ANY backtracking (except cancelling, if allowed)
         if (newStep < currentStep && newStatusNormalized !== 'cancelled') {
             throw new BadRequestException('Cannot revert order to a previous status.');
+        }
+
+        // Feature 2: Cancel Points if the order is cancelled and it previously earned points
+        if (newStatusNormalized === 'cancelled' && (currentStatusNormalized === 'delivered' || currentOrder.paymentStatus === 'paid')) {
+            await this.pointsService.reversePoints(currentOrder.customerId, Number(currentOrder.total), orderId);
         }
 
         // Validation 2: Role Checks (if userId provided)
@@ -601,6 +621,8 @@ export class OrdersService {
                     }
                 }
             }
+
+            // No need to reverse points here because points are only awarded on 'paid' or 'delivered'
 
             // Notify Customer
             const message = reason ? `نعتذر، تم رفض طلب التقسيط للطلب رقم #${order.orderNumber}: ${reason}. تم استرجاع مبلغ المقدم إلى محفظتك.` : `نعتذر، تم رفض طلب التقسيط للطلب رقم #${order.orderNumber}. تم استرجاع مبلغ المقدم إلى محفظتك.`;
