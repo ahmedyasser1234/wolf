@@ -425,6 +425,9 @@ export default function AdminDashboard() {
   };
   const [productSearch, setProductSearch] = useState("");
   const [customerSearch, setCustomerSearch] = useState("");
+  const [orderSearch, setOrderSearch] = useState("");
+  const [orderDateFrom, setOrderDateFrom] = useState("");
+  const [orderDateTo, setOrderDateTo] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isAdminOrderModalOpen, setIsAdminOrderModalOpen] = useState(false);
   const [showProfilePassword, setShowProfilePassword] = useState(false);
@@ -823,7 +826,6 @@ export default function AdminDashboard() {
             </div>
           )
         }
-        {/* Orders Tab */}
         {
           activeTab === "orders" && (
             <div>
@@ -834,11 +836,51 @@ export default function AdminDashboard() {
                 {t('orders')}
               </h2>
 
+              {/* Filter Bar */}
+              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 mb-6 flex flex-col md:flex-row gap-3 items-end">
+                <div className="flex-1 relative">
+                  <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase mb-1 block">{language === 'ar' ? 'بحث (رقم الطلب / اسم العميل)' : 'Search (Order # / Customer)'}</label>
+                  <div className="relative">
+                    <Search className={`absolute ${language === 'ar' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500`} />
+                    <input
+                      type="text"
+                      value={orderSearch}
+                      onChange={e => setOrderSearch(e.target.value)}
+                      placeholder={language === 'ar' ? 'ابحث...' : 'Search...'}
+                      className={`w-full bg-gray-950 border border-gray-800 rounded-xl py-2.5 ${language === 'ar' ? 'pr-9 pl-4' : 'pl-9 pr-4'} text-white placeholder-gray-600 text-sm focus:outline-none focus:border-purple-500`}
+                    />
+                  </div>
+                </div>
+                <div className="w-full md:w-40">
+                  <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase mb-1 block">{language === 'ar' ? 'من تاريخ' : 'From Date'}</label>
+                  <input type="date" value={orderDateFrom} onChange={e => setOrderDateFrom(e.target.value)}
+                    className="w-full bg-gray-950 border border-gray-800 rounded-xl py-2.5 px-3 text-white text-sm focus:outline-none focus:border-purple-500 [color-scheme:dark]" />
+                </div>
+                <div className="w-full md:w-40">
+                  <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase mb-1 block">{language === 'ar' ? 'إلى تاريخ' : 'To Date'}</label>
+                  <input type="date" value={orderDateTo} onChange={e => setOrderDateTo(e.target.value)}
+                    className="w-full bg-gray-950 border border-gray-800 rounded-xl py-2.5 px-3 text-white text-sm focus:outline-none focus:border-purple-500 [color-scheme:dark]" />
+                </div>
+                <button onClick={() => { setOrderSearch(''); setOrderDateFrom(''); setOrderDateTo(''); }}
+                  className="shrink-0 px-4 py-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 border border-gray-800 text-sm font-bold transition-colors">
+                  {language === 'ar' ? 'مسح' : 'Clear'}
+                </button>
+              </div>
+
               <Card className="border border-gray-800 rounded-[2.5rem] bg-background shadow-none overflow-hidden">
                 <CardContent className="p-0">
                   {/* Mobile Order Cards */}
                   <div className="md:hidden space-y-4 p-4">
-                    {adminOrders?.map((order: any) => (
+                    {adminOrders?.filter((order: any) => {
+                      const name = (order.customer?.name || order.shippingAddress?.name || '').toLowerCase();
+                      const num = (order.orderNumber || '').toLowerCase();
+                      const q = orderSearch.toLowerCase();
+                      const matchQ = !q || name.includes(q) || num.includes(q);
+                      const d = order.createdAt ? order.createdAt.slice(0, 10) : '';
+                      const matchFrom = !orderDateFrom || d >= orderDateFrom;
+                      const matchTo = !orderDateTo || d <= orderDateTo;
+                      return matchQ && matchFrom && matchTo;
+                    }).map((order: any) => (
                       <Card key={order.id} className="border border-gray-100 shadow-sm rounded-2xl overflow-hidden bg-white">
                         <CardContent className="p-4 space-y-3">
                           <div className="flex justify-between items-start">
@@ -851,8 +893,13 @@ export default function AdminDashboard() {
                                 </span>
                               </div>
                               <p className="text-xs text-gray-500 mt-1 font-medium">
-                                {order.customerName || `${t('customer')} #${order.customerId}`}
+                                {order.customer?.name || order.shippingAddress?.name || `${t('customer')} #${order.customerId}`}
                               </p>
+                              {order.createdAt && (
+                                <p className="text-[10px] text-gray-400 mt-0.5">
+                                  {new Date(order.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                </p>
+                              )}
                             </div>
                             <span className="font-black text-purple-600 text-lg">
                               {Number(order.total).toFixed(2)} {t('currency')}
@@ -880,6 +927,7 @@ export default function AdminDashboard() {
                         <tr className="border-b border-gray-800 bg-gray-900">
                           <th className="py-4 px-6 font-black text-white text-start">{t('orderNumber')}</th>
                           <th className="py-4 px-6 font-black text-white text-start">{t('customer')}</th>
+                          <th className="py-4 px-6 font-black text-white text-center">{language === 'ar' ? 'التاريخ' : 'Date'}</th>
                           <th className="py-4 px-6 font-black text-white text-center">{t('amount')}</th>
                           <th className="py-4 px-6 font-black text-white text-center">{language === 'ar' ? 'وسيلة الدفع' : 'Payment Method'}</th>
                           <th className="py-4 px-6 font-black text-white text-center">{language === 'ar' ? 'حالة الدفع' : 'Payment Status'}</th>
@@ -888,30 +936,52 @@ export default function AdminDashboard() {
                         </tr>
                       </thead>
                       <tbody>
-                        {adminOrders?.map((order: any) => (
+                        {adminOrders?.filter((order: any) => {
+                          const name = (order.customer?.name || order.shippingAddress?.name || '').toLowerCase();
+                          const num = (order.orderNumber || '').toLowerCase();
+                          const q = orderSearch.toLowerCase();
+                          const matchQ = !q || name.includes(q) || num.includes(q);
+                          const d = order.createdAt ? order.createdAt.slice(0, 10) : '';
+                          const matchFrom = !orderDateFrom || d >= orderDateFrom;
+                          const matchTo = !orderDateTo || d <= orderDateTo;
+                          return matchQ && matchFrom && matchTo;
+                        }).map((order: any) => (
                           <tr key={order.id} className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
                             <td className="py-4 px-6 font-bold text-white text-start">{order.orderNumber}</td>
                             <td className="py-4 px-6 text-white font-medium text-start">{order.customer?.name || order.shippingAddress?.name || `${t('customer')} #${order.customerId}`}</td>
+                            <td className="py-4 px-6 text-center">
+                              <span className="text-gray-300 text-xs font-bold">
+                                {order.createdAt ? new Date(order.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
+                              </span>
+                            </td>
                             <td className="py-4 px-6 font-black text-white text-center">{Number(order.total).toFixed(2)} {t('currency')}</td>
                             <td className="py-4 px-6 text-center">
-                              <span className="px-3 py-1 bg-gray-800 text-gray-300 rounded-full text-[10px] font-black uppercase tracking-wider border border-gray-700">
-                                {order.paymentMethod === 'cash' || order.paymentMethod === 'cod' || order.paymentMethod === 'cashOnDelivery' ? (language === 'ar' ? 'دفع عند الاستلام' : 'COD') :
-                                  order.paymentMethod === 'installments' ? (language === 'ar' ? 'تقسيط' : 'Installments') :
+                              <div className="flex flex-col items-center gap-1">
+                                <span className="px-3 py-1 bg-gray-800 text-gray-300 rounded-full text-[10px] font-black uppercase tracking-wider border border-gray-700">
+                                  {order.paymentMethod === 'cash' || order.paymentMethod === 'cod' || order.paymentMethod === 'cashOnDelivery' ? (language === 'ar' ? 'دفع عند الاستلام' : 'COD') :
                                     order.paymentMethod === 'wallet' ? (language === 'ar' ? 'محفظة' : 'Wallet') :
                                       order.paymentMethod === 'gift_card' ? (language === 'ar' ? 'بطاقة هدية' : 'Gift Card') :
-                                        (language === 'ar' ? 'بطاقة' : 'Card')}
-                              </span>
+                                        (language === 'ar' ? 'بطاقة ائتمان' : 'Credit Card')}
+                                </span>
+                                {order.paymentMethod === 'installments' && (
+                                  <span className="px-2 py-0.5 bg-violet-900/40 text-violet-400 rounded-full text-[9px] font-black border border-violet-800/50">
+                                    تقسيط WOLF
+                                  </span>
+                                )}
+                              </div>
                             </td>
                             <td className="py-4 px-6 text-center">
                               <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${order.paymentStatus === 'paid' ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800/50' :
                                 order.paymentStatus === 'failed' ? 'bg-red-900/40 text-red-400 border-red-800/50' :
                                   order.paymentStatus === 'pending_kyc_review' ? 'bg-amber-900/40 text-amber-500 border-amber-800/50' :
-                                    'bg-blue-900/40 text-blue-400 border-blue-800/50'
+                                    order.paymentStatus === 'pending_payment' ? 'bg-orange-900/40 text-orange-400 border-orange-800/50' :
+                                      'bg-blue-900/40 text-blue-400 border-blue-800/50'
                                 }`}>
-                                {order.paymentStatus === 'paid' ? (language === 'ar' ? 'مدفوع' : 'Paid') :
+                                {order.paymentStatus === 'paid' ? (language === 'ar' ? 'تم الدفع ✅' : 'Paid ✅') :
                                   order.paymentStatus === 'pending_kyc_review' ? (language === 'ar' ? 'مراجعة أوراق' : 'Reviewing') :
-                                    order.paymentStatus === 'pending_payment' ? (language === 'ar' ? 'بانتظار المقدم' : 'Awaiting Downpayment') :
-                                      (language === 'ar' ? 'معلق' : 'Pending')}
+                                    order.paymentStatus === 'pending_payment' ? (language === 'ar' ? 'بانتظار المقدم' : 'Awaiting Down Payment') :
+                                      order.paymentStatus === 'failed' ? (language === 'ar' ? 'فشل الدفع' : 'Failed') :
+                                        (language === 'ar' ? 'معلق' : 'Pending')}
                               </span>
                             </td>
                             <td className="py-4 px-6 text-center">
@@ -947,7 +1017,6 @@ export default function AdminDashboard() {
             </div>
           )
         }
-
         {/* Customers Tab */}
         {
           activeTab === "customers" && (
@@ -1249,20 +1318,29 @@ export default function AdminDashboard() {
           {selectedOrder && (
             <div className="py-4 space-y-6 max-h-[70vh] overflow-y-auto">
               <div className="bg-gray-900 p-4 rounded-2xl flex justify-between items-center text-start">
-                <div>
-                  <p className="text-white font-medium">{t('paymentMethod')}: {({
-                    'card': language === 'ar' ? 'بطاقة ائتمان' : 'Credit Card',
-                    'cash': language === 'ar' ? 'دفع عند الاستلام' : 'Cash on Delivery',
-                    'cod': language === 'ar' ? 'دفع عند الاستلام' : 'Cash on Delivery',
-                    'installments': language === 'ar' ? 'تقسيط WOLF' : 'WOLF Installments',
-                    'wallet': language === 'ar' ? 'المحفظة الإلكترونية' : 'Wallet',
-                    'gift_card': language === 'ar' ? 'بطاقة هدية' : 'Gift Card',
-                    'stripe': language === 'ar' ? 'بطاقة ائتمان' : 'Credit Card',
-                  } as any)[selectedOrder.paymentMethod] || selectedOrder.paymentMethod}</p>
+                <div className="space-y-1">
+                  <p className="text-white font-medium">
+                    {t('paymentMethod')}: {({
+                      'card': language === 'ar' ? 'بطاقة ائتمان' : 'Credit Card',
+                      'cash': language === 'ar' ? 'دفع عند الاستلام' : 'Cash on Delivery',
+                      'cod': language === 'ar' ? 'دفع عند الاستلام' : 'Cash on Delivery',
+                      'cashOnDelivery': language === 'ar' ? 'دفع عند الاستلام' : 'Cash on Delivery',
+                      'installments': language === 'ar' ? 'بطاقة ائتمان' : 'Credit Card',
+                      'wallet': language === 'ar' ? 'المحفظة الإلكترونية' : 'Wallet',
+                      'gift_card': language === 'ar' ? 'بطاقة هدية' : 'Gift Card',
+                      'stripe': language === 'ar' ? 'بطاقة ائتمان' : 'Credit Card',
+                    } as any)[selectedOrder.paymentMethod] || selectedOrder.paymentMethod}
+                  </p>
+                  {selectedOrder.paymentMethod === 'installments' && (
+                    <span className="inline-block px-2 py-0.5 bg-violet-900/40 text-violet-300 rounded-full text-[10px] font-black border border-violet-700/50">
+                      {language === 'ar' ? 'تمويل: تقسيط WOLF' : 'Financed: WOLF Installments'}
+                    </span>
+                  )}
                   <p className="text-white font-medium">{t('paymentStatus')}: {({
                     'paid': language === 'ar' ? 'تم الدفع ✅' : 'Paid ✅',
                     'pending': language === 'ar' ? 'قيد الانتظار' : 'Pending',
                     'pending_kyc_review': language === 'ar' ? 'مراجعة الأوراق 📋' : 'KYC Under Review 📋',
+                    'pending_payment': language === 'ar' ? 'بانتظار دفع المقدم ⏳' : 'Awaiting Down Payment ⏳',
                     'failed': language === 'ar' ? 'فشل الدفع ❌' : 'Failed ❌',
                     'refunded': language === 'ar' ? 'مُستردّ' : 'Refunded',
                     'on_delivery': language === 'ar' ? 'يُدفع عند الاستلام' : 'Pay on Delivery',
