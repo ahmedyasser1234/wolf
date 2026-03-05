@@ -374,6 +374,11 @@ export default function AdminDashboard() {
     queryFn: async () => (await api.get('/admin/stats')).data,
   });
 
+  const { data: adminOrders } = useQuery({
+    queryKey: ['admin-orders-limited'],
+    queryFn: async () => (await api.get('/admin/orders?limit=500')).data,
+  });
+
   const pendingInstallmentReviews = dashboardStats?.pendingKycReviews || 0;
 
   /* Define tabs with distinct gradient colors */
