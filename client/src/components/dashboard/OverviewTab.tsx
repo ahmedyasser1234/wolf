@@ -207,7 +207,7 @@ export default function OverviewTab({ dashboard, onCategoryClick, onProductClick
                                         const getStatusLabel = (status: string) => {
                                             const labels: any = {
                                                 'pending': language === 'ar' ? 'قيد الانتظار' : 'Pending',
-                                                'confirmed': language === 'ar' ? 'تم التأكيد' : 'Confirmed',
+                                                'preparing_shipment': language === 'ar' ? 'جاري تجهيز الشحنة' : 'Preparing Shipment',
                                                 'shipped': language === 'ar' ? 'تم الشحن' : 'Shipped',
                                                 'delivered': language === 'ar' ? 'تم التسليم' : 'Delivered',
                                                 'cancelled': language === 'ar' ? 'ملغى' : 'Cancelled',
@@ -239,7 +239,8 @@ export default function OverviewTab({ dashboard, onCategoryClick, onProductClick
                                                         order.status === 'delivered' ? "bg-emerald-900/30 text-emerald-400" :
                                                             order.status === 'cancelled' ? "bg-red-900/30 text-red-400" :
                                                                 order.status === 'shipped' ? "bg-blue-900/30 text-blue-400" :
-                                                                    "bg-amber-900/30 text-amber-400"
+                                                                    order.status === 'preparing_shipment' ? "bg-fuchsia-900/30 text-fuchsia-400" :
+                                                                        "bg-amber-900/30 text-amber-400"
                                                     )}>
                                                         {getStatusLabel(order.status)}
                                                     </span>

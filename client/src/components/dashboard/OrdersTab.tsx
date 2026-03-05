@@ -72,7 +72,7 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
         pending_kyc_review: { label: language === 'ar' ? "مراجعة أوراق" : "KYC Review", color: "bg-amber-900/30 text-amber-500 shadow-none border border-amber-800/30" },
         pending_payment: { label: language === 'ar' ? "بانتظار الدفع" : "Awaiting Payment", color: "bg-blue-900/30 text-blue-400 shadow-none border border-blue-800/30" },
         pending: { label: language === 'ar' ? "قيد الانتظار" : "Pending", color: "bg-slate-900/30 text-slate-500 shadow-none border border-slate-800/30" },
-        confirmed: { label: language === 'ar' ? "تم التأكيد" : "Confirmed", color: "bg-emerald-900/30 text-emerald-400 shadow-none border border-emerald-800/30" },
+        preparing_shipment: { label: language === 'ar' ? "جاري التجهيز للشحن" : "Preparing Shipment", color: "bg-fuchsia-900/30 text-fuchsia-400 shadow-none border border-fuchsia-800/30" },
         shipped: { label: language === 'ar' ? "تم الشحن" : "Shipped", color: "bg-purple-900/30 text-purple-400 shadow-none border border-purple-800/30" },
         delivered: { label: language === 'ar' ? "تم التسليم" : "Delivered", color: "bg-blue-900/30 text-blue-400 shadow-none border border-blue-800/30" },
         cancelled: { label: language === 'ar' ? "ملغى" : "Cancelled", color: "bg-red-900/30 text-red-500 shadow-none border border-red-800/30" },
@@ -261,17 +261,17 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
                                             >
                                                 {Object.entries(STATUS_LABELS).map(([key, config]) => {
                                                     const isLocked = (current: string, target: string) => {
-                                                        if (current === 'cancelled') return true;
+                                                        const stepMap: Record<string, number> = {
+                                                            'pending': 1,
+                                                            'preparing_shipment': 2,
+                                                            'shipped': 3,
+                                                            'delivered': 4,
+                                                            'cancelled': 5
+                                                        };
+                                                        const currentLevel = stepMap[current] || 0;
+                                                        const targetLevel = stepMap[target] || 0;
                                                         if (target === 'cancelled') return current === 'delivered';
-
-                                                        const order = ['pending_kyc_review', 'pending_payment', 'pending', 'confirmed', 'shipped', 'delivered'];
-                                                        const currentIdx = order.indexOf(current);
-                                                        const targetIdx = order.indexOf(target);
-
-                                                        if (currentIdx !== -1 && targetIdx !== -1) {
-                                                            return targetIdx < currentIdx;
-                                                        }
-                                                        return false;
+                                                        return targetLevel <= currentLevel;
                                                     };
 
                                                     return (

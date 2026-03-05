@@ -128,7 +128,7 @@ export class WalletsService {
         });
     }
 
-    async topUpBalance(userId: number, amount: number, referenceId: string) {
+    async topUpBalance(userId: number, amount: number, referenceId: string, description: string = 'شحن رصيد المحفظة') {
         const wallet = await this.getOrCreateCustomerWallet(userId);
 
         return await this.databaseService.db.transaction(async (tx) => {
@@ -145,7 +145,7 @@ export class WalletsService {
                 type: 'funding',
                 status: 'completed',
                 referenceId,
-                description: 'شحن رصيد المحفظة',
+                description,
             });
         });
     }

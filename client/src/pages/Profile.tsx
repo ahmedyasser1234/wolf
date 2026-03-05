@@ -102,7 +102,7 @@ export default function Profile() {
 
     const orderStatusTranslations: Record<string, string> = {
         pending: language === 'ar' ? "قيد الانتظار" : "Pending",
-        confirmed: language === 'ar' ? "تم التأكيد" : "Confirmed",
+        preparing_shipment: language === 'ar' ? "جاري التجهيز للشحن" : "Preparing Shipment",
         shipped: language === 'ar' ? "جاري الشحن" : "Shipped",
         delivered: language === 'ar' ? "تم التوصيل" : "Delivered",
         cancelled: language === 'ar' ? "ملغي" : "Cancelled",
@@ -267,11 +267,11 @@ export default function Profile() {
                                                 const statusKey = order.status?.toLowerCase();
                                                 const translatedStatus = orderStatusTranslations[statusKey] || order.status;
                                                 const statusColors: Record<string, string> = {
-                                                    pending: "bg-amber-100 text-amber-600",
-                                                    confirmed: "bg-green-100 text-green-600",
-                                                    shipped: "bg-blue-100 text-blue-600",
-                                                    delivered: "bg-purple-100 text-purple-600",
-                                                    cancelled: "bg-white/5 text-primary",
+                                                    pending: "bg-yellow-100 text-yellow-600",
+                                                    preparing_shipment: "bg-fuchsia-100 text-fuchsia-600",
+                                                    shipped: "bg-purple-100 text-purple-600",
+                                                    delivered: "bg-blue-100 text-blue-600",
+                                                    cancelled: "bg-red-100 text-red-600",
                                                 };
 
                                                 return (

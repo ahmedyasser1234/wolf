@@ -76,7 +76,9 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -1008,11 +1010,13 @@ export default function AdminDashboard() {
                             <td className="py-4 px-6 text-center">
                               <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${order.status === 'delivered' ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800/50' :
                                 order.status === 'cancelled' ? 'bg-red-900/40 text-red-400 border-red-800/50' :
-                                  'bg-blue-900/40 text-blue-400 border-blue-800/50'
+                                  order.status === 'preparing_shipment' ? 'bg-fuchsia-900/40 text-fuchsia-400 border-fuchsia-800/50' :
+                                    'bg-blue-900/40 text-blue-400 border-blue-800/50'
                                 }`}>
                                 {order.status === 'delivered' ? t('delivered') :
                                   order.status === 'cancelled' ? (language === 'ar' ? 'ملغى' : 'Cancelled') :
-                                    t('processing')}
+                                    order.status === 'preparing_shipment' ? (language === 'ar' ? 'تجهيز الشحن' : 'Preparing') :
+                                      t('processing')}
                               </span>
                             </td>
                             <td className="py-4 px-6 text-end">
@@ -1404,13 +1408,13 @@ export default function AdminDashboard() {
                     )}
                     <p className="text-white font-medium">{language === 'ar' ? 'حالة الدفع' : 'Payment Status'}: {({
                       'paid': language === 'ar' ? 'تم الدفع ✅' : 'Paid ✅',
-                      'confirmed': language === 'ar' ? 'تم التأكيد ✅' : 'Confirmed ✅',
                       'pending': language === 'ar' ? 'قيد الانتظار' : 'Pending',
                       'pending_kyc_review': language === 'ar' ? 'مراجعة أوراق 📋' : 'KYC Review 📋',
                       'pending_payment': language === 'ar' ? 'انتظار الدفع' : 'Awaiting Payment',
                       'awaiting_deposit_payment': language === 'ar' ? 'بانتظار دفع المقدم' : 'Awaiting Deposit',
                       'failed': language === 'ar' ? 'فشل الدفع ❌' : 'Failed ❌',
                       'cancelled': language === 'ar' ? 'ملغى' : 'Cancelled',
+                      'preparing_shipment': language === 'ar' ? 'جاري تجهيز الشحن' : 'Preparing Shipment',
                       'shipped': language === 'ar' ? 'تم الشحن' : 'Shipped',
                       'delivered': language === 'ar' ? 'تم التسليم' : 'Delivered',
                     } as any)[selectedOrder.paymentStatus || selectedOrder.status] || selectedOrder.status}</p>
@@ -1550,21 +1554,24 @@ export default function AdminDashboard() {
                     <SelectValue placeholder={t('updateOrderStatus')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pending" disabled={['confirmed', 'shipped', 'delivered', 'cancelled'].includes(selectedOrder?.status)}>
-                      {language === 'ar' ? 'قيد الانتظار' : 'Pending'}
-                    </SelectItem>
-                    <SelectItem value="confirmed" disabled={['shipped', 'delivered', 'cancelled'].includes(selectedOrder?.status)}>
-                      {language === 'ar' ? 'تم التأكيد' : 'Confirmed'}
-                    </SelectItem>
-                    <SelectItem value="shipped" disabled={['delivered', 'cancelled'].includes(selectedOrder?.status)}>
-                      {language === 'ar' ? 'تم الشحن' : 'Shipped'}
-                    </SelectItem>
-                    <SelectItem value="delivered" disabled={selectedOrder?.status === 'cancelled'}>
-                      {language === 'ar' ? 'تم التسليم' : 'Delivered'}
-                    </SelectItem>
-                    <SelectItem value="cancelled" disabled={['delivered'].includes(selectedOrder?.status)}>
-                      {language === 'ar' ? 'ملغى' : 'Cancelled'}
-                    </SelectItem>
+                    <SelectGroup>
+                      <SelectLabel>{language === 'ar' ? "الحالة" : "Status"}</SelectLabel>
+                      <SelectItem value="pending" disabled={['preparing_shipment', 'shipped', 'delivered', 'cancelled'].includes(selectedOrder?.status)}>
+                        {language === 'ar' ? "قيد الانتظار ⏳" : "Pending ⏳"}
+                      </SelectItem>
+                      <SelectItem value="preparing_shipment" disabled={['shipped', 'delivered', 'cancelled'].includes(selectedOrder?.status)}>
+                        {language === 'ar' ? "جاري التجهيز للشحن 📦" : "Preparing Shipment 📦"}
+                      </SelectItem>
+                      <SelectItem value="shipped" disabled={['delivered', 'cancelled'].includes(selectedOrder?.status)}>
+                        {language === 'ar' ? "تم الشحن 🚚" : "Shipped 🚚"}
+                      </SelectItem>
+                      <SelectItem value="delivered" disabled={['cancelled'].includes(selectedOrder?.status)}>
+                        {language === 'ar' ? "تم التوصيل 📦" : "Delivered 📦"}
+                      </SelectItem>
+                      <SelectItem value="cancelled" disabled={['delivered'].includes(selectedOrder?.status)}>
+                        {language === 'ar' ? "إلغاء ❌" : "Cancel ❌"}
+                      </SelectItem>
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
                 <Button

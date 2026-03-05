@@ -309,10 +309,10 @@ export class OrdersService {
                     // Determine status/paymentStatus based on order type
                     const isInstallment = !!installmentPlanId;
                     const isCash = paymentMethod === 'cash' || paymentMethod === 'cod' || paymentMethod === 'cashOnDelivery';
-                    const orderStatus = isCash ? 'pending_confirmation' : (isInstallment ? 'pending' : 'pending_confirmation');
+                    const orderStatus = isCash ? 'pending' : (isInstallment ? 'pending' : 'pending');
                     const orderPaymentStatus = isInstallment
                         ? (resolvedDepositPaymentMethod === 'card' ? 'awaiting_deposit_payment' : 'pending_kyc_review')
-                        : (paymentMethod === 'card' ? 'pending_payment' : (paymentMethod === 'wallet' || paymentMethod === 'gift_card' ? 'paid' : 'pending'));
+                        : (paymentMethod === 'card' ? 'paid' : (paymentMethod === 'wallet' || paymentMethod === 'gift_card' ? 'paid' : 'pending'));
 
                     console.log(`   - Pre-Insert Check [Vendor ${vendorId}]:`, {
                         orderNumber,
@@ -472,7 +472,13 @@ export class OrdersService {
         const vendorUserId = vendor ? vendor.userId : null;
 
         // Validation 1: Strict Forward-Only Workflow
-        const stepMap: Record<string, number> = { pending: 1, confirmed: 2, shipped: 3, delivered: 4, cancelled: 0 };
+        const stepMap: Record<string, number> = {
+            'pending': 1,
+            'preparing_shipment': 2,
+            'shipped': 3,
+            'delivered': 4,
+            'cancelled': 5
+        };
 
         const currentStatusNormalized = (currentOrder.status || '').toLowerCase();
         const newStatusNormalized = (status || '').toLowerCase();
@@ -581,7 +587,7 @@ export class OrdersService {
             [updatedOrder] = await this.databaseService.db
                 .update(orders)
                 .set({
-                    status: 'confirmed', // Under Document Review -> Preparing Shipment
+                    status: 'preparing_shipment', // Move directly to preparing_shipment after KYC approval
                     paymentStatus: 'paid', // Deposit was already paid
                     updatedAt: new Date()
                 })
@@ -647,6 +653,7 @@ export class OrdersService {
                 await this.walletsService.topUpBalance(
                     order.customerId,
                     Number(order.depositAmount),
+                    `refund_${orderId}`,
                     `استرجاع مقدم الدفع لرفض طلب التقسيط #${order.orderNumber}`
                 );
             }

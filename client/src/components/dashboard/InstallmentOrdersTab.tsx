@@ -49,14 +49,17 @@ export default function InstallmentOrdersTab() {
         onError: () => toast.error(language === 'ar' ? 'فشلت العملية' : 'Operation failed'),
     });
 
-    // Only show installment orders (those with an installmentPlanId)
-    const installmentOrders = (allOrders || []).filter((o: any) => o.installmentPlanId);
+    // Only show installment orders that have been paid (deposit confirmed)
+    const installmentOrders = (allOrders || []).filter((o: any) =>
+        o.installmentPlanId &&
+        !['pending_payment', 'awaiting_deposit_payment'].includes(o.paymentStatus)
+    );
 
     const filteredOrders = filterStatus === 'all'
         ? installmentOrders
         : installmentOrders.filter((o: any) => {
             if (filterStatus === 'pending_review') {
-                return ['pending_kyc_review', 'pending_payment', 'awaiting_deposit_payment'].includes(o.paymentStatus);
+                return o.paymentStatus === 'pending_kyc_review';
             }
             if (filterStatus === 'cancelled') {
                 return ['failed', 'rejected'].includes(o.paymentStatus) || o.status === 'cancelled';
@@ -65,13 +68,11 @@ export default function InstallmentOrdersTab() {
         });
 
     const reviewCount = installmentOrders.filter((o: any) =>
-        ['pending_kyc_review', 'pending_payment', 'awaiting_deposit_payment'].includes(o.paymentStatus)
+        o.paymentStatus === 'pending_kyc_review'
     ).length;
 
     const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
         pending_kyc_review: { label: language === 'ar' ? 'قيد المراجعة' : 'Under Review', color: 'bg-amber-500/20 text-amber-400 border border-amber-500/30' },
-        pending_payment: { label: language === 'ar' ? 'بانتظار الدفع' : 'Awaiting Payment', color: 'bg-blue-500/20 text-blue-400 border border-blue-500/30' },
-        awaiting_deposit_payment: { label: language === 'ar' ? 'بانتظار دفع المقدم' : 'Awaiting Down Payment', color: 'bg-blue-500/20 text-blue-400 border border-blue-500/30' },
         paid: { label: language === 'ar' ? 'مدفوع' : 'Paid', color: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' },
         failed: { label: language === 'ar' ? 'مرفوض' : 'Rejected', color: 'bg-red-500/20 text-red-400 border border-red-500/30' },
         pending: { label: language === 'ar' ? 'معلق' : 'Pending', color: 'bg-gray-500/20 text-gray-400 border border-gray-500/30' },
@@ -146,16 +147,6 @@ export default function InstallmentOrdersTab() {
                     {filteredOrders.map((order: any) => (
                         <Card key={order.id} className="bg-background border border-gray-800 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden hover:border-gray-600 transition-all group">
                             <CardContent className="p-0">
-                                {/* KYC Pending Alert Banner */}
-                                {order.paymentStatus === 'pending_kyc_review' && (
-                                    <div className="bg-amber-500/10 border-b border-amber-500/20 px-6 py-3 flex items-center gap-3">
-                                        <Clock className="w-4 h-4 text-amber-400 animate-pulse" />
-                                        <span className="text-sm font-black text-amber-400">
-                                            {language === 'ar' ? '⚡ هذا الطلب ينتظر مراجعتك وموافقتك' : '⚡ This request is awaiting your review and approval'}
-                                        </span>
-                                    </div>
-                                )}
-
                                 <div className="p-4 sm:p-6 flex flex-wrap items-center justify-between gap-5">
                                     {/* Left: Order Info */}
                                     <div className="flex-1 min-w-0">
@@ -188,7 +179,7 @@ export default function InstallmentOrdersTab() {
 
                                     {/* Right: Actions */}
                                     <div className="flex gap-3 flex-shrink-0">
-                                        {(order.paymentStatus === 'pending_kyc_review' || order.paymentStatus === 'awaiting_deposit_payment' || order.paymentStatus === 'pending_payment') && (
+                                        {order.paymentStatus === 'pending_kyc_review' && (
                                             <Button
                                                 onClick={() => setKycModalOrder(order)}
                                                 className="bg-amber-500 hover:bg-amber-400 text-black font-black rounded-2xl px-6 h-12 gap-2"
@@ -196,22 +187,6 @@ export default function InstallmentOrdersTab() {
                                                 <Eye className="w-4 h-4" />
                                                 {language === 'ar' ? 'مراجعة الطلب' : 'Review Request'}
                                             </Button>
-                                        )}
-                                        {(order.paymentStatus === 'pending_payment' || order.paymentStatus === 'awaiting_deposit_payment') && (
-                                            <div className="flex items-center gap-3">
-                                                <Button
-                                                    onClick={() => confirmPaymentMutation.mutate(order.id)}
-                                                    disabled={confirmPaymentMutation.isPending}
-                                                    className="bg-blue-600 hover:bg-blue-500 text-white font-black rounded-2xl px-5 h-12 gap-2"
-                                                >
-                                                    {confirmPaymentMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                                                    {language === 'ar' ? 'تأكيد الدفع' : 'Confirm Payment'}
-                                                </Button>
-                                                <div className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-2xl px-4 py-2">
-                                                    <CreditCard className="w-4 h-4 text-blue-400" />
-                                                    <span className="text-xs font-black text-blue-400">{language === 'ar' ? 'بانتظار دفع المقدم' : 'Awaiting down payment'}</span>
-                                                </div>
-                                            </div>
                                         )}
                                     </div>
                                 </div>
@@ -235,7 +210,6 @@ export default function InstallmentOrdersTab() {
                             <div className="text-right">
                                 <p className="text-xs text-gray-500 font-bold">{language === 'ar' ? 'حالة الطلب' : 'Order Status'}</p>
                                 <p className="text-xl font-black text-primary">{({
-                                    'confirmed': language === 'ar' ? 'تم التأكيد' : 'Confirmed',
                                     'pending_kyc_review': language === 'ar' ? 'مراجعة أوراق' : 'KYC Review',
                                     'pending_payment': language === 'ar' ? 'بانتظار الدفع' : 'Awaiting Payment',
                                     'paid': language === 'ar' ? 'مدفوع' : 'Paid',
@@ -327,47 +301,47 @@ export default function InstallmentOrdersTab() {
                                 <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest text-start">{language === 'ar' ? 'المستندات المرفوعة' : 'Uploaded Documents'}</p>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {(kycModalOrder.kycData.faceId || kycModalOrder.kycData.faceImage) && (
+                                    {(kycModalOrder.kycData.faceIdImage || kycModalOrder.kycData.faceId || kycModalOrder.kycData.faceImage) && (
                                         <div className="bg-gray-900 p-4 rounded-2xl border border-gray-800">
                                             <div className="flex items-center gap-2 mb-3">
                                                 <ScanFace className="w-4 h-4 text-blue-400" />
                                                 <span className="text-xs font-black text-white">{language === 'ar' ? 'صورة الوجه' : 'Face Image'}</span>
                                             </div>
                                             <img
-                                                src={kycModalOrder.kycData.faceId || kycModalOrder.kycData.faceImage}
+                                                src={kycModalOrder.kycData.faceIdImage || kycModalOrder.kycData.faceId || kycModalOrder.kycData.faceImage}
                                                 alt="Face"
                                                 className="w-full h-40 rounded-xl object-cover border-2 border-gray-700 cursor-zoom-in"
-                                                onClick={() => window.open(kycModalOrder.kycData.faceId || kycModalOrder.kycData.faceImage, '_blank')}
+                                                onClick={() => window.open(kycModalOrder.kycData.faceIdImage || kycModalOrder.kycData.faceId || kycModalOrder.kycData.faceImage, '_blank')}
                                             />
                                         </div>
                                     )}
 
-                                    {(kycModalOrder.kycData.residencyDoc || kycModalOrder.kycData.idImage) && (
+                                    {(kycModalOrder.kycData.residencyImage || kycModalOrder.kycData.residencyDoc || kycModalOrder.kycData.idImage) && (
                                         <div className="bg-gray-900 p-4 rounded-2xl border border-gray-800">
                                             <div className="flex items-center gap-2 mb-3">
                                                 <CreditCard className="w-4 h-4 text-green-400" />
                                                 <span className="text-xs font-black text-white">{language === 'ar' ? 'الهوية / الإقامة' : 'ID / Residency'}</span>
                                             </div>
                                             <img
-                                                src={kycModalOrder.kycData.residencyDoc || kycModalOrder.kycData.idImage}
+                                                src={kycModalOrder.kycData.residencyImage || kycModalOrder.kycData.residencyDoc || kycModalOrder.kycData.idImage}
                                                 alt="ID"
                                                 className="w-full h-40 rounded-xl object-cover border-2 border-gray-700 cursor-zoom-in"
-                                                onClick={() => window.open(kycModalOrder.kycData.residencyDoc || kycModalOrder.kycData.idImage, '_blank')}
+                                                onClick={() => window.open(kycModalOrder.kycData.residencyImage || kycModalOrder.kycData.residencyDoc || kycModalOrder.kycData.idImage, '_blank')}
                                             />
                                         </div>
                                     )}
 
-                                    {(kycModalOrder.kycData.passportDoc || kycModalOrder.kycData.passportImage) && (
+                                    {(kycModalOrder.kycData.passportImage || kycModalOrder.kycData.passportDoc || kycModalOrder.kycData.passportImage) && (
                                         <div className="bg-gray-900 p-4 rounded-2xl border border-gray-800 sm:col-span-2">
                                             <div className="flex items-center gap-2 mb-3">
                                                 <FileText className="w-4 h-4 text-purple-400" />
                                                 <span className="text-xs font-black text-white">{language === 'ar' ? 'جواز السفر' : 'Passport'}</span>
                                             </div>
                                             <img
-                                                src={kycModalOrder.kycData.passportDoc || kycModalOrder.kycData.passportImage}
+                                                src={kycModalOrder.kycData.passportImage || kycModalOrder.kycData.passportDoc || kycModalOrder.kycData.passportImage}
                                                 alt="Passport"
                                                 className="w-full h-48 rounded-xl object-cover border-2 border-gray-700 cursor-zoom-in"
-                                                onClick={() => window.open(kycModalOrder.kycData.passportDoc || kycModalOrder.kycData.passportImage, '_blank')}
+                                                onClick={() => window.open(kycModalOrder.kycData.passportImage || kycModalOrder.kycData.passportDoc || kycModalOrder.kycData.passportImage, '_blank')}
                                             />
                                         </div>
                                     )}

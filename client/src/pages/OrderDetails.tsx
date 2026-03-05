@@ -3,18 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { endpoints } from "@/lib/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "wouter";
-import { Package, Clock, CheckCircle, Truck, ArrowRight, MapPin, CreditCard, ShoppingBag, Download, AlertCircle, UserCheck } from "lucide-react";
+import { Package, Clock, CheckCircle, Truck, ArrowRight, MapPin, CreditCard, ShoppingBag, Download, AlertCircle, UserCheck, XCircle } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { toast } from "sonner";
 import { useRef } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 
 const ORDER_STATUSES: Record<string, { labelAr: string; labelEn: string; icon: any; color: string; step: number }> = {
-    pending: { labelAr: "قيد الانتظار", labelEn: "Pending", icon: Clock, color: "yellow", step: 1 },
-    confirmed: { labelAr: "تم التأكيد", labelEn: "Confirmed", icon: CheckCircle, color: "blue", step: 2 },
-    shipped: { labelAr: "تم الشحن", labelEn: "Shipped", icon: Truck, color: "purple", step: 3 },
-    delivered: { labelAr: "تم التسليم", labelEn: "Delivered", icon: CheckCircle, color: "green", step: 4 },
-    cancelled: { labelAr: "ملغى", labelEn: "Cancelled", icon: AlertCircle, color: "red", step: 0 },
+    pending: { labelAr: "قيد الانتظار", labelEn: "Pending", icon: Clock, color: "orange", step: 1 },
+    preparing_shipment: { labelAr: "جاري التجهيز للشحن", labelEn: "Preparing Shipment", icon: Package, color: "fuchsia", step: 2 },
+    shipped: { labelAr: "في الطريق", labelEn: "Shipped", icon: Truck, color: "purple", step: 3 },
+    delivered: { labelAr: "مكتمل", labelEn: "Delivered", icon: CheckCircle, color: "green", step: 4 },
+    cancelled: { labelAr: "ملغى", labelEn: "Cancelled", icon: XCircle, color: "red", step: -1 },
 };
 
 export default function OrderDetails() {
@@ -165,10 +165,10 @@ export default function OrderDetails() {
                                         <div className="absolute top-1/2 left-0 right-0 h-1.5 bg-gray-100 -translate-y-1/2 z-0 rounded-full" />
                                         <div
                                             className="absolute top-1/2 right-0 h-1.5 bg-green-500 -translate-y-1/2 z-0 transition-all duration-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.3)]"
-                                            style={{ width: `${((currentStatus.step - 1) / 3) * 100}%` }}
+                                            style={{ width: `${((currentStatus.step - 1) / 4) * 100}%` }}
                                         />
                                         <div className="relative z-10 flex justify-between">
-                                            {['pending', 'confirmed', 'shipped', 'delivered'].map((statusKey) => {
+                                            {['pending', 'preparing_shipment', 'shipped', 'delivered'].map((statusKey) => {
                                                 const s = ORDER_STATUSES[statusKey];
                                                 const isCompleted = s.step <= currentStatus.step;
                                                 const isCurrent = s.step === currentStatus.step;
@@ -243,20 +243,20 @@ export default function OrderDetails() {
                                 </div>
                             ))}
                         </CardContent>
-                    </Card>
+                    </Card >
 
-                </div>
+                </div >
 
                 {/* Sidebar Info */}
-                <div className="space-y-6">
+                < div className="space-y-6" >
 
                     {/* Invoice Summary */}
-                    <Card className="border-0 shadow-sm" ref={invoiceRef}>
+                    < Card className="border-0 shadow-sm" ref={invoiceRef} >
                         {/* Invoice Header for Print only - Hidden by default css but here assumes simple print */}
-                        <div className="hidden print:block mb-8 text-center border-b pb-4">
+                        < div className="hidden print:block mb-8 text-center border-b pb-4" >
                             <h2 className="text-2xl font-bold">{language === 'ar' ? 'فاتورة ضريبية مبسطة' : 'Simplified Tax Invoice'}</h2>
                             <p>{language === 'ar' ? 'رقم الطلب' : 'Order Number'}: {order.orderNumber}</p>
-                        </div>
+                        </div >
 
                         <CardHeader>
                             <CardTitle>{language === 'ar' ? 'ملخص الفاتورة' : 'Invoice Summary'}</CardTitle>
@@ -297,10 +297,10 @@ export default function OrderDetails() {
                                 </div>
                             </div>
                         </CardContent>
-                    </Card>
+                    </Card >
 
                     {/* Shipping Address */}
-                    <Card className="border-0 shadow-sm">
+                    < Card className="border-0 shadow-sm" >
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-base">
                                 <MapPin className="w-5 h-5 text-gray-400" />
@@ -315,10 +315,10 @@ export default function OrderDetails() {
                                 <p>{order.shippingAddress?.phone}</p>
                             </div>
                         </CardContent>
-                    </Card>
+                    </Card >
 
                     {/* Payment Info */}
-                    <Card className="border-0 shadow-sm">
+                    < Card className="border-0 shadow-sm" >
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-base">
                                 <CreditCard className="w-5 h-5 text-gray-400" />
@@ -371,10 +371,10 @@ export default function OrderDetails() {
                                 )}
                             </div>
                         </CardContent>
-                    </Card>
+                    </Card >
 
-                </div>
-            </div>
-        </div>
+                </div >
+            </div >
+        </div >
     );
 }

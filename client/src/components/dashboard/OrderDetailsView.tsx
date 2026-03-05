@@ -46,16 +46,16 @@ export default function OrderDetailsView({ orderId, onClose }: OrderDetailsViewP
     if (!order) return null;
 
     const STATUS_COLORS: Record<string, string> = {
-        pending: "bg-amber-100 text-amber-700",
-        confirmed: "bg-blue-100 text-blue-700",
+        pending: "bg-yellow-100 text-yellow-700",
+        preparing_shipment: "bg-fuchsia-100 text-fuchsia-700",
         shipped: "bg-purple-100 text-purple-700",
-        delivered: "bg-emerald-100 text-emerald-700",
+        delivered: "bg-green-100 text-green-700",
         cancelled: "bg-red-100 text-red-700",
     };
 
     const STATUS_LABELS: Record<string, string> = {
         pending: language === 'ar' ? "قيد الانتظار" : "Pending",
-        confirmed: language === 'ar' ? "تم التأكيد" : "Confirmed",
+        preparing_shipment: language === 'ar' ? "جاري التجهيز للشحن" : "Preparing Shipment",
         shipped: language === 'ar' ? "تم الشحن" : "Shipped",
         delivered: language === 'ar' ? "تم التسليم" : "Delivered",
         cancelled: language === 'ar' ? "ملغى" : "Cancelled",
