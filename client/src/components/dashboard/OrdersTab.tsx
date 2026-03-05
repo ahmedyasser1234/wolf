@@ -233,7 +233,7 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
 
                                     <div className="flex items-center gap-3">
                                         {/* KYC Review Badge + Button */}
-                                        {order.paymentStatus === 'pending_kyc_review' && (
+                                        {(order.paymentStatus === 'pending_kyc_review' || (order.paymentMethod === 'installments' && order.paymentStatus === 'awaiting_deposit_payment')) && (
                                             <Button
                                                 size="sm"
                                                 onClick={() => setKycModalOrder(order)}
@@ -259,11 +259,33 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
                                                 onChange={(e) => updateStatusMutation.mutate({ orderId: order.id, status: e.target.value })}
                                                 disabled={updateStatusMutation.isPending}
                                             >
-                                                {Object.entries(STATUS_LABELS).map(([key, config]) => (
-                                                    <option key={key} value={key} className="bg-gray-900 text-white font-bold">
-                                                        {config.label} {updateStatusMutation.isPending && key === order.status ? "..." : ""}
-                                                    </option>
-                                                ))}
+                                                {Object.entries(STATUS_LABELS).map(([key, config]) => {
+                                                    const isLocked = (current: string, target: string) => {
+                                                        if (current === 'cancelled') return true;
+                                                        if (target === 'cancelled') return current === 'delivered';
+
+                                                        const order = ['pending_kyc_review', 'pending_payment', 'pending', 'confirmed', 'shipped', 'delivered'];
+                                                        const currentIdx = order.indexOf(current);
+                                                        const targetIdx = order.indexOf(target);
+
+                                                        if (currentIdx !== -1 && targetIdx !== -1) {
+                                                            return targetIdx < currentIdx;
+                                                        }
+                                                        return false;
+                                                    };
+
+                                                    return (
+                                                        <option
+                                                            key={key}
+                                                            value={key}
+                                                            className="bg-gray-900 text-white font-bold"
+                                                            disabled={isLocked(order.status, key)}
+                                                        >
+                                                            {config.label} {updateStatusMutation.isPending && key === order.status ? "..." : ""}
+                                                            {isLocked(order.status, key) ? " (🔒)" : ""}
+                                                        </option>
+                                                    );
+                                                })}
                                             </select>
                                         </div>
                                     </div>
@@ -453,6 +475,34 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
                                                 className="w-full h-32 rounded-xl object-cover border-2 border-gray-700 cursor-zoom-in"
                                                 onClick={() => window.open(kycModalOrder.kycData.passportDoc || kycModalOrder.kycData.passportImage, '_blank')}
                                             />
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Manual KYC Data */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                                    {kycModalOrder.kycData.idNumber && (
+                                        <div className="bg-gray-900/50 p-4 rounded-2xl border border-gray-800/50">
+                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'رقم الهوية' : 'ID Number'}</p>
+                                            <p className="text-white font-black">{kycModalOrder.kycData.idNumber}</p>
+                                        </div>
+                                    )}
+                                    {kycModalOrder.kycData.passportNumber && (
+                                        <div className="bg-gray-900/50 p-4 rounded-2xl border border-gray-800/50">
+                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'رقم الجواز' : 'Passport Number'}</p>
+                                            <p className="text-white font-black">{kycModalOrder.kycData.passportNumber}</p>
+                                        </div>
+                                    )}
+                                    {kycModalOrder.kycData.dob && (
+                                        <div className="bg-gray-900/50 p-4 rounded-2xl border border-gray-800/50">
+                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'تاريخ الميلاد' : 'Date of Birth'}</p>
+                                            <p className="text-white font-black">{kycModalOrder.kycData.dob}</p>
+                                        </div>
+                                    )}
+                                    {kycModalOrder.kycData.residentialAddress && (
+                                        <div className="bg-gray-900/50 p-4 rounded-2xl border border-gray-800/50 sm:col-span-2">
+                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'عنوان السكن' : 'Residential Address'}</p>
+                                            <p className="text-white font-black">{kycModalOrder.kycData.residentialAddress}</p>
                                         </div>
                                     )}
                                 </div>

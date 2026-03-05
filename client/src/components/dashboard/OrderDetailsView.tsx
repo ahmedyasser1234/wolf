@@ -364,11 +364,39 @@ export default function OrderDetailsView({ orderId, onClose }: OrderDetailsViewP
                                                     <span className="text-[10px] font-black text-pink-600">{language === 'ar' ? "عرض" : "View"}</span>
                                                 </a>
                                             )}
-                                            {order.kycData.passportDoc && (
-                                                <a href={order.kycData.passportDoc} target="_blank" rel="noopener noreferrer" className="block p-2 border border-slate-100 rounded-xl hover:bg-slate-50 transition-colors text-center">
+                                            {order.passportDoc && (
+                                                <a href={order.passportDoc} target="_blank" rel="noopener noreferrer" className="block p-2 border border-slate-100 rounded-xl hover:bg-slate-50 transition-colors text-center">
                                                     <span className="text-[10px] font-bold text-slate-500 block mb-1">{language === 'ar' ? "الجواز/الهوية" : "Passport/ID"}</span>
                                                     <span className="text-[10px] font-black text-pink-600">{language === 'ar' ? "عرض" : "View"}</span>
                                                 </a>
+                                            )}
+                                        </div>
+
+                                        {/* Manual KYC Data */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                                            {order.kycData.idNumber && (
+                                                <div className="p-3 border border-slate-100 rounded-xl bg-slate-50/30">
+                                                    <span className="text-[10px] font-bold text-slate-500 block mb-0.5">{language === 'ar' ? "رقم الهوية" : "ID Number"}</span>
+                                                    <span className="text-xs font-black text-slate-900">{order.kycData.idNumber}</span>
+                                                </div>
+                                            )}
+                                            {order.kycData.passportNumber && (
+                                                <div className="p-3 border border-slate-100 rounded-xl bg-slate-50/30">
+                                                    <span className="text-[10px] font-bold text-slate-500 block mb-0.5">{language === 'ar' ? "رقم الجواز" : "Passport Number"}</span>
+                                                    <span className="text-xs font-black text-slate-900">{order.kycData.passportNumber}</span>
+                                                </div>
+                                            )}
+                                            {order.kycData.dob && (
+                                                <div className="p-3 border border-slate-100 rounded-xl bg-slate-50/30">
+                                                    <span className="text-[10px] font-bold text-slate-500 block mb-0.5">{language === 'ar' ? "تاريخ الميلاد" : "Date of Birth"}</span>
+                                                    <span className="text-xs font-black text-slate-900">{order.kycData.dob}</span>
+                                                </div>
+                                            )}
+                                            {order.kycData.residentialAddress && (
+                                                <div className="p-3 border border-slate-100 rounded-xl bg-slate-50/30 sm:col-span-2">
+                                                    <span className="text-[10px] font-bold text-slate-500 block mb-0.5">{language === 'ar' ? "عنوان السكن" : "Residential Address"}</span>
+                                                    <span className="text-xs font-black text-slate-900">{order.kycData.residentialAddress}</span>
+                                                </div>
                                             )}
                                         </div>
                                     </div>

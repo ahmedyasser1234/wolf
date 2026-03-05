@@ -191,7 +191,7 @@ export default function OverviewTab({ dashboard, onCategoryClick, onProductClick
                                 <tr>
                                     <th className={`py-6 px-10 text-[10px] font-black text-gray-400 uppercase tracking-widest ${language === 'ar' ? 'text-right' : 'text-left'}`}>{language === 'ar' ? "العميل" : "Customer"}</th>
                                     <th className="py-6 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">{language === 'ar' ? "المنتجات" : "Items"}</th>
-                                    <th className="py-6 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">{language === 'ar' ? "الحالة" : "Status"}</th>
+                                    <th className="py-6 px-8 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">{language === 'ar' ? "حالة التوصيل" : "Delivery Status"}</th>
                                     <th className={`py-6 px-10 text-[10px] font-black text-gray-400 uppercase tracking-widest ${language === 'ar' ? 'text-left' : 'text-right'}`}>{language === 'ar' ? "المبلغ" : "Total"}</th>
                                 </tr>
                             </thead>
@@ -203,35 +203,53 @@ export default function OverviewTab({ dashboard, onCategoryClick, onProductClick
                                         </td>
                                     </tr>
                                 ) : (
-                                    recentOrders.map((order: any) => (
-                                        <tr key={order.id} className="hover:bg-gray-800/50 transition-colors group cursor-pointer" onClick={() => onOrderClick(order)}>
-                                            <td className="py-6 px-10">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center font-black text-gray-400 text-xs">
-                                                        {order.customer?.name?.[0] || 'G'}
+                                    recentOrders.map((order: any) => {
+                                        const getStatusLabel = (status: string) => {
+                                            const labels: any = {
+                                                'pending': language === 'ar' ? 'قيد الانتظار' : 'Pending',
+                                                'confirmed': language === 'ar' ? 'تم التأكيد' : 'Confirmed',
+                                                'shipped': language === 'ar' ? 'تم الشحن' : 'Shipped',
+                                                'delivered': language === 'ar' ? 'تم التسليم' : 'Delivered',
+                                                'cancelled': language === 'ar' ? 'ملغى' : 'Cancelled',
+                                                'pending_kyc_review': language === 'ar' ? 'مراجعة أوراق' : 'KYC Review',
+                                                'awaiting_deposit_payment': language === 'ar' ? 'بانتظار المقدم' : 'Awaiting Deposit',
+                                            };
+                                            return labels[status] || status;
+                                        };
+
+                                        return (
+                                            <tr key={order.id} className="hover:bg-gray-800/50 transition-colors group cursor-pointer" onClick={() => onOrderClick(order)}>
+                                                <td className="py-6 px-10">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center font-black text-gray-400 text-xs">
+                                                            {order.customer?.name?.[0] || 'G'}
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-black text-white text-sm">{order.customer?.name || (language === 'ar' ? "ضيف" : "Guest")}</p>
+                                                            <p className="text-[10px] font-bold text-gray-500">#{order.orderNumber}</p>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <p className="font-black text-white text-sm">{order.customer?.name || (language === 'ar' ? "ضيف" : "Guest")}</p>
-                                                        <p className="text-[10px] font-bold text-gray-500">#{order.orderNumber}</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="py-6 px-8 text-center font-bold text-white text-sm">
-                                                {order.items?.length || 0} {language === 'ar' ? "قطع" : "Items"}
-                                            </td>
-                                            <td className="py-6 px-8 text-center">
-                                                <span className={cn(
-                                                    "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest",
-                                                    order.status === 'delivered' ? "bg-emerald-900/30 text-emerald-400" : "bg-amber-900/30 text-amber-400"
-                                                )}>
-                                                    {order.status === 'delivered' ? (language === 'ar' ? 'مسلم' : 'Delivered') : (language === 'ar' ? 'قيد التنفيذ' : 'Processing')}
-                                                </span>
-                                            </td>
-                                            <td className={`py-6 px-10 ${language === 'ar' ? 'text-left' : 'text-right'}`}>
-                                                <span className="font-black text-white">{order.total} <span className="text-[10px]">{t('currency')}</span></span>
-                                            </td>
-                                        </tr>
-                                    ))
+                                                </td>
+                                                <td className="py-6 px-8 text-center font-bold text-white text-sm">
+                                                    {order.items?.length || 0} {language === 'ar' ? "قطع" : "Items"}
+                                                </td>
+                                                <td className="py-6 px-8 text-center">
+                                                    <span className={cn(
+                                                        "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest",
+                                                        order.status === 'delivered' ? "bg-emerald-900/30 text-emerald-400" :
+                                                            order.status === 'cancelled' ? "bg-red-900/30 text-red-400" :
+                                                                order.status === 'shipped' ? "bg-blue-900/30 text-blue-400" :
+                                                                    "bg-amber-900/30 text-amber-400"
+                                                    )}>
+                                                        {getStatusLabel(order.status)}
+                                                    </span>
+                                                </td>
+                                                <td className={`py-6 px-10 ${language === 'ar' ? 'text-left' : 'text-right'}`}>
+                                                    <span className="font-black text-white">{order.total} <span className="text-[10px]">{t('currency')}</span></span>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
                                 )}
                             </tbody>
                         </table>

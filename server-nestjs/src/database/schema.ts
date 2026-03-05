@@ -274,6 +274,10 @@ export const orders = pgTable(
             faceIdImage: string;
             residencyImage: string;
             passportImage: string;
+            idNumber?: string;
+            passportNumber?: string;
+            dob?: string;
+            residentialAddress?: string;
         }>(),
         trackingNumber: text("trackingNumber"),
         notes: text("notes"),

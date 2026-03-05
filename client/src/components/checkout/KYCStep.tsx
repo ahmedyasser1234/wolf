@@ -6,7 +6,7 @@ import { useLanguage } from "@/lib/i18n";
 import { motion } from "framer-motion";
 
 interface KYCStepProps {
-    onComplete: (data: { faceIdImage: string; residencyImage: string; passportImage: string }) => void;
+    onComplete: (data: { faceIdImage: string; residencyImage: string; passportImage: string; idNumber: string; passportNumber: string; dob: string; residentialAddress: string }) => void;
     onBack: () => void;
 }
 
@@ -22,6 +22,12 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
     const { language } = useLanguage();
 
     const [images, setImages] = useState<Record<DocKey, string | null>>({ faceId: null, residency: null, passport: null });
+    const [manualData, setManualData] = useState({
+        idNumber: "",
+        passportNumber: "",
+        dob: "",
+        residentialAddress: ""
+    });
     const [activeCamera, setActiveCamera] = useState<DocKey | null>(null);
 
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -107,7 +113,8 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
         reader.readAsDataURL(file);
     };
 
-    const isStepComplete = images.faceId && images.residency && images.passport;
+    const isStepComplete = images.faceId && images.residency && images.passport &&
+        manualData.idNumber && manualData.passportNumber && manualData.dob && manualData.residentialAddress;
 
     /* ─── Per-doc card ─────────────────────────────────────────── */
     const DocCard = ({ docKey }: { docKey: DocKey }) => {
@@ -240,6 +247,50 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
                         <DocCard docKey="residency" />
                         <DocCard docKey="passport" />
                     </div>
+
+                    <div className="bg-gray-50 p-6 rounded-[2rem] border border-gray-100 space-y-4">
+                        <h4 className="font-black text-gray-800 text-lg mb-2">{isAr ? 'البيانات الشخصية' : 'Personal Details'}</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="space-y-1 text-right font-arabic">
+                                <label className="text-sm font-bold text-gray-600">{isAr ? 'رقم الهوية' : 'ID Number'}</label>
+                                <input
+                                    type="text"
+                                    value={manualData.idNumber}
+                                    onChange={(e) => setManualData(prev => ({ ...prev, idNumber: e.target.value }))}
+                                    className="w-full h-12 rounded-xl border border-gray-200 bg-white px-4 font-bold focus:ring-primary focus:border-primary"
+                                    placeholder={isAr ? "أدخل رقم الهوية" : "Enter ID number"}
+                                />
+                            </div>
+                            <div className="space-y-1 text-right font-arabic">
+                                <label className="text-sm font-bold text-gray-600">{isAr ? 'رقم جواز السفر' : 'Passport Number'}</label>
+                                <input
+                                    type="text"
+                                    value={manualData.passportNumber}
+                                    onChange={(e) => setManualData(prev => ({ ...prev, passportNumber: e.target.value }))}
+                                    className="w-full h-12 rounded-xl border border-gray-200 bg-white px-4 font-bold focus:ring-primary focus:border-primary"
+                                    placeholder={isAr ? "أدخل رقم الجواز" : "Enter passport number"}
+                                />
+                            </div>
+                            <div className="space-y-1 text-right font-arabic">
+                                <label className="text-sm font-bold text-gray-600">{isAr ? 'تاريخ الميلاد' : 'Date of Birth'}</label>
+                                <input
+                                    type="date"
+                                    value={manualData.dob}
+                                    onChange={(e) => setManualData(prev => ({ ...prev, dob: e.target.value }))}
+                                    className="w-full h-12 rounded-xl border border-gray-200 bg-white px-4 font-bold focus:ring-primary focus:border-primary"
+                                />
+                            </div>
+                            <div className="sm:col-span-2 space-y-1 text-right font-arabic">
+                                <label className="text-sm font-bold text-gray-600">{isAr ? 'عنوان السكن بالتفصيل' : 'Detailed Residential Address'}</label>
+                                <textarea
+                                    value={manualData.residentialAddress}
+                                    onChange={(e) => setManualData(prev => ({ ...prev, residentialAddress: e.target.value }))}
+                                    className="w-full h-24 rounded-xl border border-gray-200 bg-white p-4 font-bold focus:ring-primary focus:border-primary resize-none"
+                                    placeholder={isAr ? "أدخل عنوان سكنك بالتفصيل (الشارع، البناية، المدينة)" : "Enter your full residential address (Street, Building, City)"}
+                                />
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Progress */}
@@ -257,8 +308,13 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
                     <Button
                         disabled={!isStepComplete}
                         onClick={() => {
-                            if (images.faceId && images.residency && images.passport) {
-                                onComplete({ faceIdImage: images.faceId, residencyImage: images.residency, passportImage: images.passport });
+                            if (isStepComplete) {
+                                onComplete({
+                                    faceIdImage: images.faceId!,
+                                    residencyImage: images.residency!,
+                                    passportImage: images.passport!,
+                                    ...manualData
+                                });
                             }
                         }}
                         className="h-12 md:h-16 rounded-full bg-primary hover:bg-primary/90 text-sm md:text-xl font-bold shadow-xl shadow-primary/20 text-gray-950 disabled:opacity-50 disabled:text-gray-700"

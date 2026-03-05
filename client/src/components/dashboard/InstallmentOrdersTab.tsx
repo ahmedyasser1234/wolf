@@ -14,7 +14,7 @@ export default function InstallmentOrdersTab() {
     const { language, t } = useLanguage();
     const [kycModalOrder, setKycModalOrder] = useState<any | null>(null);
     const [rejectReason, setRejectReason] = useState('');
-    const [filterStatus, setFilterStatus] = useState<'pending_kyc_review' | 'pending_payment' | 'paid' | 'all'>('pending_kyc_review');
+    const [filterStatus, setFilterStatus] = useState<'pending_review' | 'paid' | 'cancelled' | 'all'>('pending_review');
 
     const confirmPaymentMutation = useMutation({
         mutationFn: async (orderId: number) => {
@@ -55,18 +55,22 @@ export default function InstallmentOrdersTab() {
     const filteredOrders = filterStatus === 'all'
         ? installmentOrders
         : installmentOrders.filter((o: any) => {
-            if (filterStatus === 'pending_payment') {
-                return o.paymentStatus === 'pending_payment' || o.paymentStatus === 'awaiting_deposit_payment';
+            if (filterStatus === 'pending_review') {
+                return ['pending_kyc_review', 'pending_payment', 'awaiting_deposit_payment'].includes(o.paymentStatus);
+            }
+            if (filterStatus === 'cancelled') {
+                return ['failed', 'rejected'].includes(o.paymentStatus) || o.status === 'cancelled';
             }
             return o.paymentStatus === filterStatus;
         });
 
-    const pendingCount = installmentOrders.filter((o: any) => o.paymentStatus === 'pending_kyc_review').length;
-    const awaitingPaymentCount = installmentOrders.filter((o: any) => o.paymentStatus === 'pending_payment' || o.paymentStatus === 'awaiting_deposit_payment').length;
+    const reviewCount = installmentOrders.filter((o: any) =>
+        ['pending_kyc_review', 'pending_payment', 'awaiting_deposit_payment'].includes(o.paymentStatus)
+    ).length;
 
     const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
         pending_kyc_review: { label: language === 'ar' ? 'قيد المراجعة' : 'Under Review', color: 'bg-amber-500/20 text-amber-400 border border-amber-500/30' },
-        pending_payment: { label: language === 'ar' ? 'بانتظار الدفعة الأولى' : 'Awaiting Down Payment', color: 'bg-blue-500/20 text-blue-400 border border-blue-500/30' },
+        pending_payment: { label: language === 'ar' ? 'بانتظار الدفع' : 'Awaiting Payment', color: 'bg-blue-500/20 text-blue-400 border border-blue-500/30' },
         awaiting_deposit_payment: { label: language === 'ar' ? 'بانتظار دفع المقدم' : 'Awaiting Down Payment', color: 'bg-blue-500/20 text-blue-400 border border-blue-500/30' },
         paid: { label: language === 'ar' ? 'مدفوع' : 'Paid', color: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' },
         failed: { label: language === 'ar' ? 'مرفوض' : 'Rejected', color: 'bg-red-500/20 text-red-400 border border-red-500/30' },
@@ -94,16 +98,16 @@ export default function InstallmentOrdersTab() {
                 <div>
                     <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white mb-1">{language === 'ar' ? 'طلبات التقسيط' : 'Installment Requests'}</h2>
                     <p className="text-gray-400 font-bold text-xs sm:text-sm">
-                        {language === 'ar' ? `${pendingCount} طلب بانتظار المراجعة` : `${pendingCount} request(s) awaiting review`}
+                        {language === 'ar' ? `${reviewCount} طلب بانتظار المراجعة` : `${reviewCount} request(s) awaiting review`}
                     </p>
                 </div>
 
                 {/* Filter Tabs */}
                 <div className="flex flex-wrap gap-2">
                     {([
-                        { key: 'pending_kyc_review', label: language === 'ar' ? 'قيد المراجعة' : 'Under Review' },
-                        { key: 'pending_payment', label: language === 'ar' ? 'بانتظار الدفع' : 'Awaiting Payment' },
+                        { key: 'pending_review', label: language === 'ar' ? 'قيد المراجعة' : 'Under Review' },
                         { key: 'paid', label: language === 'ar' ? 'مدفوع' : 'Paid' },
+                        { key: 'cancelled', label: language === 'ar' ? 'ملغى' : 'Cancelled' },
                         { key: 'all', label: language === 'ar' ? 'الكل' : 'All' },
                     ] as const).map(f => (
                         <button
@@ -114,11 +118,8 @@ export default function InstallmentOrdersTab() {
                                 : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}
                         >
                             {f.label}
-                            {f.key === 'pending_kyc_review' && pendingCount > 0 && (
-                                <span className="ms-2 bg-amber-500 text-black text-xs rounded-full px-1.5 py-0.5">{pendingCount}</span>
-                            )}
-                            {f.key === 'pending_payment' && awaitingPaymentCount > 0 && (
-                                <span className="ms-2 bg-blue-500 text-white text-xs rounded-full px-1.5 py-0.5">{awaitingPaymentCount}</span>
+                            {f.key === 'pending_review' && reviewCount > 0 && (
+                                <span className="ms-2 bg-amber-500 text-black text-xs rounded-full px-1.5 py-0.5">{reviewCount}</span>
                             )}
                         </button>
                     ))}
@@ -187,7 +188,7 @@ export default function InstallmentOrdersTab() {
 
                                     {/* Right: Actions */}
                                     <div className="flex gap-3 flex-shrink-0">
-                                        {order.paymentStatus === 'pending_kyc_review' && (
+                                        {(order.paymentStatus === 'pending_kyc_review' || order.paymentStatus === 'awaiting_deposit_payment' || order.paymentStatus === 'pending_payment') && (
                                             <Button
                                                 onClick={() => setKycModalOrder(order)}
                                                 className="bg-amber-500 hover:bg-amber-400 text-black font-black rounded-2xl px-6 h-12 gap-2"
@@ -368,6 +369,34 @@ export default function InstallmentOrdersTab() {
                                                 className="w-full h-48 rounded-xl object-cover border-2 border-gray-700 cursor-zoom-in"
                                                 onClick={() => window.open(kycModalOrder.kycData.passportDoc || kycModalOrder.kycData.passportImage, '_blank')}
                                             />
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Manual KYC Data */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                                    {kycModalOrder.kycData.idNumber && (
+                                        <div className="bg-gray-900/50 p-4 rounded-2xl border border-gray-800/50">
+                                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1 text-start">{language === 'ar' ? 'رقم الهوية' : 'ID Number'}</p>
+                                            <p className="text-white font-black text-start">{kycModalOrder.kycData.idNumber}</p>
+                                        </div>
+                                    )}
+                                    {kycModalOrder.kycData.passportNumber && (
+                                        <div className="bg-gray-900/50 p-4 rounded-2xl border border-gray-800/50">
+                                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1 text-start">{language === 'ar' ? 'رقم الجواز' : 'Passport Number'}</p>
+                                            <p className="text-white font-black text-start">{kycModalOrder.kycData.passportNumber}</p>
+                                        </div>
+                                    )}
+                                    {kycModalOrder.kycData.dob && (
+                                        <div className="bg-gray-900/50 p-4 rounded-2xl border border-gray-800/50">
+                                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1 text-start">{language === 'ar' ? 'تاريخ الميلاد' : 'Date of Birth'}</p>
+                                            <p className="text-white font-black text-start">{kycModalOrder.kycData.dob}</p>
+                                        </div>
+                                    )}
+                                    {kycModalOrder.kycData.residentialAddress && (
+                                        <div className="bg-gray-900/50 p-4 rounded-2xl border border-gray-800/50 sm:col-span-2">
+                                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1 text-start">{language === 'ar' ? 'عنوان السكن' : 'Residential Address'}</p>
+                                            <p className="text-white font-black text-start">{kycModalOrder.kycData.residentialAddress}</p>
                                         </div>
                                     )}
                                 </div>

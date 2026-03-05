@@ -304,7 +304,7 @@ export class OrdersService {
                     const finalSubtotal = group.subtotal - totalDiscount;
                     const orderTotal = finalSubtotal + shippingCost;
                     const commission = (finalSubtotal * commissionRate) / 100;
-                    const orderNumber = `ORD-${Date.now()}-${vendorId || 0}`;
+                    const orderNumber = `ORD-${Date.now()}-${(vendorId === null || vendorId === undefined) ? 0 : vendorId}`;
 
                     // Determine status/paymentStatus based on order type
                     const isInstallment = !!installmentPlanId;

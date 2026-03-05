@@ -1445,10 +1445,31 @@ export default function AdminDashboard() {
               </div>
 
               {selectedOrder.kycData && (
-                <div className="bg-gray-900 p-4 rounded-2xl text-start">
-                  <h4 className="font-black text-white mb-4 text-sm flex items-center gap-2">
-                    <UserCheck className="w-4 h-4 text-emerald-500" /> {language === 'ar' ? 'أوراق العميل (KYC)' : 'Customer Documents (KYC)'}
+                <div className="bg-gray-900 p-4 rounded-2xl text-start space-y-4">
+                  <h4 className="font-black text-white mb-2 text-sm flex items-center gap-2">
+                    <UserCheck className="w-4 h-4 text-emerald-500" /> {language === 'ar' ? 'بيانات وأوراق العميل (KYC)' : 'Customer Info & Documents (KYC)'}
                   </h4>
+
+                  {/* Manual Data Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-gray-950/50 p-4 rounded-xl border border-gray-800">
+                    <div className="space-y-1">
+                      <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">{language === 'ar' ? 'رقم الهوية' : 'ID Number'}</p>
+                      <p className="text-sm text-white font-medium">{selectedOrder.kycData.idNumber || '-'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">{language === 'ar' ? 'رقم الجواز' : 'Passport Number'}</p>
+                      <p className="text-sm text-white font-medium">{selectedOrder.kycData.passportNumber || '-'}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">{language === 'ar' ? 'تاريخ الميلاد' : 'Date of Birth'}</p>
+                      <p className="text-sm text-white font-medium">{selectedOrder.kycData.dob || '-'}</p>
+                    </div>
+                    <div className="sm:col-span-2 space-y-1">
+                      <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">{language === 'ar' ? 'عنوان السكن' : 'Residential Address'}</p>
+                      <p className="text-sm text-white font-medium leading-relaxed">{selectedOrder.kycData.residentialAddress || '-'}</p>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-3 gap-3">
                     {selectedOrder.kycData.faceId && (
                       <a href={selectedOrder.kycData.faceId} target="_blank" rel="noopener noreferrer" className="block group">
@@ -1529,11 +1550,21 @@ export default function AdminDashboard() {
                     <SelectValue placeholder={t('updateOrderStatus')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pending">{language === 'ar' ? 'قيد الانتظار' : 'Pending'}</SelectItem>
-                    <SelectItem value="confirmed">{language === 'ar' ? 'تم التأكيد' : 'Confirmed'}</SelectItem>
-                    <SelectItem value="shipped">{language === 'ar' ? 'تم الشحن' : 'Shipped'}</SelectItem>
-                    <SelectItem value="delivered">{language === 'ar' ? 'تم التسليم' : 'Delivered'}</SelectItem>
-                    <SelectItem value="cancelled">{language === 'ar' ? 'ملغى' : 'Cancelled'}</SelectItem>
+                    <SelectItem value="pending" disabled={['confirmed', 'shipped', 'delivered', 'cancelled'].includes(selectedOrder?.status)}>
+                      {language === 'ar' ? 'قيد الانتظار' : 'Pending'}
+                    </SelectItem>
+                    <SelectItem value="confirmed" disabled={['shipped', 'delivered', 'cancelled'].includes(selectedOrder?.status)}>
+                      {language === 'ar' ? 'تم التأكيد' : 'Confirmed'}
+                    </SelectItem>
+                    <SelectItem value="shipped" disabled={['delivered', 'cancelled'].includes(selectedOrder?.status)}>
+                      {language === 'ar' ? 'تم الشحن' : 'Shipped'}
+                    </SelectItem>
+                    <SelectItem value="delivered" disabled={selectedOrder?.status === 'cancelled'}>
+                      {language === 'ar' ? 'تم التسليم' : 'Delivered'}
+                    </SelectItem>
+                    <SelectItem value="cancelled" disabled={['delivered'].includes(selectedOrder?.status)}>
+                      {language === 'ar' ? 'ملغى' : 'Cancelled'}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
                 <Button
