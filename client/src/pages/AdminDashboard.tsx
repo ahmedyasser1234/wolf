@@ -54,7 +54,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, lazy, Suspense } from "react";
 import { Link, useLocation } from "wouter";
 import { useChat } from "@/contexts/ChatContext";
 import {
@@ -99,19 +99,24 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useChatNotifications } from "@/hooks/useChatNotifications";
-import AdminAnalyticsTab from "@/components/dashboard/AdminAnalyticsTab";
-import ContentTab from "@/components/dashboard/ContentTab";
-import AdminCategoriesTab from "@/components/dashboard/AdminCategoriesTab";
-import AdminCollectionsTab from "@/components/dashboard/AdminCollectionsTab";
-import AdminOffersTab from "@/components/dashboard/AdminOffersTab";
-import AdminCouponsTab from "@/components/dashboard/AdminCouponsTab";
-import AdminGiftCardsTab from "@/components/dashboard/AdminGiftCardsTab";
-import AdminInstallmentsTab from "@/components/dashboard/AdminInstallmentsTab";
-import InstallmentOrdersTab from "@/components/dashboard/InstallmentOrdersTab";
-import ProductsTab from "@/components/dashboard/ProductsTab";
-import AdminPaymentGatewaysTab from "@/components/dashboard/AdminPaymentGatewaysTab";
 import { useLanguage } from "@/lib/i18n";
 import AdminSearchModal from "@/components/admin/AdminSearchModal";
+
+// Lazy-load dashboard tabs for performance
+const AdminAnalyticsTab = lazy(() => import("@/components/dashboard/AdminAnalyticsTab"));
+const ContentTab = lazy(() => import("@/components/dashboard/ContentTab"));
+const AdminCategoriesTab = lazy(() => import("@/components/dashboard/AdminCategoriesTab"));
+const AdminCollectionsTab = lazy(() => import("@/components/dashboard/AdminCollectionsTab"));
+const AdminOffersTab = lazy(() => import("@/components/dashboard/AdminOffersTab"));
+const AdminCouponsTab = lazy(() => import("@/components/dashboard/AdminCouponsTab"));
+const AdminGiftCardsTab = lazy(() => import("@/components/dashboard/AdminGiftCardsTab"));
+const AdminInstallmentsTab = lazy(() => import("@/components/dashboard/AdminInstallmentsTab"));
+const InstallmentOrdersTab = lazy(() => import("@/components/dashboard/InstallmentOrdersTab"));
+const ProductsTab = lazy(() => import("@/components/dashboard/ProductsTab"));
+const AdminPaymentGatewaysTab = lazy(() => import("@/components/dashboard/AdminPaymentGatewaysTab"));
+const AdminOrdersTab = lazy(() => import("@/components/dashboard/OrdersTab"));
+const AdminCustomersTab = lazy(() => import("@/components/dashboard/CustomersTab"));
+const MessagesTab = lazy(() => import("@/components/dashboard/MessagesTab"));
 
 
 interface CardHeaderProps {
@@ -652,711 +657,723 @@ export default function AdminDashboard() {
 
       {/* Content */}
       <main className="flex-1 overflow-auto p-4 sm:p-8">
-        {/* Overview Tab */}
-        {activeTab === "overview" && (
-          <div className="space-y-8">
-            {/* Stats Cards */}
-            <div className="grid lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-2 gap-6">
-              <Card className="border-0 shadow-sm border-r-4 border-r-blue-500 rounded-3xl bg-background border border-gray-800 h-full">
-                <CardContent className="p-5 md:p-6">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="space-y-1">
-                      <header className="h-4 md:h-6 flex items-center">
-                        <p className="text-[10px] md:text-xs text-white font-black uppercase tracking-widest opacity-70">{t('totalCustomers')}</p>
-                      </header>
-                      <p className="text-2xl md:text-3xl font-black text-white">{customers?.length || 0}</p>
-                    </div>
-                    <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-900/20 rounded-2xl flex items-center justify-center shrink-0">
-                      <Users className="w-5 h-5 md:w-6 md:h-6 text-blue-400" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-0 shadow-sm border-r-4 border-r-yellow-500 bg-background border border-gray-800 h-full">
-                <CardContent className="p-5 md:p-6">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="space-y-1">
-                      <p className="text-[10px] md:text-xs text-white font-black uppercase tracking-widest opacity-70">{t('totalProducts')}</p>
-                      <p className="text-2xl md:text-3xl font-black text-white">{products?.length || 0}</p>
-                    </div>
-                    <div className="w-10 h-10 md:w-12 md:h-12 bg-yellow-900/20 rounded-2xl flex items-center justify-center shrink-0">
-                      <Package className="w-5 h-5 md:w-6 md:h-6 text-yellow-400" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-0 shadow-sm border-r-4 border-primary/20 bg-background border border-gray-800 h-full">
-                <CardContent className="p-5 md:p-6">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="space-y-1">
-                      <p className="text-[10px] md:text-xs text-white font-black uppercase tracking-widest opacity-70">{t('paidOrders')}</p>
-                      <p className="text-2xl md:text-3xl font-black text-white">{adminOrders?.length || 0}</p>
-                    </div>
-                    <div className="w-10 h-10 md:w-12 md:h-12 bg-primary/10 rounded-2xl flex items-center justify-center shrink-0">
-                      <ShoppingCart className="w-5 h-5 md:w-6 md:h-6 text-primary" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-0 shadow-sm border-r-4 border-r-emerald-500 bg-background border border-gray-800 h-full">
-                <CardContent className="p-5 md:p-6">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="space-y-1">
-                      <p className="text-[10px] md:text-xs text-emerald-400 font-black uppercase tracking-widest">{t('totalRevenue')}</p>
-                      <p className="text-xl md:text-2xl font-black text-white">{totalRevenue.toFixed(2)} {t('currency')}</p>
-                      <div className="mt-1 flex items-center gap-1 text-[10px] text-emerald-600 font-bold">
-                        <TrendingUp size={10} />
-                        <span>{t('fromPaidOrders')}</span>
-                      </div>
-                    </div>
-                    <div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-900/30 rounded-2xl flex items-center justify-center shrink-0">
-                      <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-emerald-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+        <Suspense fallback={
+          <div className="h-full flex flex-col items-center justify-center gap-6 py-20">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-gray-800 rounded-full animate-pulse" />
+              <Loader2 className="w-16 h-16 text-primary animate-spin absolute inset-0" />
             </div>
-
-            {/* System Health */}
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card className="border-0 shadow-sm bg-background border border-gray-800">
-                <CardHeader>
-                  <CardTitle className="text-white">{t('systemStatus')}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-white">{t('dbServer')}</span>
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-white">{t('emailServer')}</span>
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-white">{t('paymentService')}</span>
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-white">{t('storageService')}</span>
-                    <AlertCircle className="w-5 h-5 text-yellow-600" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-0 shadow-sm bg-background border border-gray-800">
-                <CardHeader>
-                  <CardTitle className="text-white">{t('quickActions')}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 space-y-3">
-                  <Button
-                    className="w-full bg-blue-600 hover:bg-blue-700 justify-start"
-                    onClick={() => {
-                      setActiveTab("categories");
-                      setAutoOpenAddCategory(true);
-                    }}
-                  >
-                    {t('addCategory')}
-                  </Button>
-                </CardContent>
-              </Card>
+            <div className="space-y-2 text-center">
+              <p className="text-sm font-black text-white uppercase tracking-[0.3em] animate-pulse">Wolf Techno</p>
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{t('retry')}</p>
             </div>
           </div>
-        )
-        }
-
-        {/* Analytics Tab */}
-        {activeTab === "analytics" && <AdminAnalyticsTab />}
-
-        {/* Content Tab */}
-        {activeTab === "content" && <ContentTab />}
-
-        {/* Categories Tab */}
-        {
-          activeTab === "categories" && (
-            <AdminCategoriesTab
-              showConfirm={showConfirm}
-              initialAddOpen={autoOpenAddCategory}
-              onModalClose={() => setAutoOpenAddCategory(false)}
-            />
-          )
-        }
-
-        {/* Collections Tab */}
-        {
-          activeTab === "collections" && (
-            <AdminCollectionsTab
-              showConfirm={showConfirm}
-            />
-          )
-        }
-
-        {/* Offers Tab */}
-        {
-          activeTab === "offers" && (
-            <AdminOffersTab showConfirm={showConfirm} />
-          )
-        }
-
-        {/* Coupons Tab */}
-        {
-          activeTab === "coupons" && (
-            <AdminCouponsTab showConfirm={showConfirm} />
-          )
-        }
-
-        {/* Gift Cards Tab */}
-        {
-          activeTab === "giftcards" && (
-            <AdminGiftCardsTab showConfirm={showConfirm} />
-          )
-        }
-
-        {/* Installments Plans Tab */}
-        {
-          activeTab === "installments" && (
-            <AdminInstallmentsTab showConfirm={showConfirm} />
-          )
-        }
-
-        {/* Installment Orders Review Tab */}
-        {
-          activeTab === "installment-orders" && (
-            <InstallmentOrdersTab />
-          )
-        }
-
-        {/* Settings Tab */}
-        {activeTab === "settings" && <SettingsTab />}
-
-        {/* Products Tab - Full featured with add/edit modals */}
-        {
-          activeTab === "products" && (
-            <div>
-              <ProductsTab
-                onProductClick={(id) => setLocation(`/products/${id}`)}
-                onPreview={(id) => window.open(`/products/${id}`, '_blank')}
-                showConfirm={(title, desc, onConfirm) => {
-                  setConfirmConfig({ title, description: desc, onConfirm });
-                  setConfirmOpen(true);
-                }}
-              />
-            </div>
-          )
-        }
-        {
-          activeTab === "orders" && (
-            <div>
-              <h2 className="text-xl sm:text-2xl font-black text-white mb-6 flex items-center gap-3">
-                <div className="w-10 h-10 bg-orange-900/30 rounded-xl flex items-center justify-center">
-                  <ShoppingCart className="w-6 h-6 text-orange-400" />
-                </div>
-                {t('orders')}
-              </h2>
-
-              {/* Filter Bar */}
-              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 mb-6 flex flex-col md:flex-row gap-3 items-end">
-                <div className="flex-1 relative">
-                  <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase mb-1 block">{language === 'ar' ? 'بحث (رقم الطلب / اسم العميل)' : 'Search (Order # / Customer)'}</label>
-                  <div className="relative">
-                    <Search className={`absolute ${language === 'ar' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500`} />
-                    <input
-                      type="text"
-                      value={orderSearch}
-                      onChange={e => setOrderSearch(e.target.value)}
-                      placeholder={language === 'ar' ? 'ابحث...' : 'Search...'}
-                      className={`w-full bg-gray-950 border border-gray-800 rounded-xl py-2.5 ${language === 'ar' ? 'pr-9 pl-4' : 'pl-9 pr-4'} text-white placeholder-gray-600 text-sm focus:outline-none focus:border-purple-500`}
-                    />
-                  </div>
-                </div>
-                <div className="w-full md:w-40">
-                  <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase mb-1 block">{language === 'ar' ? 'من تاريخ' : 'From Date'}</label>
-                  <input type="date" value={orderDateFrom} onChange={e => setOrderDateFrom(e.target.value)}
-                    className="w-full bg-gray-950 border border-gray-800 rounded-xl py-2.5 px-3 text-white text-sm focus:outline-none focus:border-purple-500 [color-scheme:dark]" />
-                </div>
-                <div className="w-full md:w-40">
-                  <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase mb-1 block">{language === 'ar' ? 'إلى تاريخ' : 'To Date'}</label>
-                  <input type="date" value={orderDateTo} onChange={e => setOrderDateTo(e.target.value)}
-                    className="w-full bg-gray-950 border border-gray-800 rounded-xl py-2.5 px-3 text-white text-sm focus:outline-none focus:border-purple-500 [color-scheme:dark]" />
-                </div>
-                <button onClick={() => { setOrderSearch(''); setOrderDateFrom(''); setOrderDateTo(''); }}
-                  className="shrink-0 px-4 py-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 border border-gray-800 text-sm font-bold transition-colors">
-                  {language === 'ar' ? 'مسح' : 'Clear'}
-                </button>
-              </div>
-
-              <Card className="border border-gray-800 rounded-[2.5rem] bg-background shadow-none overflow-hidden">
-                <CardContent className="p-0">
-                  {/* Mobile Order Cards */}
-                  <div className="md:hidden space-y-4 p-4">
-                    {adminOrders?.filter((order: any) => {
-                      // Hide placeholder installment orders (Awaiting Deposit)
-                      if (order.installmentPlanId && ['awaiting_deposit_payment', 'pending_payment'].includes(order.paymentStatus)) return false;
-
-                      const name = (order.customer?.name || order.shippingAddress?.name || '').toLowerCase();
-                      const num = (order.orderNumber || '').toLowerCase();
-                      const q = orderSearch.toLowerCase();
-                      const matchQ = !q || name.includes(q) || num.includes(q);
-                      const d = order.createdAt ? order.createdAt.slice(0, 10) : '';
-                      const matchFrom = !orderDateFrom || d >= orderDateFrom;
-                      const matchTo = !orderDateTo || d <= orderDateTo;
-                      return matchQ && matchFrom && matchTo;
-                    }).map((order: any) => (
-                      <Card key={order.id} className="border border-gray-100 shadow-sm rounded-2xl overflow-hidden bg-white">
-                        <CardContent className="p-4 space-y-3">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-black text-gray-900">#{order.orderNumber}</span>
-                                <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-wider ${order.status === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-                                  }`}>
-                                  {order.status === 'delivered' ? t('delivered') : t('processing')}
-                                </span>
-                              </div>
-                              <p className="text-xs text-gray-500 mt-1 font-medium">
-                                {order.customer?.name || order.shippingAddress?.name || `${t('customer')} #${order.customerId}`}
-                              </p>
-                              {order.createdAt && (
-                                <p className="text-[10px] text-gray-400 mt-0.5">
-                                  {new Date(order.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                </p>
-                              )}
-                            </div>
-                            <span className="font-black text-purple-600 text-lg">
-                              {Number(order.total).toFixed(2)} {t('currency')}
-                            </span>
-                          </div>
-
-                          <Button
-                            className="w-full bg-slate-900 text-white hover:bg-slate-800 h-9 text-xs font-bold rounded-xl"
-                            onClick={() => {
-                              setSelectedOrder(order);
-                              setIsAdminOrderModalOpen(true);
-                            }}
-                          >
-                            {t('viewDetails')}
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-
-                  {/* Desktop Table View */}
-                  <div className="hidden md:block overflow-x-auto text-start" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-gray-800 bg-gray-900">
-                          <th className="py-4 px-6 font-black text-white text-start">{t('orderNumber')}</th>
-                          <th className="py-4 px-6 font-black text-white text-start">{t('customer')}</th>
-                          <th className="py-4 px-6 font-black text-white text-center">{language === 'ar' ? 'التاريخ' : 'Date'}</th>
-                          <th className="py-4 px-6 font-black text-white text-center">{t('amount')}</th>
-                          <th className="py-4 px-6 font-black text-white text-center">{language === 'ar' ? 'وسيلة الدفع' : 'Payment Method'}</th>
-                          <th className="py-4 px-6 font-black text-white text-center">{language === 'ar' ? 'حالة الطلب' : 'Order Status'}</th>
-                          <th className="py-4 px-6 font-black text-white text-center">{t('deliveryStatus')}</th>
-                          <th className="py-4 px-6 font-black text-white text-end">{t('actions')}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {adminOrders?.filter((order: any) => {
-                          // Hide placeholder installment orders (Awaiting Deposit)
-                          if (order.installmentPlanId && ['awaiting_deposit_payment', 'pending_payment'].includes(order.paymentStatus)) return false;
-
-                          const name = (order.customer?.name || order.shippingAddress?.name || '').toLowerCase();
-                          const num = (order.orderNumber || '').toLowerCase();
-                          const q = orderSearch.toLowerCase();
-                          const matchQ = !q || name.includes(q) || num.includes(q);
-                          const d = order.createdAt ? order.createdAt.slice(0, 10) : '';
-                          const matchFrom = !orderDateFrom || d >= orderDateFrom;
-                          const matchTo = !orderDateTo || d <= orderDateTo;
-                          return matchQ && matchFrom && matchTo;
-                        }).map((order: any) => (
-                          <tr key={order.id} className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
-                            <td className="py-4 px-6 font-bold text-white text-start">{order.orderNumber}</td>
-                            <td className="py-4 px-6 text-white font-medium text-start">{order.customer?.name || order.shippingAddress?.name || `${t('customer')} #${order.customerId}`}</td>
-                            <td className="py-4 px-6 text-center">
-                              <span className="text-gray-300 text-xs font-bold">
-                                {order.createdAt ? new Date(order.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
-                              </span>
-                            </td>
-                            <td className="py-4 px-6 font-black text-white text-center">{Number(order.total).toFixed(2)} {t('currency')}</td>
-                            <td className="py-4 px-6 text-center">
-                              <div className="flex flex-col items-center gap-1">
-                                <span className="px-3 py-1 bg-gray-800 text-gray-300 rounded-full text-[10px] font-black uppercase tracking-wider border border-gray-700">
-                                  {order.paymentMethod === 'cash' || order.paymentMethod === 'cod' || order.paymentMethod === 'cashOnDelivery' ? (language === 'ar' ? 'دفع عند الاستلام' : 'COD') :
-                                    order.paymentMethod === 'wallet' ? (language === 'ar' ? 'محفظة' : 'Wallet') :
-                                      order.paymentMethod === 'gift_card' ? (language === 'ar' ? 'بطاقة هدية' : 'Gift Card') :
-                                        (language === 'ar' ? 'بطاقة بنكية' : 'Bank Card')}
-                                </span>
-                                {order.paymentMethod === 'installments' && (
-                                  <span className="px-2 py-0.5 bg-violet-900/40 text-violet-400 rounded-full text-[9px] font-black border border-violet-800/50">
-                                    {language === 'ar' ? 'تقسيط WOLF (بطاقة)' : 'WOLF Installments (Card)'}
-                                  </span>
-                                )}
-                              </div>
-                            </td>
-                            <td className="py-4 px-6 text-center">
-                              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${order.installmentPlanId ? 'bg-purple-900/40 text-purple-400 border-purple-800/50' : 'bg-blue-900/40 text-blue-400 border-blue-800/50'}`}>
-                                {order.installmentPlanId ? (language === 'ar' ? 'تقسيط' : 'Installment') : (language === 'ar' ? 'كاش' : 'Cash')}
-                              </span>
-                              <div className="mt-1">
-                                <span className={`text-[9px] font-bold ${order.paymentStatus === 'paid' ? 'text-emerald-500' :
-                                  order.paymentStatus === 'failed' ? 'text-red-500' :
-                                    (order.paymentStatus === 'pending_kyc_review' || order.paymentStatus === 'pending_payment') ? 'text-amber-500' :
-                                      'text-blue-400'
-                                  }`}>
-                                  {order.paymentStatus === 'paid' ? (language === 'ar' ? 'مدفوع' : 'Paid') :
-                                    (order.paymentStatus === 'pending_kyc_review' || order.paymentStatus === 'pending_payment') ? (language === 'ar' ? 'مراجعة' : 'Review') :
-                                      order.paymentStatus === 'failed' ? (language === 'ar' ? 'فشل' : 'Failed') :
-                                        (language === 'ar' ? 'معلق' : 'Pending')}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="py-4 px-6 text-center">
-                              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${order.status === 'delivered' ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800/50' :
-                                order.status === 'cancelled' ? 'bg-red-900/40 text-red-400 border-red-800/50' :
-                                  order.status === 'preparing_shipment' ? 'bg-fuchsia-900/40 text-fuchsia-400 border-fuchsia-800/50' :
-                                    'bg-blue-900/40 text-blue-400 border-blue-800/50'
-                                }`}>
-                                {order.status === 'delivered' ? t('delivered') :
-                                  order.status === 'cancelled' ? (language === 'ar' ? 'ملغى' : 'Cancelled') :
-                                    order.status === 'preparing_shipment' ? (language === 'ar' ? 'تجهيز الشحن' : 'Preparing') :
-                                      t('processing')}
-                              </span>
-                            </td>
-                            <td className="py-4 px-6 text-end">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-purple-400 font-bold hover:bg-purple-900/30"
-                                onClick={() => {
-                                  setSelectedOrder(order);
-                                  setIsAdminOrderModalOpen(true);
-                                }}
-                              >
-                                {t('viewDetails')}
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )
-        }
-        {/* Customers Tab */}
-        {
-          activeTab === "customers" && (
-            <div>
-              <h2 className="text-xl sm:text-2xl font-black text-white mb-6 flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-900/30 rounded-xl flex items-center justify-center">
-                  <UserCheck className="w-6 h-6 text-blue-400" />
-                </div>
-                {t('manageCustomers')}
-              </h2>
-
-              <Card className="border border-gray-800 rounded-[1.5rem] md:rounded-[2.5rem] bg-background shadow-none overflow-hidden">
-                <CardContent className="p-0">
-                  <div className="p-4 md:p-6 border-b border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4 bg-gray-900/50">
-                    <div className="flex flex-wrap items-center gap-3 order-2 md:order-1">
-                      <Button
-                        variant="outline"
-                        onClick={handleExportCustomers}
-                        disabled={exportingCustomers}
-                        className="h-10 px-4 rounded-xl border-gray-800 bg-gray-900 text-white hover:bg-gray-800 font-bold shadow-lg flex items-center gap-2"
-                      >
-                        {exportingCustomers ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                        <span className="text-xs">{language === 'ar' ? 'تصدير Excel' : 'Export Excel'}</span>
-                      </Button>
-
-                      <div className="relative">
-                        <input
-                          type="file"
-                          accept=".xlsx, .xls"
-                          id="import-customers-admin"
-                          className="hidden"
-                          onChange={handleImportCustomers}
-                        />
-                        <Button
-                          variant="outline"
-                          asChild
-                          disabled={importingCustomers}
-                          className="h-10 px-4 rounded-xl border-gray-800 bg-gray-900 text-white hover:bg-gray-800 cursor-pointer font-bold shadow-lg flex items-center gap-2"
-                        >
-                          <label htmlFor="import-customers-admin" className="flex items-center gap-2">
-                            {importingCustomers ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                            <span className="text-xs">{language === 'ar' ? 'استيراد Excel' : 'Import Excel'}</span>
-                          </label>
-                        </Button>
+        }>
+          {/* Overview Tab */}
+          {activeTab === "overview" && (
+            <div className="space-y-8">
+              {/* Stats Cards */}
+              <div className="grid lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-2 gap-6">
+                <Card className="border-0 shadow-sm border-r-4 border-r-blue-500 rounded-3xl bg-background border border-gray-800 h-full">
+                  <CardContent className="p-5 md:p-6">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="space-y-1">
+                        <header className="h-4 md:h-6 flex items-center">
+                          <p className="text-[10px] md:text-xs text-white font-black uppercase tracking-widest opacity-70">{t('totalCustomers')}</p>
+                        </header>
+                        <p className="text-2xl md:text-3xl font-black text-white">{customers?.length || 0}</p>
+                      </div>
+                      <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-900/20 rounded-2xl flex items-center justify-center shrink-0">
+                        <Users className="w-5 h-5 md:w-6 md:h-6 text-blue-400" />
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
 
-                    <div className="relative w-full md:w-72 text-start order-1 md:order-2">
-                      <Search className={`absolute ${language === 'ar' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-white`} />
-                      <Input
-                        placeholder={t('searchCustomerAdmin')}
-                        className={`rounded-xl border-gray-800 bg-gray-900 text-white placeholder:text-gray-500 focus:ring-purple-500 h-10 md:h-11 font-bold ${language === 'ar' ? 'pr-10' : 'pl-10'}`}
-                        value={customerSearch}
-                        onChange={(e) => setCustomerSearch(e.target.value)}
+                <Card className="border-0 shadow-sm border-r-4 border-r-yellow-500 bg-background border border-gray-800 h-full">
+                  <CardContent className="p-5 md:p-6">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="space-y-1">
+                        <p className="text-[10px] md:text-xs text-white font-black uppercase tracking-widest opacity-70">{t('totalProducts')}</p>
+                        <p className="text-2xl md:text-3xl font-black text-white">{products?.length || 0}</p>
+                      </div>
+                      <div className="w-10 h-10 md:w-12 md:h-12 bg-yellow-900/20 rounded-2xl flex items-center justify-center shrink-0">
+                        <Package className="w-5 h-5 md:w-6 md:h-6 text-yellow-400" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-0 shadow-sm border-r-4 border-primary/20 bg-background border border-gray-800 h-full">
+                  <CardContent className="p-5 md:p-6">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="space-y-1">
+                        <p className="text-[10px] md:text-xs text-white font-black uppercase tracking-widest opacity-70">{t('paidOrders')}</p>
+                        <p className="text-2xl md:text-3xl font-black text-white">{adminOrders?.length || 0}</p>
+                      </div>
+                      <div className="w-10 h-10 md:w-12 md:h-12 bg-primary/10 rounded-2xl flex items-center justify-center shrink-0">
+                        <ShoppingCart className="w-5 h-5 md:w-6 md:h-6 text-primary" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-0 shadow-sm border-r-4 border-r-emerald-500 bg-background border border-gray-800 h-full">
+                  <CardContent className="p-5 md:p-6">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="space-y-1">
+                        <p className="text-[10px] md:text-xs text-emerald-400 font-black uppercase tracking-widest">{t('totalRevenue')}</p>
+                        <p className="text-xl md:text-2xl font-black text-white">{totalRevenue.toFixed(2)} {t('currency')}</p>
+                        <div className="mt-1 flex items-center gap-1 text-[10px] text-emerald-600 font-bold">
+                          <TrendingUp size={10} />
+                          <span>{t('fromPaidOrders')}</span>
+                        </div>
+                      </div>
+                      <div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-900/30 rounded-2xl flex items-center justify-center shrink-0">
+                        <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-emerald-600" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* System Health */}
+              <div className="grid md:grid-cols-2 gap-6">
+                <Card className="border-0 shadow-sm bg-background border border-gray-800">
+                  <CardHeader>
+                    <CardTitle className="text-white">{t('systemStatus')}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-white">{t('dbServer')}</span>
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-white">{t('emailServer')}</span>
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-white">{t('paymentService')}</span>
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-white">{t('storageService')}</span>
+                      <AlertCircle className="w-5 h-5 text-yellow-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-0 shadow-sm bg-background border border-gray-800">
+                  <CardHeader>
+                    <CardTitle className="text-white">{t('quickActions')}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6 space-y-3">
+                    <Button
+                      className="w-full bg-blue-600 hover:bg-blue-700 justify-start"
+                      onClick={() => {
+                        setActiveTab("categories");
+                        setAutoOpenAddCategory(true);
+                      }}
+                    >
+                      {t('addCategory')}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )
+          }
+
+          {/* Analytics Tab */}
+          {activeTab === "analytics" && <AdminAnalyticsTab />}
+
+          {/* Content Tab */}
+          {activeTab === "content" && <ContentTab />}
+
+          {/* Categories Tab */}
+          {
+            activeTab === "categories" && (
+              <AdminCategoriesTab
+                showConfirm={showConfirm}
+                initialAddOpen={autoOpenAddCategory}
+                onModalClose={() => setAutoOpenAddCategory(false)}
+              />
+            )
+          }
+
+          {/* Collections Tab */}
+          {
+            activeTab === "collections" && (
+              <AdminCollectionsTab
+                showConfirm={showConfirm}
+              />
+            )
+          }
+
+          {/* Offers Tab */}
+          {
+            activeTab === "offers" && (
+              <AdminOffersTab showConfirm={showConfirm} />
+            )
+          }
+
+          {/* Coupons Tab */}
+          {
+            activeTab === "coupons" && (
+              <AdminCouponsTab showConfirm={showConfirm} />
+            )
+          }
+
+          {/* Gift Cards Tab */}
+          {
+            activeTab === "giftcards" && (
+              <AdminGiftCardsTab showConfirm={showConfirm} />
+            )
+          }
+
+          {/* Installments Plans Tab */}
+          {
+            activeTab === "installments" && (
+              <AdminInstallmentsTab showConfirm={showConfirm} />
+            )
+          }
+
+          {/* Installment Orders Review Tab */}
+          {
+            activeTab === "installment-orders" && (
+              <InstallmentOrdersTab />
+            )
+          }
+
+          {/* Settings Tab */}
+          {activeTab === "settings" && <SettingsTab />}
+
+          {/* Products Tab - Full featured with add/edit modals */}
+          {
+            activeTab === "products" && (
+              <div>
+                <ProductsTab
+                  onProductClick={(id) => setLocation(`/products/${id}`)}
+                  onPreview={(id) => window.open(`/products/${id}`, '_blank')}
+                  showConfirm={(title, desc, onConfirm) => {
+                    setConfirmConfig({ title, description: desc, onConfirm });
+                    setConfirmOpen(true);
+                  }}
+                />
+              </div>
+            )
+          }
+          {
+            activeTab === "orders" && (
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-white mb-6 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-orange-900/30 rounded-xl flex items-center justify-center">
+                    <ShoppingCart className="w-6 h-6 text-orange-400" />
+                  </div>
+                  {t('orders')}
+                </h2>
+
+                {/* Filter Bar */}
+                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 mb-6 flex flex-col md:flex-row gap-3 items-end">
+                  <div className="flex-1 relative">
+                    <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase mb-1 block">{language === 'ar' ? 'بحث (رقم الطلب / اسم العميل)' : 'Search (Order # / Customer)'}</label>
+                    <div className="relative">
+                      <Search className={`absolute ${language === 'ar' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500`} />
+                      <input
+                        type="text"
+                        value={orderSearch}
+                        onChange={e => setOrderSearch(e.target.value)}
+                        placeholder={language === 'ar' ? 'ابحث...' : 'Search...'}
+                        className={`w-full bg-gray-950 border border-gray-800 rounded-xl py-2.5 ${language === 'ar' ? 'pr-9 pl-4' : 'pl-9 pr-4'} text-white placeholder-gray-600 text-sm focus:outline-none focus:border-purple-500`}
                       />
                     </div>
                   </div>
-
-                  {/* Mobile Customer Cards */}
-                  <div className="md:hidden space-y-4 p-4">
-                    {customers?.filter((c: any) =>
-                      c.name?.toLowerCase().includes(customerSearch.toLowerCase()) ||
-                      c.email?.toLowerCase().includes(customerSearch.toLowerCase()) ||
-                      (c.phone && c.phone.includes(customerSearch))
-                    ).map((c: any) => (
-                      <Card key={c.id}
-                        className="border border-gray-800 shadow-sm rounded-2xl overflow-hidden bg-gray-900/50"
-                        onClick={() => { setDetailsCustomerId(c.id); setCustomerDetailsOpen(true); }}
-                      >
-                        <CardContent className="p-4 space-y-3">
-                          <div className="flex items-center gap-3">
-                            <div className="relative">
-                              <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-white font-black text-xs uppercase shadow-sm border border-gray-700">
-                                {(c.name || 'C').substring(0, 2)}
-                              </div>
-                              {isUserOnline(c.id) && (
-                                <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full animate-pulse shadow-sm"></span>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-bold text-white truncate">{c.name || t('customerUnknown')}</h4>
-                              <p className="text-xs text-gray-500 truncate">{c.email}</p>
-                            </div>
-                          </div>
-
-                          <div className="flex justify-between items-center text-xs">
-                            <div className="text-gray-400">
-                              <p>{t('mobileNumber')}: {c.phone || '-'}</p>
-                            </div>
-                            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-9 w-9 text-white hover:text-purple-400 hover:bg-purple-900/30 rounded-lg"
-                                onClick={() => {
-                                  openAdminChat({
-                                    recipientId: c.id,
-                                    name: c.name || t('customer'),
-                                    logo: c.avatar
-                                  });
-                                }}
-                              >
-                                <MessageSquare className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                  <div className="w-full md:w-40">
+                    <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase mb-1 block">{language === 'ar' ? 'من تاريخ' : 'From Date'}</label>
+                    <input type="date" value={orderDateFrom} onChange={e => setOrderDateFrom(e.target.value)}
+                      className="w-full bg-gray-950 border border-gray-800 rounded-xl py-2.5 px-3 text-white text-sm focus:outline-none focus:border-purple-500 [color-scheme:dark]" />
                   </div>
+                  <div className="w-full md:w-40">
+                    <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase mb-1 block">{language === 'ar' ? 'إلى تاريخ' : 'To Date'}</label>
+                    <input type="date" value={orderDateTo} onChange={e => setOrderDateTo(e.target.value)}
+                      className="w-full bg-gray-950 border border-gray-800 rounded-xl py-2.5 px-3 text-white text-sm focus:outline-none focus:border-purple-500 [color-scheme:dark]" />
+                  </div>
+                  <button onClick={() => { setOrderSearch(''); setOrderDateFrom(''); setOrderDateTo(''); }}
+                    className="shrink-0 px-4 py-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 border border-gray-800 text-sm font-bold transition-colors">
+                    {language === 'ar' ? 'مسح' : 'Clear'}
+                  </button>
+                </div>
 
-                  {/* Desktop Table View */}
-                  <div className="hidden md:block overflow-x-auto text-start" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b border-gray-800 bg-gray-900">
-                          <th className="py-4 px-6 font-black text-white text-start">{t('customer')}</th>
-                          <th className="py-4 px-6 font-black text-white text-start">{t('emailContact')}</th>
-                          <th className="py-4 px-6 font-black text-white text-center">{language === 'ar' ? 'الحالة' : 'Status'}</th>
-                          <th className="py-4 px-6 font-black text-white text-center">{t('lastSeen')}</th>
-                          <th className="py-4 px-6 font-black text-white text-center">{t('mobileNumber')}</th>
-                          <th className="py-4 px-6 font-black text-white text-end">{t('actions')}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {customersLoading ? (
-                          Array.from({ length: 5 }).map((_, i) => (
-                            <tr key={i} className="border-b border-gray-100">
-                              <td className="py-4 px-6"><div className="flex items-center gap-3"><Skeleton className="w-8 h-8 rounded-full" /><Skeleton className="h-4 w-32" /></div></td>
-                              <td className="py-4 px-6"><Skeleton className="h-4 w-40" /></td>
-                              <td className="py-4 px-6 text-center"><Skeleton className="h-4 w-24 mx-auto" /></td>
-                              <td className="py-4 px-6 text-center"><Skeleton className="h-4 w-24 mx-auto" /></td>
-                              <td className="py-4 px-6 justify-end flex gap-2"><Skeleton className="h-8 w-8 rounded-lg" /></td>
-                            </tr>
-                          ))
-                        ) : (
-                          customers?.filter((c: any) =>
-                            c.name?.toLowerCase().includes(customerSearch.toLowerCase()) ||
-                            c.email?.toLowerCase().includes(customerSearch.toLowerCase()) ||
-                            (c.phone && c.phone.includes(customerSearch))
-                          ).map((c: any) => (
-                            <tr key={c.id}
-                              className="border-b border-gray-800 hover:bg-gray-800/50 cursor-pointer transition-colors"
-                              onClick={() => { setDetailsCustomerId(c.id); setCustomerDetailsOpen(true); }}
-                            >
-                              <td className="py-4 px-6 font-bold text-white text-start">
-                                <div className="flex items-center gap-3">
-                                  <div className="relative">
-                                    <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-white font-black text-[10px] uppercase shadow-sm border border-gray-700">
-                                      {(c.name || 'C').substring(0, 2)}
-                                    </div>
-                                    {isUserOnline(c.id) && (
-                                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full animate-pulse shadow-sm"></span>
-                                    )}
-                                  </div>
-                                  <div className="flex flex-col">
-                                    <span>{c.name || t('customerUnknown')}</span>
-                                    {c.status === 'blocked' && (
-                                      <span className="text-[10px] text-red-500 font-bold uppercase">{language === 'ar' ? 'محظور' : 'Blocked'}</span>
-                                    )}
-                                  </div>
+                <Card className="border border-gray-800 rounded-[2.5rem] bg-background shadow-none overflow-hidden">
+                  <CardContent className="p-0">
+                    {/* Mobile Order Cards */}
+                    <div className="md:hidden space-y-4 p-4">
+                      {adminOrders?.filter((order: any) => {
+                        // Hide placeholder installment orders (Awaiting Deposit)
+                        if (order.installmentPlanId && ['awaiting_deposit_payment', 'pending_payment'].includes(order.paymentStatus)) return false;
+
+                        const name = (order.customer?.name || order.shippingAddress?.name || '').toLowerCase();
+                        const num = (order.orderNumber || '').toLowerCase();
+                        const q = orderSearch.toLowerCase();
+                        const matchQ = !q || name.includes(q) || num.includes(q);
+                        const d = order.createdAt ? order.createdAt.slice(0, 10) : '';
+                        const matchFrom = !orderDateFrom || d >= orderDateFrom;
+                        const matchTo = !orderDateTo || d <= orderDateTo;
+                        return matchQ && matchFrom && matchTo;
+                      }).map((order: any) => (
+                        <Card key={order.id} className="border border-gray-100 shadow-sm rounded-2xl overflow-hidden bg-white">
+                          <CardContent className="p-4 space-y-3">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-black text-gray-900">#{order.orderNumber}</span>
+                                  <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-wider ${order.status === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                                    }`}>
+                                    {order.status === 'delivered' ? t('delivered') : t('processing')}
+                                  </span>
                                 </div>
-                              </td>
-                              <td className="py-4 px-6 text-white text-start">{c.email}</td>
+                                <p className="text-xs text-gray-500 mt-1 font-medium">
+                                  {order.customer?.name || order.shippingAddress?.name || `${t('customer')} #${order.customerId}`}
+                                </p>
+                                {order.createdAt && (
+                                  <p className="text-[10px] text-gray-400 mt-0.5">
+                                    {new Date(order.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                  </p>
+                                )}
+                              </div>
+                              <span className="font-black text-purple-600 text-lg">
+                                {Number(order.total).toFixed(2)} {t('currency')}
+                              </span>
+                            </div>
+
+                            <Button
+                              className="w-full bg-slate-900 text-white hover:bg-slate-800 h-9 text-xs font-bold rounded-xl"
+                              onClick={() => {
+                                setSelectedOrder(order);
+                                setIsAdminOrderModalOpen(true);
+                              }}
+                            >
+                              {t('viewDetails')}
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block overflow-x-auto text-start" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-gray-800 bg-gray-900">
+                            <th className="py-4 px-6 font-black text-white text-start">{t('orderNumber')}</th>
+                            <th className="py-4 px-6 font-black text-white text-start">{t('customer')}</th>
+                            <th className="py-4 px-6 font-black text-white text-center">{language === 'ar' ? 'التاريخ' : 'Date'}</th>
+                            <th className="py-4 px-6 font-black text-white text-center">{t('amount')}</th>
+                            <th className="py-4 px-6 font-black text-white text-center">{language === 'ar' ? 'وسيلة الدفع' : 'Payment Method'}</th>
+                            <th className="py-4 px-6 font-black text-white text-center">{language === 'ar' ? 'حالة الطلب' : 'Order Status'}</th>
+                            <th className="py-4 px-6 font-black text-white text-center">{t('deliveryStatus')}</th>
+                            <th className="py-4 px-6 font-black text-white text-end">{t('actions')}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {adminOrders?.filter((order: any) => {
+                            // Hide placeholder installment orders (Awaiting Deposit)
+                            if (order.installmentPlanId && ['awaiting_deposit_payment', 'pending_payment'].includes(order.paymentStatus)) return false;
+
+                            const name = (order.customer?.name || order.shippingAddress?.name || '').toLowerCase();
+                            const num = (order.orderNumber || '').toLowerCase();
+                            const q = orderSearch.toLowerCase();
+                            const matchQ = !q || name.includes(q) || num.includes(q);
+                            const d = order.createdAt ? order.createdAt.slice(0, 10) : '';
+                            const matchFrom = !orderDateFrom || d >= orderDateFrom;
+                            const matchTo = !orderDateTo || d <= orderDateTo;
+                            return matchQ && matchFrom && matchTo;
+                          }).map((order: any) => (
+                            <tr key={order.id} className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
+                              <td className="py-4 px-6 font-bold text-white text-start">{order.orderNumber}</td>
+                              <td className="py-4 px-6 text-white font-medium text-start">{order.customer?.name || order.shippingAddress?.name || `${t('customer')} #${order.customerId}`}</td>
                               <td className="py-4 px-6 text-center">
-                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${c.status === 'blocked' ? 'bg-red-900/40 text-red-400 border-red-800/50' : 'bg-emerald-900/40 text-emerald-400 border-emerald-800/50'}`}>
-                                  {c.status === 'blocked' ? (language === 'ar' ? 'محظور' : 'Blocked') : (language === 'ar' ? 'نشط' : 'Active')}
+                                <span className="text-gray-300 text-xs font-bold">
+                                  {order.createdAt ? new Date(order.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
                                 </span>
                               </td>
-                              <td className="py-4 px-6 text-white text-xs text-center">{c.lastSignedIn ? new Date(c.lastSignedIn).toLocaleDateString() : t('never')}</td>
-                              <td className="py-4 px-6 text-white text-center">{c.phone || '-'}</td>
-                              <td className="py-4 px-6 text-end">
-                                <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-                                  {c.status === 'blocked' ? (
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      disabled={updateCustomerStatusMutation.isPending && updateCustomerStatusMutation.variables?.id === c.id}
-                                      className="text-emerald-400 hover:text-emerald-500 hover:bg-emerald-900/30 rounded-lg"
-                                      onClick={() => updateCustomerStatusMutation.mutate({ id: c.id, status: 'active' })}
-                                      title={language === 'ar' ? 'تفعيل الحساب' : 'Activate Account'}
-                                    >
-                                      {updateCustomerStatusMutation.isPending && updateCustomerStatusMutation.variables?.id === c.id ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                      ) : (
-                                        <UserCheck className="w-4 h-4" />
-                                      )}
-                                    </Button>
-                                  ) : (
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="text-amber-400 hover:text-amber-500 hover:bg-amber-900/30 rounded-lg"
-                                      onClick={() => showConfirm(
-                                        language === 'ar' ? 'حظر العميل' : 'Block Customer',
-                                        language === 'ar' ? `هل أنت متأكد من حظر العميل ${c.name}؟ لن يتمكن من تسجيل الدخول.` : `Are you sure you want to block ${c.name}? They will not be able to log in.`,
-                                        () => updateCustomerStatusMutation.mutate({ id: c.id, status: 'blocked' })
-                                      )}
-                                      title={language === 'ar' ? 'حظر الحساب' : 'Block Account'}
-                                    >
-                                      <XCircle className="w-4 h-4" />
-                                    </Button>
-                                  )}
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="text-white hover:text-purple-400 hover:bg-purple-900/30 rounded-lg"
-                                    onClick={() => {
-                                      openAdminChat({
-                                        recipientId: c.id,
-                                        name: c.name || t('customer'),
-                                        logo: c.avatar
-                                      });
-                                    }}
-                                  >
-                                    <MessageSquare className="w-4 h-4" />
-                                  </Button>
-
-                                  {user?.email === 'admin@fustan.com' && (
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="text-red-400 hover:text-red-500 hover:bg-red-900/30 rounded-lg"
-                                      onClick={() => {
-                                        setCustomerToDelete(c);
-                                        setDeleteCustomerOpen(true);
-                                      }}
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </Button>
+                              <td className="py-4 px-6 font-black text-white text-center">{Number(order.total).toFixed(2)} {t('currency')}</td>
+                              <td className="py-4 px-6 text-center">
+                                <div className="flex flex-col items-center gap-1">
+                                  <span className="px-3 py-1 bg-gray-800 text-gray-300 rounded-full text-[10px] font-black uppercase tracking-wider border border-gray-700">
+                                    {order.paymentMethod === 'cash' || order.paymentMethod === 'cod' || order.paymentMethod === 'cashOnDelivery' ? (language === 'ar' ? 'دفع عند الاستلام' : 'COD') :
+                                      order.paymentMethod === 'wallet' ? (language === 'ar' ? 'محفظة' : 'Wallet') :
+                                        order.paymentMethod === 'gift_card' ? (language === 'ar' ? 'بطاقة هدية' : 'Gift Card') :
+                                          (language === 'ar' ? 'بطاقة بنكية' : 'Bank Card')}
+                                  </span>
+                                  {order.paymentMethod === 'installments' && (
+                                    <span className="px-2 py-0.5 bg-violet-900/40 text-violet-400 rounded-full text-[9px] font-black border border-violet-800/50">
+                                      {language === 'ar' ? 'تقسيط WOLF (بطاقة)' : 'WOLF Installments (Card)'}
+                                    </span>
                                   )}
                                 </div>
                               </td>
+                              <td className="py-4 px-6 text-center">
+                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${order.installmentPlanId ? 'bg-purple-900/40 text-purple-400 border-purple-800/50' : 'bg-blue-900/40 text-blue-400 border-blue-800/50'}`}>
+                                  {order.installmentPlanId ? (language === 'ar' ? 'تقسيط' : 'Installment') : (language === 'ar' ? 'كاش' : 'Cash')}
+                                </span>
+                                <div className="mt-1">
+                                  <span className={`text-[9px] font-bold ${order.paymentStatus === 'paid' ? 'text-emerald-500' :
+                                    order.paymentStatus === 'failed' ? 'text-red-500' :
+                                      (order.paymentStatus === 'pending_kyc_review' || order.paymentStatus === 'pending_payment') ? 'text-amber-500' :
+                                        'text-blue-400'
+                                    }`}>
+                                    {order.paymentStatus === 'paid' ? (language === 'ar' ? 'مدفوع' : 'Paid') :
+                                      (order.paymentStatus === 'pending_kyc_review' || order.paymentStatus === 'pending_payment') ? (language === 'ar' ? 'مراجعة' : 'Review') :
+                                        order.paymentStatus === 'failed' ? (language === 'ar' ? 'فشل' : 'Failed') :
+                                          (language === 'ar' ? 'معلق' : 'Pending')}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="py-4 px-6 text-center">
+                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${order.status === 'delivered' ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800/50' :
+                                  order.status === 'cancelled' ? 'bg-red-900/40 text-red-400 border-red-800/50' :
+                                    order.status === 'preparing_shipment' ? 'bg-fuchsia-900/40 text-fuchsia-400 border-fuchsia-800/50' :
+                                      'bg-blue-900/40 text-blue-400 border-blue-800/50'
+                                  }`}>
+                                  {order.status === 'delivered' ? t('delivered') :
+                                    order.status === 'cancelled' ? (language === 'ar' ? 'ملغى' : 'Cancelled') :
+                                      order.status === 'preparing_shipment' ? (language === 'ar' ? 'تجهيز الشحن' : 'Preparing') :
+                                        t('processing')}
+                                </span>
+                              </td>
+                              <td className="py-4 px-6 text-end">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-purple-400 font-bold hover:bg-purple-900/30"
+                                  onClick={() => {
+                                    setSelectedOrder(order);
+                                    setIsAdminOrderModalOpen(true);
+                                  }}
+                                >
+                                  {t('viewDetails')}
+                                </Button>
+                              </td>
                             </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )
+          }
+          {/* Customers Tab */}
+          {
+            activeTab === "customers" && (
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-white mb-6 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-900/30 rounded-xl flex items-center justify-center">
+                    <UserCheck className="w-6 h-6 text-blue-400" />
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-          )
-        }
+                  {t('manageCustomers')}
+                </h2>
 
-        {/* Chat Tab */}
-        {
-          activeTab === "chat" && (
-            <div>
-              <h2 className="text-xl sm:text-2xl font-black text-white mb-6 flex items-center gap-3">
-                <div className="w-10 h-10 bg-indigo-900/30 rounded-xl flex items-center justify-center">
-                  <MessageSquare className="w-6 h-6 text-indigo-400" />
-                </div>
-                {t('manageConversations')}
-              </h2>
-
-              <Card className="border border-gray-800 rounded-[1.5rem] md:rounded-[2.5rem] bg-background shadow-none overflow-hidden">
-                <div className="bg-gray-900/50 px-6 py-4 border-b border-gray-800 flex items-center justify-between">
-                  <p className="text-sm font-bold text-gray-300">{t('activeConversationsDesc')}</p>
-                  <span className="bg-gray-800 px-3 py-1 rounded-lg border border-gray-700 text-white text-xs font-black">
-                    {adminConversations?.length || 0} {t('conversationCount')}
-                  </span>
-                </div>
-                <CardContent className="p-0">
-                  <div className="divide-y divide-gray-800">
-                    {adminConversations?.map((conv: any) => (
-                      <div key={conv.id} className="p-4 flex items-center justify-between hover:bg-gray-800/50 transition-colors cursor-pointer group">
-                        <div className="flex items-center gap-4">
-                          <div className="flex -space-x-3 rtl:space-x-reverse">
-                            <div className="w-10 h-10 rounded-full border-2 border-white bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs ring-2 ring-blue-50 overflow-hidden">
-                              {conv.customerAvatar ? <img src={conv.customerAvatar} alt="" className="w-full h-full object-cover" /> : (conv.customerName || 'C').substring(0, 1)}
-                            </div>
-                            <div className="w-10 h-10 rounded-full border-2 border-white bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-xs ring-2 ring-purple-50 overflow-hidden">
-                              {conv.storeLogo ? <img src={conv.storeLogo} alt="" className="w-full h-full object-cover" /> : (conv.storeNameAr || conv.storeNameEn || 'S').substring(0, 1)}
-                            </div>
-                          </div>
-                          <div className="text-right" dir="rtl">
-                            <h4 className="font-bold text-white text-sm">
-                              {conv.customerName || t('customer')} <span className="text-white font-normal mx-1">{t('with')}</span> {conv.storeNameAr || conv.storeNameEn || t('vendor')}
-                            </h4>
-                            <p className="text-xs text-white mt-1">
-                              {conv.lastMessage ? conv.lastMessage.substring(0, 50) : t('noMessages')}...
-                            </p>
-                          </div>
-                        </div>
+                <Card className="border border-gray-800 rounded-[1.5rem] md:rounded-[2.5rem] bg-background shadow-none overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className="p-4 md:p-6 border-b border-gray-800 flex flex-col md:flex-row items-center justify-between gap-4 bg-gray-900/50">
+                      <div className="flex flex-wrap items-center gap-3 order-2 md:order-1">
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-white font-bold gap-2 hover:bg-white/10"
-                          onClick={() => {
-                            toast.info(t('chatDetailsComingSoon'));
-                          }}
+                          variant="outline"
+                          onClick={handleExportCustomers}
+                          disabled={exportingCustomers}
+                          className="h-10 px-4 rounded-xl border-gray-800 bg-gray-900 text-white hover:bg-gray-800 font-bold shadow-lg flex items-center gap-2"
                         >
-                          {t('viewConversationDetails')} <ChevronRight size={14} />
+                          {exportingCustomers ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                          <span className="text-xs">{language === 'ar' ? 'تصدير Excel' : 'Export Excel'}</span>
                         </Button>
-                      </div>
-                    ))}
-                    {(!adminConversations || adminConversations.length === 0) && (
-                      <div className="p-12 text-center text-white font-medium">{t('noActiveConversations')}</div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )
-        }
-        {/* Payment Gateways Tab */}
-        {activeTab === "payments" && <AdminPaymentGatewaysTab />}
 
+                        <div className="relative">
+                          <input
+                            type="file"
+                            accept=".xlsx, .xls"
+                            id="import-customers-admin"
+                            className="hidden"
+                            onChange={handleImportCustomers}
+                          />
+                          <Button
+                            variant="outline"
+                            asChild
+                            disabled={importingCustomers}
+                            className="h-10 px-4 rounded-xl border-gray-800 bg-gray-900 text-white hover:bg-gray-800 cursor-pointer font-bold shadow-lg flex items-center gap-2"
+                          >
+                            <label htmlFor="import-customers-admin" className="flex items-center gap-2">
+                              {importingCustomers ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                              <span className="text-xs">{language === 'ar' ? 'استيراد Excel' : 'Import Excel'}</span>
+                            </label>
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="relative w-full md:w-72 text-start order-1 md:order-2">
+                        <Search className={`absolute ${language === 'ar' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-white`} />
+                        <Input
+                          placeholder={t('searchCustomerAdmin')}
+                          className={`rounded-xl border-gray-800 bg-gray-900 text-white placeholder:text-gray-500 focus:ring-purple-500 h-10 md:h-11 font-bold ${language === 'ar' ? 'pr-10' : 'pl-10'}`}
+                          value={customerSearch}
+                          onChange={(e) => setCustomerSearch(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Mobile Customer Cards */}
+                    <div className="md:hidden space-y-4 p-4">
+                      {customers?.filter((c: any) =>
+                        c.name?.toLowerCase().includes(customerSearch.toLowerCase()) ||
+                        c.email?.toLowerCase().includes(customerSearch.toLowerCase()) ||
+                        (c.phone && c.phone.includes(customerSearch))
+                      ).map((c: any) => (
+                        <Card key={c.id}
+                          className="border border-gray-800 shadow-sm rounded-2xl overflow-hidden bg-gray-900/50"
+                          onClick={() => { setDetailsCustomerId(c.id); setCustomerDetailsOpen(true); }}
+                        >
+                          <CardContent className="p-4 space-y-3">
+                            <div className="flex items-center gap-3">
+                              <div className="relative">
+                                <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-white font-black text-xs uppercase shadow-sm border border-gray-700">
+                                  {(c.name || 'C').substring(0, 2)}
+                                </div>
+                                {isUserOnline(c.id) && (
+                                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full animate-pulse shadow-sm"></span>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-bold text-white truncate">{c.name || t('customerUnknown')}</h4>
+                                <p className="text-xs text-gray-500 truncate">{c.email}</p>
+                              </div>
+                            </div>
+
+                            <div className="flex justify-between items-center text-xs">
+                              <div className="text-gray-400">
+                                <p>{t('mobileNumber')}: {c.phone || '-'}</p>
+                              </div>
+                              <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-9 w-9 text-white hover:text-purple-400 hover:bg-purple-900/30 rounded-lg"
+                                  onClick={() => {
+                                    openAdminChat({
+                                      recipientId: c.id,
+                                      name: c.name || t('customer'),
+                                      logo: c.avatar
+                                    });
+                                  }}
+                                >
+                                  <MessageSquare className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block overflow-x-auto text-start" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-gray-800 bg-gray-900">
+                            <th className="py-4 px-6 font-black text-white text-start">{t('customer')}</th>
+                            <th className="py-4 px-6 font-black text-white text-start">{t('emailContact')}</th>
+                            <th className="py-4 px-6 font-black text-white text-center">{language === 'ar' ? 'الحالة' : 'Status'}</th>
+                            <th className="py-4 px-6 font-black text-white text-center">{t('lastSeen')}</th>
+                            <th className="py-4 px-6 font-black text-white text-center">{t('mobileNumber')}</th>
+                            <th className="py-4 px-6 font-black text-white text-end">{t('actions')}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {customersLoading ? (
+                            Array.from({ length: 5 }).map((_, i) => (
+                              <tr key={i} className="border-b border-gray-100">
+                                <td className="py-4 px-6"><div className="flex items-center gap-3"><Skeleton className="w-8 h-8 rounded-full" /><Skeleton className="h-4 w-32" /></div></td>
+                                <td className="py-4 px-6"><Skeleton className="h-4 w-40" /></td>
+                                <td className="py-4 px-6 text-center"><Skeleton className="h-4 w-24 mx-auto" /></td>
+                                <td className="py-4 px-6 text-center"><Skeleton className="h-4 w-24 mx-auto" /></td>
+                                <td className="py-4 px-6 justify-end flex gap-2"><Skeleton className="h-8 w-8 rounded-lg" /></td>
+                              </tr>
+                            ))
+                          ) : (
+                            customers?.filter((c: any) =>
+                              c.name?.toLowerCase().includes(customerSearch.toLowerCase()) ||
+                              c.email?.toLowerCase().includes(customerSearch.toLowerCase()) ||
+                              (c.phone && c.phone.includes(customerSearch))
+                            ).map((c: any) => (
+                              <tr key={c.id}
+                                className="border-b border-gray-800 hover:bg-gray-800/50 cursor-pointer transition-colors"
+                                onClick={() => { setDetailsCustomerId(c.id); setCustomerDetailsOpen(true); }}
+                              >
+                                <td className="py-4 px-6 font-bold text-white text-start">
+                                  <div className="flex items-center gap-3">
+                                    <div className="relative">
+                                      <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-white font-black text-[10px] uppercase shadow-sm border border-gray-700">
+                                        {(c.name || 'C').substring(0, 2)}
+                                      </div>
+                                      {isUserOnline(c.id) && (
+                                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full animate-pulse shadow-sm"></span>
+                                      )}
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span>{c.name || t('customerUnknown')}</span>
+                                      {c.status === 'blocked' && (
+                                        <span className="text-[10px] text-red-500 font-bold uppercase">{language === 'ar' ? 'محظور' : 'Blocked'}</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="py-4 px-6 text-white text-start">{c.email}</td>
+                                <td className="py-4 px-6 text-center">
+                                  <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${c.status === 'blocked' ? 'bg-red-900/40 text-red-400 border-red-800/50' : 'bg-emerald-900/40 text-emerald-400 border-emerald-800/50'}`}>
+                                    {c.status === 'blocked' ? (language === 'ar' ? 'محظور' : 'Blocked') : (language === 'ar' ? 'نشط' : 'Active')}
+                                  </span>
+                                </td>
+                                <td className="py-4 px-6 text-white text-xs text-center">{c.lastSignedIn ? new Date(c.lastSignedIn).toLocaleDateString() : t('never')}</td>
+                                <td className="py-4 px-6 text-white text-center">{c.phone || '-'}</td>
+                                <td className="py-4 px-6 text-end">
+                                  <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                                    {c.status === 'blocked' ? (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        disabled={updateCustomerStatusMutation.isPending && updateCustomerStatusMutation.variables?.id === c.id}
+                                        className="text-emerald-400 hover:text-emerald-500 hover:bg-emerald-900/30 rounded-lg"
+                                        onClick={() => updateCustomerStatusMutation.mutate({ id: c.id, status: 'active' })}
+                                        title={language === 'ar' ? 'تفعيل الحساب' : 'Activate Account'}
+                                      >
+                                        {updateCustomerStatusMutation.isPending && updateCustomerStatusMutation.variables?.id === c.id ? (
+                                          <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                          <UserCheck className="w-4 h-4" />
+                                        )}
+                                      </Button>
+                                    ) : (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="text-amber-400 hover:text-amber-500 hover:bg-amber-900/30 rounded-lg"
+                                        onClick={() => showConfirm(
+                                          language === 'ar' ? 'حظر العميل' : 'Block Customer',
+                                          language === 'ar' ? `هل أنت متأكد من حظر العميل ${c.name}؟ لن يتمكن من تسجيل الدخول.` : `Are you sure you want to block ${c.name}? They will not be able to log in.`,
+                                          () => updateCustomerStatusMutation.mutate({ id: c.id, status: 'blocked' })
+                                        )}
+                                        title={language === 'ar' ? 'حظر الحساب' : 'Block Account'}
+                                      >
+                                        <XCircle className="w-4 h-4" />
+                                      </Button>
+                                    )}
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="text-white hover:text-purple-400 hover:bg-purple-900/30 rounded-lg"
+                                      onClick={() => {
+                                        openAdminChat({
+                                          recipientId: c.id,
+                                          name: c.name || t('customer'),
+                                          logo: c.avatar
+                                        });
+                                      }}
+                                    >
+                                      <MessageSquare className="w-4 h-4" />
+                                    </Button>
+
+                                    {user?.email === 'admin@fustan.com' && (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="text-red-400 hover:text-red-500 hover:bg-red-900/30 rounded-lg"
+                                        onClick={() => {
+                                          setCustomerToDelete(c);
+                                          setDeleteCustomerOpen(true);
+                                        }}
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )
+          }
+
+          {/* Chat Tab */}
+          {
+            activeTab === "chat" && (
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-white mb-6 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-indigo-900/30 rounded-xl flex items-center justify-center">
+                    <MessageSquare className="w-6 h-6 text-indigo-400" />
+                  </div>
+                  {t('manageConversations')}
+                </h2>
+
+                <Card className="border border-gray-800 rounded-[1.5rem] md:rounded-[2.5rem] bg-background shadow-none overflow-hidden">
+                  <div className="bg-gray-900/50 px-6 py-4 border-b border-gray-800 flex items-center justify-between">
+                    <p className="text-sm font-bold text-gray-300">{t('activeConversationsDesc')}</p>
+                    <span className="bg-gray-800 px-3 py-1 rounded-lg border border-gray-700 text-white text-xs font-black">
+                      {adminConversations?.length || 0} {t('conversationCount')}
+                    </span>
+                  </div>
+                  <CardContent className="p-0">
+                    <div className="divide-y divide-gray-800">
+                      {adminConversations?.map((conv: any) => (
+                        <div key={conv.id} className="p-4 flex items-center justify-between hover:bg-gray-800/50 transition-colors cursor-pointer group">
+                          <div className="flex items-center gap-4">
+                            <div className="flex -space-x-3 rtl:space-x-reverse">
+                              <div className="w-10 h-10 rounded-full border-2 border-white bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs ring-2 ring-blue-50 overflow-hidden">
+                                {conv.customerAvatar ? <img src={conv.customerAvatar} alt="" className="w-full h-full object-cover" /> : (conv.customerName || 'C').substring(0, 1)}
+                              </div>
+                              <div className="w-10 h-10 rounded-full border-2 border-white bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-xs ring-2 ring-purple-50 overflow-hidden">
+                                {conv.storeLogo ? <img src={conv.storeLogo} alt="" className="w-full h-full object-cover" /> : (conv.storeNameAr || conv.storeNameEn || 'S').substring(0, 1)}
+                              </div>
+                            </div>
+                            <div className="text-right" dir="rtl">
+                              <h4 className="font-bold text-white text-sm">
+                                {conv.customerName || t('customer')} <span className="text-white font-normal mx-1">{t('with')}</span> {conv.storeNameAr || conv.storeNameEn || t('vendor')}
+                              </h4>
+                              <p className="text-xs text-white mt-1">
+                                {conv.lastMessage ? conv.lastMessage.substring(0, 50) : t('noMessages')}...
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-white font-bold gap-2 hover:bg-white/10"
+                            onClick={() => {
+                              toast.info(t('chatDetailsComingSoon'));
+                            }}
+                          >
+                            {t('viewConversationDetails')} <ChevronRight size={14} />
+                          </Button>
+                        </div>
+                      ))}
+                      {(!adminConversations || adminConversations.length === 0) && (
+                        <div className="p-12 text-center text-white font-medium">{t('noActiveConversations')}</div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )
+          }
+          {/* Payment Gateways Tab */}
+          {activeTab === "payments" && <AdminPaymentGatewaysTab />}
+        </Suspense>
       </main >
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
