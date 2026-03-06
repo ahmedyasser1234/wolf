@@ -188,12 +188,21 @@ export default function Checkout() {
 
     const isInstallment = formData.paymentMethod === 'installments' || formData.installmentPlanId !== null;
 
-    console.log('🚀 [Checkout] handlePlaceOrder', {
-      isInstallment,
-      formDataPaymentMethod: formData.paymentMethod,
-      depositMethod,
-      installmentPlanId: formData.installmentPlanId,
-      hasKycData: !!kycData
+    console.log('🚀 [Checkout] handlePlaceOrder payload:', {
+      shippingAddress: {
+        name: `${formData.firstName} ${formData.lastName}`,
+        phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        country: formData.country,
+        zipCode: formData.zipCode
+      },
+      paymentMethod: isInstallment ? 'installments' : depositMethod,
+      couponCode: appliedCoupon?.code || undefined,
+      installmentPlanId: isInstallment ? formData.installmentPlanId : undefined,
+      kycData: !!kycData,
+      depositPaymentMethod: isInstallment ? depositMethod : undefined,
+      depositGiftCardCode: (isInstallment || depositMethod === 'gift_card') ? depositGiftCardCode : undefined,
     });
 
     placeOrderMutation.mutate({

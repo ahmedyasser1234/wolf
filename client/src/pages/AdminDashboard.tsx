@@ -374,7 +374,19 @@ export default function AdminDashboard() {
     queryFn: async () => (await api.get('/admin/stats')).data,
   });
 
+  const [productSearch, setProductSearch] = useState("");
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [orderSearch, setOrderSearch] = useState("");
+  const [orderDateFrom, setOrderDateFrom] = useState("");
+  const [orderDateTo, setOrderDateTo] = useState("");
+
   const [orderPage, setOrderPage] = useState(1);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setOrderPage(1);
+  }, [orderSearch, orderDateFrom, orderDateTo]);
+
   const { data: ordersResult, isLoading: ordersLoading } = useQuery({
     queryKey: ['admin', 'orders', orderPage, orderSearch, orderDateFrom, orderDateTo],
     queryFn: async () => (await api.get('/admin/orders', {
@@ -397,7 +409,7 @@ export default function AdminDashboard() {
   const tabs = useMemo<{ id: string; label: string; icon: any; color?: string; badge?: number }[]>(() => [
     { id: "overview", label: t('overview'), icon: LayoutDashboard, color: "from-purple-600 to-pink-600 shadow-purple-500/30" },
     { id: "analytics", label: t('analytics'), icon: BarChart3, color: "from-emerald-400 to-teal-600 shadow-emerald-500/30" },
-    { id: "content", label: t('contentManagement'), icon: Edit, color: "-primary to-red-600 -primary/30" },
+    { id: "content", label: t('contentManagement'), icon: Edit, color: "from-primary to-rose-600 shadow-primary/30" },
     { id: "products", label: t('products'), icon: Package, color: "from-fuchsia-500 to-purple-600 shadow-fuchsia-500/30" },
     { id: "categories", label: t('categories'), icon: Layers, color: "from-teal-400 to-emerald-600 shadow-teal-500/30" },
     { id: "collections", label: language === 'ar' ? 'المجموعات' : 'Collections', icon: List, color: "from-blue-400 to-indigo-600 shadow-blue-500/30" },
@@ -409,7 +421,7 @@ export default function AdminDashboard() {
     { id: "payments", label: language === 'ar' ? 'بوابات الدفع' : 'Payment Gateways', icon: DollarSign, color: "from-emerald-400 to-teal-600 shadow-emerald-500/30" },
     { id: "orders", label: t('orders'), icon: ShoppingCart, color: "from-orange-500 to-red-600 shadow-orange-500/30" },
     { id: "customers", label: t('customers'), icon: Users, color: "from-sky-500 to-blue-600 shadow-sky-500/30" },
-    { id: "chat", label: t('chat'), icon: MessageSquare, badge: unreadCount, color: "from-pink-500 -primary shadow-pink-500/30" },
+    { id: "chat", label: t('chat'), icon: MessageSquare, badge: unreadCount, color: "from-pink-500 to-primary shadow-pink-500/30" },
     { id: "settings", label: t('settings'), icon: Settings, color: "from-slate-700 to-slate-900 shadow-slate-500/30" },
   ], [t, unreadCount, language]);
 
@@ -444,16 +456,6 @@ export default function AdminDashboard() {
     setConfirmConfig({ title, description, onConfirm });
     setConfirmOpen(true);
   };
-  const [productSearch, setProductSearch] = useState("");
-  const [customerSearch, setCustomerSearch] = useState("");
-  const [orderSearch, setOrderSearch] = useState("");
-  const [orderDateFrom, setOrderDateFrom] = useState("");
-  const [orderDateTo, setOrderDateTo] = useState("");
-
-  // Reset page when filters change
-  useEffect(() => {
-    setOrderPage(1);
-  }, [orderSearch, orderDateFrom, orderDateTo]);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isAdminOrderModalOpen, setIsAdminOrderModalOpen] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);

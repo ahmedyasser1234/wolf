@@ -58,12 +58,6 @@ export function useChatNotifications() {
         };
     }, [socket, user, queryClient]);
 
-    // Re-fetch when location changes (e.g. user leaves chat page)
-    useEffect(() => {
-        if (user) {
-            refetch();
-        }
-    }, [location, refetch, user]);
 
     return { unreadCount };
 }

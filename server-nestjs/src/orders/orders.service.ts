@@ -160,6 +160,15 @@ export class OrdersService {
         // ============================================================
         // INSTALLMENT FLOW: Calculate deposit & validate payment FIRST
         // ============================================================
+        console.log(`🚀 [OrdersService.create] STARTED`, {
+            customerId,
+            paymentMethod,
+            depositPaymentMethod,
+            installmentPlanId: !!installmentPlanId,
+            walletAmountUsed,
+            language
+        });
+
         let depositAmount = 0;
         let stripeCheckoutUrl: string | null = null;
         let resolvedDepositPaymentMethod = (depositPaymentMethod || 'card') as 'card' | 'wallet' | 'gift_card';
@@ -370,6 +379,14 @@ export class OrdersService {
                             updatedAt: new Date(),
                         })
                         .returning();
+
+                    console.log(`   ✅ [OrdersService.create] Order Saved:`, {
+                        id: newOrder.id,
+                        orderNumber: newOrder.orderNumber,
+                        paymentMethod: newOrder.paymentMethod,
+                        paymentStatus: newOrder.paymentStatus,
+                        depositPaymentMethod: newOrder.depositPaymentMethod
+                    });
 
                     const itemsWithOrderId = group.items.map(item => ({ ...item, orderId: newOrder.id }));
                     await tx.insert(orderItems).values(itemsWithOrderId);
