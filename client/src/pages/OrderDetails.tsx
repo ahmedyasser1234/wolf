@@ -202,8 +202,8 @@ export default function OrderDetails() {
                                 <div key={item.id} className="py-4 flex gap-4">
                                     <div className="w-20 h-24 bg-gray-100 rounded-lg overflow-hidden shrink-0">
                                         <img
-                                            src={item.productImage?.[0] || '/placeholder.png'}
-                                            alt={language === 'ar' ? item.productNameAr : item.productNameEn}
+                                            src={item.product?.images?.[0] || item.productImage?.[0] || '/placeholder.png'}
+                                            alt={language === 'ar' ? (item.product?.nameAr || item.productNameAr) : (item.product?.nameEn || item.productNameEn)}
                                             className="w-full h-full object-cover"
                                         />
                                     </div>
@@ -211,10 +211,10 @@ export default function OrderDetails() {
                                         <div className="flex justify-between items-start">
                                             <div>
                                                 <h3 className="font-bold text-white mb-1">
-                                                    {language === 'ar' ? item.productNameAr : item.productNameEn}
+                                                    {language === 'ar' ? (item.product?.nameAr || item.productNameAr) : (item.product?.nameEn || item.productNameEn)}
                                                 </h3>
                                                 <p className="text-sm text-gray-300 mb-2">
-                                                    {language === 'ar' ? item.storeNameAr : item.storeNameEn}
+                                                    {language === 'ar' ? (item.vendor?.storeNameAr || item.storeNameAr) : (item.vendor?.storeNameEn || item.storeNameEn)}
                                                 </p>
                                                 {item.size && (
                                                     <div className="inline-block bg-gray-100 px-2 py-1 rounded text-xs font-bold text-gray-600">

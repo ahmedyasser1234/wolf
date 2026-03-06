@@ -50,26 +50,37 @@ export class OrdersService {
 
         if (orderRaw.length === 0) return null;
 
-        const items = await this.databaseService.db
+        const itemsRaw = await this.databaseService.db
             .select({
-                id: orderItems.id,
-                orderId: orderItems.orderId,
-                productId: orderItems.productId,
-                vendorId: orderItems.vendorId,
-                quantity: orderItems.quantity,
-                price: orderItems.price,
-                total: orderItems.total,
-                size: orderItems.size,
-                productNameAr: products.nameAr,
-                productNameEn: products.nameEn,
-                productImage: products.images,
-                storeNameAr: vendors.storeNameAr,
-                storeNameEn: vendors.storeNameEn,
+                item: orderItems,
+                product: {
+                    id: products.id,
+                    nameAr: products.nameAr,
+                    nameEn: products.nameEn,
+                    images: products.images,
+                },
+                vendor: {
+                    id: vendors.id,
+                    storeNameAr: vendors.storeNameAr,
+                    storeNameEn: vendors.storeNameEn,
+                }
             })
             .from(orderItems)
             .leftJoin(products, eq(orderItems.productId, products.id))
             .leftJoin(vendors, eq(orderItems.vendorId, vendors.id))
             .where(eq(orderItems.orderId, id));
+
+        const items = itemsRaw.map(r => ({
+            ...r.item,
+            product: r.product,
+            vendor: r.vendor,
+            // Keep flat fields for backward compatibility with customer order details page if needed
+            productNameAr: r.product?.nameAr,
+            productNameEn: r.product?.nameEn,
+            productImage: r.product?.images,
+            storeNameAr: r.vendor?.storeNameAr,
+            storeNameEn: r.vendor?.storeNameEn,
+        }));
 
         return { ...orderRaw[0].order, customer: orderRaw[0].customer, items };
     }

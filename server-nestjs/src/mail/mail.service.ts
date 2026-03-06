@@ -15,16 +15,40 @@ export class MailService {
         const pass = this.configService.get<string>('SMTP_PASS');
 
         if (host && user && pass) {
+            this.logger.log(`📧 Initializing mail transport for ${host}:${port} (Secure: ${Number(port) === 465})`);
+
             this.transporter = nodemailer.createTransport({
                 host,
-                port,
-                secure: port === 465, // true for 465, false for other ports
+                port: Number(port),
+                secure: Number(port) === 465, // true for 465, false for other ports
                 auth: {
                     user,
                     pass,
                 },
+                tls: {
+                    // Do not fail on invalid certs (common for custom SMTP/VPS)
+                    rejectUnauthorized: false
+                },
+                // If using port 587, often STARTTLS is required
+                requireTLS: Number(port) === 587,
+                connectionTimeout: 15000, // 15 seconds
+                greetingTimeout: 15000,
+                socketTimeout: 15000,
+                debug: true, // Show protocol logs in console
+                logger: true, // Use nodemailer's internal logger
             });
-            this.logger.log('📧 Mail transport initialized');
+
+            // Verify connection configuration on startup
+            this.transporter.verify((error, success) => {
+                if (error) {
+                    this.logger.error(`❌ Mail transport verification failed (${host}:${port}):`, error.message);
+                    if ((error as any).code === 'ETIMEDOUT') {
+                        this.logger.error('💡 Hint: Check if your server or firewall is blocking outbound connections on this port.');
+                    }
+                } else {
+                    this.logger.log('📧 Mail transport verified and ready');
+                }
+            });
         } else {
             this.logger.warn('⚠️ SMTP configuration missing. MailService will log emails to console instead of sending.');
         }

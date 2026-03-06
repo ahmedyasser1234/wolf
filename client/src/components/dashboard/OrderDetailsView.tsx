@@ -324,7 +324,7 @@ export default function OrderDetailsView({ orderId, onClose }: OrderDetailsViewP
                                 </div>
 
                                 {/* Deposit Information */}
-                                {order.depositAmount && (
+                                {Number(order.depositAmount) > 0 && (
                                     <div className="pt-4 border-t border-slate-50">
                                         <div className="flex items-center justify-between gap-4 flex-wrap">
                                             <div className="flex flex-col">
