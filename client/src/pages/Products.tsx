@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { endpoints } from "@/lib/api";
@@ -15,8 +15,35 @@ import { SEO } from "@/components/SEO";
 
 export default function Products() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<number | undefined>();
-  const [selectedCollection, setSelectedCollection] = useState<number | undefined>();
+  const [selectedCategory, setSelectedCategory] = useState<number | undefined>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const catId = params.get('category');
+      if (catId) return Number(catId);
+    }
+    return undefined;
+  });
+
+  const [selectedCollection, setSelectedCollection] = useState<number | undefined>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const colId = params.get('collection');
+      if (colId) return Number(colId);
+    }
+    return undefined;
+  });
+
+  const [location] = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const catId = params.get('category');
+    const colId = params.get('collection');
+
+    setSelectedCategory(catId ? Number(catId) : undefined);
+    setSelectedCollection(colId ? Number(colId) : undefined);
+  }, [location, window.location.search]);
+
   const [showFilters, setShowFilters] = useState(false); // Mobile toggle
   const [sortBy, setSortBy] = useState<"newest" | "price-low" | "price-high" | "rating">("newest");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 30000]);
@@ -25,14 +52,6 @@ export default function Products() {
 
   const { language, t } = useLanguage();
 
-  // Read collection from URL params
-  useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    const collectionId = params.get('collection');
-    if (collectionId) {
-      setSelectedCollection(Number(collectionId));
-    }
-  });
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
@@ -101,12 +120,18 @@ export default function Products() {
 
   // Nav Items
   const navItems = [
-    { id: 0, name: t('all'), isActive: !selectedCategory && !selectedCollection, onClick: () => { setSelectedCategory(undefined); setSelectedCollection(undefined); } },
+    { id: 'all', name: t('all'), isActive: !selectedCategory && !selectedCollection, onClick: () => { setSelectedCategory(undefined); setSelectedCollection(undefined); } },
     ...(categories as any[] || []).map((cat: any) => ({
-      id: cat.id,
+      id: `cat-${cat.id}`,
       name: language === 'ar' ? (cat.nameAr || cat.name) : (cat.nameEn || cat.name),
       isActive: selectedCategory === cat.id,
       onClick: () => { setSelectedCategory(cat.id); setSelectedCollection(undefined); }
+    })),
+    ...(collections as any[] || []).map((col: any) => ({
+      id: `col-${col.id}`,
+      name: language === 'ar' ? (col.nameAr || col.name) : (col.nameEn || col.name),
+      isActive: selectedCollection === col.id,
+      onClick: () => { setSelectedCollection(col.id); setSelectedCategory(undefined); }
     }))
   ];
 

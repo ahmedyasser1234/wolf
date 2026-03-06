@@ -103,14 +103,12 @@ export default function WalletPage() {
             toast.error(language === "ar" ? "أدخل مبلغاً صحيحاً" : "Enter a valid amount");
             return;
         }
-        if (!selectedGateway) {
-            toast.error(language === "ar" ? "اختر وسيلة دفع" : "Select a payment method");
-            return;
-        }
+
+        const gatewayToUse = selectedGateway || (gateways && gateways[0]?.key) || 'stripe';
 
         setIsTopUpLoading(true);
         try {
-            const { url } = await endpoints.wallets.createTopUpSession(amount, selectedGateway);
+            const { url } = await endpoints.wallets.createTopUpSession(amount, gatewayToUse);
             if (url) {
                 window.location.href = url;
             } else {
@@ -197,26 +195,10 @@ export default function WalletPage() {
                             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">AED</div>
                         </div>
 
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                            {gateways?.map((gw: any) => (
-                                <button
-                                    key={gw.id}
-                                    onClick={() => setSelectedGateway(gw.key)}
-                                    className={cn(
-                                        "p-3 rounded-xl border transition-all text-xs font-bold",
-                                        selectedGateway === gw.key
-                                            ? "bg-emerald-500/10 border-emerald-500 text-emerald-400"
-                                            : "bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600"
-                                    )}
-                                >
-                                    {language === "ar" ? gw.nameAr : gw.nameEn}
-                                </button>
-                            ))}
-                        </div>
 
                         <Button
                             onClick={handleTopUp}
-                            disabled={isTopUpLoading || !topUpAmount || !selectedGateway}
+                            disabled={isTopUpLoading || !topUpAmount}
                             className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-lg rounded-2xl shadow-xl shadow-emerald-500/20 transition-all"
                         >
                             {isTopUpLoading ? <Loader2 className="animate-spin" /> : (language === "ar" ? "اشحن الآن" : "Top up Now")}

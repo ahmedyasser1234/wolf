@@ -420,7 +420,7 @@ function Footer() {
             </div>
             <div className={`flex items-center gap-2.5 ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
               <RefreshCw size={21} className="text-gray-900" />
-              <span>{isAr ? "10 أيام للاسترجاع" : "10 Days To Return"}</span>
+              <span>{isAr ? "14 أيام للاسترجاع" : "14 Days To Return"}</span>
             </div>
             <div className={`flex items-center gap-2.5 ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
               <Heart size={21} className="text-gray-900" />
@@ -481,7 +481,6 @@ function Footer() {
             <ul className="space-y-4 text-gray-400 font-bold text-xs">
               <li><Link href="/about-us" className="hover:text-white transition-colors">{isAr ? 'عن ولف تكنو' : 'About Wolf Techno'}</Link></li>
               <li><Link href="/products" className="hover:text-white transition-colors">{isAr ? 'المتجر' : 'Shop'}</Link></li>
-              <li><Link href="/blog" className="hover:text-white transition-colors">{isAr ? 'المدونة' : 'Our Blog'}</Link></li>
             </ul>
           </div>
 
@@ -517,16 +516,15 @@ function Footer() {
             <ul className="space-y-4 text-gray-400 font-bold text-xs mb-10">
               <li><Link href="/profile" className="hover:text-white transition-colors">{isAr ? 'حسابي' : 'My Account'}</Link></li>
               <li><Link href="/orders" className="hover:text-white transition-colors">{isAr ? 'تتبع طلبي' : 'Track Your Order'}</Link></li>
-              <li><Link href="/claims" className="hover:text-white transition-colors">{isAr ? 'تقديم مطالبة' : 'Raise A Claim'}</Link></li>
             </ul>
 
             {/* Contact Details */}
             <div className={`space-y-3 flex flex-col ${isAr ? 'items-start' : 'items-start'}`}>
               <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">Contact Us</p>
 
-              <a href="mailto:contact@wolftechno.me" className="text-xs text-white font-black hover:text-primary transition-colors flex items-center gap-3 group">
+              <a href="mailto:contact@wolftechno.com" className="text-xs text-white font-black hover:text-primary transition-colors flex items-center gap-3 group">
                 <Mail size={14} className="text-primary group-hover:scale-110 transition-transform flex-shrink-0" />
-                <span>contact@wolftechno.me</span>
+                <span>contact@wolftechno.com</span>
               </a>
 
               <a href="tel:+971588808744" className="text-xs text-white font-black hover:text-primary transition-colors flex items-center gap-3 group">

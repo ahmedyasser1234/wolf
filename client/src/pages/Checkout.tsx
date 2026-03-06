@@ -500,7 +500,7 @@ export default function Checkout() {
                               value={depositGiftCardCode}
                               onChange={(e) => setDepositGiftCardCode(e.target.value.toUpperCase())}
                               placeholder="XXXX-XXXX-XXXX"
-                              className="h-14 rounded-xl text-center font-mono font-bold text-lg border-gray-200"
+                              className="h-14 rounded-xl text-center font-mono font-bold text-lg border-gray-200 text-black"
                             />
                             {validateGiftCardMutation.isPending && (
                               <div className="absolute left-4 top-4">
@@ -575,89 +575,88 @@ export default function Checkout() {
           </div>
 
           <div className="lg:col-span-4">
-            <div className="bg-white p-10 rounded-[3rem] shadow-sm border border-gray-50 text-right sticky top-40 font-arabic">
-              <h3 className="text-2xl font-black text-gray-900 mb-8 border-b border-gray-50 pb-4">ملخص الطلب</h3>
+            <div className={`bg-white p-6 md:p-10 rounded-[3rem] shadow-sm border border-gray-50 sticky top-40 font-arabic ${language === 'ar' ? 'text-right' : 'text-left'}`}>
+              <h3 className="text-2xl font-black text-gray-900 mb-8 border-b border-gray-50 pb-4">{language === 'ar' ? 'ملخص الطلب' : 'Order Summary'}</h3>
               <div className="space-y-6 mb-8 max-h-[300px] overflow-y-auto scrollbar-hide">
                 {items.map((item: any) => (
-                  <div key={item.id} className="flex items-center justify-end gap-5">
-                    <div className="grow text-right">
-                      <p className="font-bold text-gray-900 truncate max-w-[120px]">{language === 'ar' ? item.product?.nameAr : item.product?.nameEn}</p>
-                      <p className="text-sm text-gray-400">الكمية: {item.quantity}</p>
+                  <div key={item.id} className="flex items-center gap-4">
+                    <img src={item.product?.images?.[0]} alt="" className="w-16 h-16 rounded-2xl object-cover shadow-sm shrink-0" />
+                    <div className="grow min-w-0">
+                      <p className="font-bold text-gray-900 truncate w-full" dir="auto">{language === 'ar' ? item.product?.nameAr : item.product?.nameEn}</p>
+                      <p className="text-sm text-gray-400">{language === 'ar' ? 'الكمية:' : 'Qty:'} {item.quantity}</p>
                     </div>
-                    <img src={item.product?.images?.[0]} alt="" className="w-16 h-16 rounded-2xl object-cover shadow-sm" />
                   </div>
                 ))}
               </div>
-            </div>
 
-            {/* Coupon Section */}
-            <div className="mt-6 mb-8 w-full">
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => {
-                    if (appliedCoupon) {
-                      setAppliedCoupon(null);
-                      setCouponInput("");
-                    } else if (couponInput.trim()) {
-                      validateCouponMutation.mutate(couponInput);
-                    }
-                  }}
-                  disabled={validateCouponMutation.isPending || (!appliedCoupon && !couponInput.trim())}
-                  variant={appliedCoupon ? "destructive" : "default"}
-                  className="h-12 px-6 rounded-xl font-bold shrink-0"
-                >
-                  {validateCouponMutation.isPending ? <Loader2 className="animate-spin h-4 w-4" /> : appliedCoupon ? (language === 'ar' ? 'إزالة' : 'Remove') : (language === 'ar' ? 'تطبيق' : 'Apply')}
-                </Button>
-                <Input
-                  value={couponInput}
-                  onChange={(e) => setCouponInput(e.target.value)}
-                  placeholder={language === 'ar' ? 'كود الخصم (إن وجد)' : 'Discount code (if any)'}
-                  disabled={!!appliedCoupon}
-                  className="h-12 bg-gray-50 border-gray-100 rounded-xl font-mono text-center flex-1 font-bold text-gray-900 focus-visible:ring-primary"
-                />
-              </div>
-            </div>
-
-            {appliedCoupon && (
-              <div className="flex justify-between items-center bg-green-50/50 p-4 rounded-xl mt-4 border border-green-100 mb-4">
-                <span className="font-bold text-green-600 text-lg">-{formatPrice(discountAmount)}</span>
-                <span className="text-green-700 font-bold">
-                  {language === 'ar'
-                    ? `الخصم (${appliedCoupon.type === 'fixed' ? formatPrice(appliedCoupon.discountAmount) : `${appliedCoupon.discountPercent}%`})`
-                    : `Discount (${appliedCoupon.type === 'fixed' ? formatPrice(appliedCoupon.discountAmount) : `${appliedCoupon.discountPercent}%`})`}
-                </span>
-              </div>
-            )}
-
-            <div className="flex justify-between items-center bg-gray-50 p-6 rounded-[2rem] mt-4">
-              <span className="font-black text-primary text-3xl tracking-tighter">{formatPrice(finalTotal)}</span>
-              <span className="text-gray-900 font-black text-xl">المجموع</span>
-            </div>
-
-            {formData.paymentMethod === 'installments' && (() => {
-              const intentRaw = localStorage.getItem('wolf_payment_intent');
-              if (!intentRaw) return null;
-              const intent = JSON.parse(intentRaw);
-              return (
-                <div className="mt-6 space-y-3 bg-purple-50 p-6 rounded-[2rem] border-2 border-purple-100">
-                  <div className="flex justify-between items-center text-sm font-bold text-purple-700">
-                    <span>{formatPrice(intent.total)}</span>
-                    <span>الإجمالي بالفوائد</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm font-black text-purple-900 pt-3 border-t border-purple-200">
-                    <span>{formatPrice(intent.downPayment)}</span>
-                    <span>الدفعة الأولى (تُدفع الآن)</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs font-bold text-purple-500">
-                    <span>{formatPrice(intent.financedAmount)}</span>
-                    <span>المبلغ المتبقي للأقساط</span>
-                  </div>
+              {/* Coupon Section */}
+              <div className="mt-6 mb-8 w-full">
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => {
+                      if (appliedCoupon) {
+                        setAppliedCoupon(null);
+                        setCouponInput("");
+                      } else if (couponInput.trim()) {
+                        validateCouponMutation.mutate(couponInput);
+                      }
+                    }}
+                    disabled={validateCouponMutation.isPending || (!appliedCoupon && !couponInput.trim())}
+                    variant={appliedCoupon ? "destructive" : "default"}
+                    className="h-12 px-6 rounded-xl font-bold shrink-0"
+                  >
+                    {validateCouponMutation.isPending ? <Loader2 className="animate-spin h-4 w-4" /> : appliedCoupon ? (language === 'ar' ? 'إزالة' : 'Remove') : (language === 'ar' ? 'تطبيق' : 'Apply')}
+                  </Button>
+                  <Input
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value)}
+                    placeholder={language === 'ar' ? 'كود الخصم (إن وجد)' : 'Discount code (if any)'}
+                    disabled={!!appliedCoupon}
+                    className="h-12 bg-gray-50 border-gray-100 rounded-xl font-mono text-center flex-1 font-bold text-gray-900 focus-visible:ring-primary text-black"
+                  />
                 </div>
-              );
-            })()}
+              </div>
+
+              {appliedCoupon && (
+                <div className="flex justify-between items-center bg-green-50/50 p-4 rounded-xl mt-4 border border-green-100 mb-4">
+                  <span className="font-bold text-green-600 text-lg">-{formatPrice(discountAmount)}</span>
+                  <span className="text-green-700 font-bold">
+                    {language === 'ar'
+                      ? `الخصم (${appliedCoupon.type === 'fixed' ? formatPrice(appliedCoupon.discountAmount) : `${appliedCoupon.discountPercent}%`})`
+                      : `Discount (${appliedCoupon.type === 'fixed' ? formatPrice(appliedCoupon.discountAmount) : `${appliedCoupon.discountPercent}%`})`}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center bg-gray-50 p-6 rounded-[2rem] mt-4">
+                <span className="font-black text-primary text-3xl tracking-tighter">{formatPrice(finalTotal)}</span>
+                <span className="text-gray-900 font-black text-xl">المجموع</span>
+              </div>
+
+              {formData.paymentMethod === 'installments' && (() => {
+                const intentRaw = localStorage.getItem('wolf_payment_intent');
+                if (!intentRaw) return null;
+                const intent = JSON.parse(intentRaw);
+                return (
+                  <div className="mt-6 space-y-3 bg-purple-50 p-6 rounded-[2rem] border-2 border-purple-100">
+                    <div className="flex justify-between items-center text-sm font-bold text-purple-700">
+                      <span>{formatPrice(intent.total)}</span>
+                      <span>الإجمالي بالفوائد</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm font-black text-purple-900 pt-3 border-t border-purple-200">
+                      <span>{formatPrice(intent.downPayment)}</span>
+                      <span>الدفعة الأولى (تُدفع الآن)</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs font-bold text-purple-500">
+                      <span>{formatPrice(intent.financedAmount)}</span>
+                      <span>المبلغ المتبقي للأقساط</span>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
           </div>
-        </div>
+        </div >
       </div >
-    </div >
-  );
+      );
 }

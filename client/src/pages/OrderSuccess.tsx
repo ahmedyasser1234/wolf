@@ -84,13 +84,13 @@ export default function OrderSuccess() {
                     className="grid gap-4"
                 >
                     <Link href="/orders">
-                        <Button className="w-full h-16 rounded-full bg-primary hover:bg-primary/90 text-xl font-bold shadow-xl shadow-primary/10 gap-3">
+                        <Button className="w-full h-16 rounded-full bg-primary hover:bg-primary/90 text-xl font-bold shadow-xl shadow-primary/10 gap-3 text-black">
                             <ShoppingBag size={24} />
                             {t('trackOrder')}
                         </Button>
                     </Link>
                     <Link href="/">
-                        <Button variant="outline" className="w-full h-16 rounded-full border-2 text-xl font-bold gap-3 group">
+                        <Button variant="outline" className="w-full h-16 rounded-full border-2 text-xl font-bold gap-3 group text-black">
                             <ArrowLeft size={24} className={language === 'ar' ? 'rotate-180 group-hover:translate-x-2 transition-transform' : 'group-hover:-translate-x-2 transition-transform'} />
                             {t('backToHome')}
                         </Button>

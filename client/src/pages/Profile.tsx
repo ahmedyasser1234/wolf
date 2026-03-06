@@ -495,7 +495,7 @@ export default function Profile() {
                                 value={redeemCode}
                                 onChange={(e) => setRedeemCode(e.target.value.toUpperCase())}
                                 placeholder="XXXX-XXXX-XXXX"
-                                className="h-14 rounded-2xl bg-gray-50 border-0 font-black text-lg tracking-widest placeholder:tracking-normal placeholder:font-bold focus:ring-2 focus:ring-primary uppercase px-6"
+                                className="h-14 rounded-2xl bg-gray-50 border-0 font-black text-lg tracking-widest placeholder:tracking-normal placeholder:font-bold focus:ring-2 focus:ring-primary uppercase px-6 text-black"
                             />
                         </div>
 
@@ -537,6 +537,9 @@ function EditProfileModal({ isOpen, onClose, user, language, queryClient }: any)
     // User State
     const [name, setName] = useState(user?.name || "");
     const [email, setEmail] = useState(user?.email || "");
+    const [phone, setPhone] = useState(user?.phone || "");
+    const [country, setCountry] = useState(user?.country || "");
+    const [address, setAddress] = useState(user?.address || "");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -581,6 +584,9 @@ function EditProfileModal({ isOpen, onClose, user, language, queryClient }: any)
 
         const userFormData = new FormData();
         userFormData.append('name', name);
+        if (phone) userFormData.append('phone', phone);
+        if (country) userFormData.append('country', country);
+        if (address) userFormData.append('address', address);
         // Email is read-only, no need to send it
         if (password) userFormData.append('password', password);
         if (avatarFile) userFormData.append('avatar', avatarFile);
@@ -668,6 +674,18 @@ function EditProfileModal({ isOpen, onClose, user, language, queryClient }: any)
                                             <div className="text-start space-y-2">
                                                 <label className="text-xs font-black text-gray-700 px-1 uppercase tracking-wider">{language === 'ar' ? "البريد الإلكتروني" : "Email Address"}</label>
                                                 <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-gray-100 border-0 rounded-2xl h-14 px-6 font-bold focus:ring-2 focus:ring-primary transition-all text-gray-400 cursor-not-allowed" disabled dir="ltr" />
+                                            </div>
+                                            <div className="text-start space-y-2">
+                                                <label className="text-xs font-black text-gray-700 px-1 uppercase tracking-wider">{language === 'ar' ? "رقم الهاتف (اختياري)" : "Phone Number (Optional)"}</label>
+                                                <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-gray-50 border-0 rounded-2xl h-14 px-6 font-bold focus:ring-2 focus:ring-primary transition-all text-gray-900" dir="ltr" />
+                                            </div>
+                                            <div className="text-start space-y-2">
+                                                <label className="text-xs font-black text-gray-700 px-1 uppercase tracking-wider">{language === 'ar' ? "الدولة (اختياري)" : "Country (Optional)"}</label>
+                                                <Input type="text" value={country} onChange={(e) => setCountry(e.target.value)} className="w-full bg-gray-50 border-0 rounded-2xl h-14 px-6 font-bold focus:ring-2 focus:ring-primary transition-all text-gray-900" />
+                                            </div>
+                                            <div className="text-start md:col-span-2 space-y-2">
+                                                <label className="text-xs font-black text-gray-700 px-1 uppercase tracking-wider">{language === 'ar' ? "العنوان (اختياري)" : "Address (Optional)"}</label>
+                                                <Input type="text" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full bg-gray-50 border-0 rounded-2xl h-14 px-6 font-bold focus:ring-2 focus:ring-primary transition-all text-gray-900" />
                                             </div>
                                             <div className="text-start md:col-span-2 space-y-2">
                                                 <label className="text-xs font-black text-gray-700 px-1 uppercase tracking-wider">{language === 'ar' ? "كلمة المرور الجديدة" : "New Password"}</label>

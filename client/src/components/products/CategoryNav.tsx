@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 
 interface CategoryNavItem {
-    id: number;
+    id: number | string;
     name: string;
     isActive: boolean;
     onClick: () => void;

@@ -73,27 +73,34 @@ export default function ContactUs() {
                                 <MapPin size={24} />
                             </div>
                             <h3 className="text-xl font-bold text-gray-900 mb-2">{language === 'ar' ? "العنوان" : "Address"}</h3>
-                            <p className="text-gray-500 font-medium">
-                                {language === 'ar' ? "شارع الشيخ زايد، دبي، الإمارات العربية المتحدة" : "Sheikh Zayed Road, Dubai, UAE"}
-                            </p>
+                            <div className="text-gray-500 font-medium space-y-1">
+                                <p>{language === 'ar' ? "منطقة عجمان الحرة" : "Ajman Free Zone"}</p>
+                                <p>{language === 'ar' ? "برج بوليفارد A" : "Boulevard Tower A"}</p>
+                            </div>
                         </div>
-                        ... (rest of the cards)
 
                         <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 hover:shadow-md transition-all">
                             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6">
                                 <Phone size={24} />
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">{language === 'ar' ? "الهاتف" : "Phone"}</h3>
-                            <p className="text-gray-500 font-medium" dir="ltr">+966 50 123 4567</p>
-                            <p className="text-gray-400 text-sm mt-1">{language === 'ar' ? "متاح واتساب أيضاً" : "WhatsApp available"}</p>
+                            <h3 className="text-xl font-bold text-gray-900 mb-4">{language === 'ar' ? "وسائل الاتصال" : "Contact Methods"}</h3>
+                            <div className="text-gray-500 font-medium text-sm space-y-2">
+                                <p dir="ltr"><span className="font-bold text-gray-700">Phone:</span> +971588808744</p>
+                                <p dir="ltr"><span className="font-bold text-gray-700">General:</span> info@wolftechno.com</p>
+                                <p dir="ltr"><span className="font-bold text-gray-700">Support Team:</span> support@wolftechno.com</p>
+                                <p dir="ltr"><span className="font-bold text-gray-700">Returns Team:</span> returns@wolftechno.com</p>
+                                <p dir="ltr"><span className="font-bold text-gray-700">Legal Team:</span> legal@wolftechno.com</p>
+                                <p dir="ltr"><span className="font-bold text-gray-700">Marketing:</span> marketing@wolftechno.com</p>
+                            </div>
                         </div>
 
                         <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 hover:shadow-md transition-all">
                             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6">
                                 <Clock size={24} />
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">{language === 'ar' ? "ساعات العمل" : "Working Hours"}</h3>
-                            <p className="text-gray-500 font-medium">{language === 'ar' ? "يومياً من ١٠ صباحاً - ١٠ مساءً" : "Daily 10 AM - 10 PM"}</p>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">{language === 'ar' ? "مواعيد العمل" : "Working Hours"}</h3>
+                            <p className="text-gray-400 text-sm mb-1 font-bold">{language === 'ar' ? "(رد خلال 1 يوم عمل)" : "(Reply within 1 business day)"}</p>
+                            <p className="text-gray-500 font-medium">{language === 'ar' ? "الاثنين إلى الجمعة من 9 صباحاً إلى 5 مساءً" : "Monday to Friday 9 am to 5 pm"}</p>
                         </div>
                     </motion.div>
 
@@ -109,22 +116,22 @@ export default function ContactUs() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-gray-700">{language === 'ar' ? "الاسم" : "Name"}</label>
-                                    <Input required className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:-primary/40" placeholder={language === 'ar' ? "اسمك الكريم" : "Your Name"} />
+                                    <Input required className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:ring-primary/40 text-black" placeholder={language === 'ar' ? "اسمك الكريم" : "Your Name"} />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-gray-700">{language === 'ar' ? "البريد الإلكتروني" : "Email"}</label>
-                                    <Input required type="email" className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:-primary/40" placeholder="example@email.com" />
+                                    <Input required type="email" className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:ring-primary/40 text-black" placeholder="example@email.com" />
                                 </div>
                             </div>
 
                             <div className="space-y-2">
                                 <label className="text-sm font-bold text-gray-700">{language === 'ar' ? "الموضوع" : "Subject"}</label>
-                                <Input required className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:-primary/40" placeholder={language === 'ar' ? "استفسار بخصوص..." : "Inquiry about..."} />
+                                <Input required className="h-12 rounded-xl bg-gray-50 border-gray-200 focus:ring-primary/40 text-black" placeholder={language === 'ar' ? "استفسار بخصوص..." : "Inquiry about..."} />
                             </div>
 
                             <div className="space-y-2">
                                 <label className="text-sm font-bold text-gray-700">{language === 'ar' ? "الرسالة" : "Message"}</label>
-                                <Textarea required className="min-h-[150px] rounded-2xl bg-gray-50 border-gray-200 focus:ring-primary/40 p-4" placeholder={language === 'ar' ? "اكتب رسالتك هنا..." : "Type your message here..."} />
+                                <Textarea required className="min-h-[150px] rounded-2xl bg-gray-50 border-gray-200 focus:ring-primary/40 p-4 text-black" placeholder={language === 'ar' ? "اكتب رسالتك هنا..." : "Type your message here..."} />
                             </div>
 
                             <div className="pt-4 text-right">

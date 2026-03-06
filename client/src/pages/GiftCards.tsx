@@ -268,10 +268,13 @@ export default function GiftCards() {
                                             value={customAmount}
                                             onChange={e => setCustomAmount(e.target.value)}
                                             placeholder={language === 'ar' ? 'أو أدخل مبلغاً مخصصاً (AED)' : 'Or enter custom amount (AED)'}
-                                            className="h-14 bg-gray-800 border-gray-700 text-white rounded-2xl px-5 text-lg font-black placeholder:text-gray-600 focus-visible:ring-purple-500"
+                                            className={`h-14 bg-gray-800 border-gray-700 text-white rounded-2xl px-5 text-lg font-black placeholder:text-gray-600 focus-visible:ring-purple-500 ${language === 'ar' ? 'pr-14' : 'pl-14'}`}
+                                            dir="ltr"
                                         />
                                         {customAmount && (
-                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-sm">AED</span>
+                                            <span className={`absolute top-1/2 -translate-y-1/2 text-gray-500 font-bold text-sm ${language === 'ar' ? 'right-4' : 'left-4'}`}>
+                                                AED
+                                            </span>
                                         )}
                                     </div>
                                 </div>

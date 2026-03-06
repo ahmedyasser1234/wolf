@@ -65,8 +65,13 @@ export default function AboutUs() {
                             </p>
                             <p>
                                 {language === 'ar'
-                                    ? "فريقنا من الخبراء التقنيين يعمل بشغف لاختيار أفضل الأجهزة من أبرز العلامات العالمية، مع توفير خدمة عملاء استثنائية وخيارات دفع مرنة بالتقسيط."
-                                    : "Our team of tech experts works passionately to select the best devices from top global brands, while providing exceptional customer service and flexible installment payment options."}
+                                    ? "فريقنا من الخبراء التقنيين يعمل بشغف لاختيار أفضل الأجهزة من أبرز العلامات العالمية، مع توفير خدمة عملاء استثنائية وخيارات دفع مرنة."
+                                    : "Our team of tech experts works passionately to select the best devices from top global brands, while providing exceptional customer service and flexible payment options."}
+                            </p>
+                            <p>
+                                {language === 'ar'
+                                    ? "WOLF TECHNO تابعة للأنشطة التجارية المصرح بها وتحت ترخيص شركة Wolf SMM F.Z.E وهي شركة مسجلة من قبل سلطة منطقة عجمان الحرة."
+                                    : "WOLF TECHNO is a commercial activity operating under the license of Wolf SMM F.Z.E, a company registered by the Ajman Free Zone Authority."}
                             </p>
                         </div>
 
@@ -75,7 +80,6 @@ export default function AboutUs() {
                                 { icon: Sparkles, textAr: "أجهزة حصرية", textEn: "Exclusive Devices" },
                                 { icon: ShieldCheck, textAr: "ضمان رسمي", textEn: "Official Warranty" },
                                 { icon: CheckCircle2, textAr: "جودة مضمونة", textEn: "Guaranteed Quality" },
-                                { icon: Zap, textAr: "تقسيط بدون فوائد", textEn: "0% Installments" },
                             ].map((item, i) => (
                                 <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50/50 border border-gray-100">
                                     <div className="w-10 h-10 rounded-full bg-yellow-50 flex items-center justify-center text-yellow-600">

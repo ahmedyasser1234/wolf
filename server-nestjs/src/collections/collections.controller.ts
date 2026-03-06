@@ -41,8 +41,8 @@ export class CollectionsController {
     }
 
     @Get()
-    findAll() {
-        return this.collectionsService.findAll();
+    findAll(@Query('categoryId') categoryId?: string) {
+        return this.collectionsService.findAll(categoryId ? +categoryId : undefined);
     }
 
     @Get(':id')

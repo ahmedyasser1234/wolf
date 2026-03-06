@@ -200,13 +200,13 @@ export default function OrderDetailsView({ orderId, onClose }: OrderDetailsViewP
                                                     <td className="py-4 px-6">
                                                         <div className="flex items-center gap-4">
                                                             <div className="w-12 h-16 rounded-xl bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-200">
-                                                                {item.productImage?.[0] && (
-                                                                    <img src={item.productImage[0]} alt="product" className="w-full h-full object-cover" />
+                                                                {item.product?.images?.[0] && (
+                                                                    <img src={item.product.images[0]} alt="product" className="w-full h-full object-cover" />
                                                                 )}
                                                             </div>
                                                             <div>
                                                                 <p className="font-black text-slate-800 text-sm mb-1">
-                                                                    {language === 'ar' ? item.productNameAr : item.productNameEn}
+                                                                    {language === 'ar' ? item.product?.nameAr : item.product?.nameEn}
                                                                 </p>
                                                                 <p className="text-xs font-bold text-slate-400">
                                                                     {Number(item.price).toFixed(2)} {t('currency')}

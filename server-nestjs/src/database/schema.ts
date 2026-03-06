@@ -20,6 +20,7 @@ export const users = pgTable("users", {
     phone: text("phone"),
     whatsapp: text("whatsapp"),
     address: text("address"),
+    country: text("country"),
     password: text("password"),
     loginMethod: text("loginMethod"),
     status: text("status").default("active").notNull(), // active, blocked, deactivated

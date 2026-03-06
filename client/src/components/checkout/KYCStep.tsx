@@ -257,7 +257,7 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
                                     type="text"
                                     value={manualData.idNumber}
                                     onChange={(e) => setManualData(prev => ({ ...prev, idNumber: e.target.value }))}
-                                    className="w-full h-12 rounded-xl border border-gray-200 bg-white px-4 font-bold focus:ring-primary focus:border-primary"
+                                    className="w-full h-12 rounded-xl border border-gray-200 bg-white px-4 font-bold focus:ring-primary focus:border-primary text-black"
                                     placeholder={isAr ? "أدخل رقم الهوية" : "Enter ID number"}
                                 />
                             </div>
@@ -267,7 +267,7 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
                                     type="text"
                                     value={manualData.passportNumber}
                                     onChange={(e) => setManualData(prev => ({ ...prev, passportNumber: e.target.value }))}
-                                    className="w-full h-12 rounded-xl border border-gray-200 bg-white px-4 font-bold focus:ring-primary focus:border-primary"
+                                    className="w-full h-12 rounded-xl border border-gray-200 bg-white px-4 font-bold focus:ring-primary focus:border-primary text-black"
                                     placeholder={isAr ? "أدخل رقم الجواز" : "Enter passport number"}
                                 />
                             </div>
@@ -277,7 +277,7 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
                                     type="date"
                                     value={manualData.dob}
                                     onChange={(e) => setManualData(prev => ({ ...prev, dob: e.target.value }))}
-                                    className="w-full h-12 rounded-xl border border-gray-200 bg-white px-4 font-bold focus:ring-primary focus:border-primary"
+                                    className="w-full h-12 rounded-xl border border-gray-200 bg-white px-4 font-bold focus:ring-primary focus:border-primary text-black"
                                 />
                             </div>
                             <div className="sm:col-span-2 space-y-1 text-right font-arabic">
@@ -285,7 +285,7 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
                                 <textarea
                                     value={manualData.residentialAddress}
                                     onChange={(e) => setManualData(prev => ({ ...prev, residentialAddress: e.target.value }))}
-                                    className="w-full h-24 rounded-xl border border-gray-200 bg-white p-4 font-bold focus:ring-primary focus:border-primary resize-none"
+                                    className="w-full h-24 rounded-xl border border-gray-200 bg-white p-4 font-bold focus:ring-primary focus:border-primary resize-none text-black"
                                     placeholder={isAr ? "أدخل عنوان سكنك بالتفصيل (الشارع، البناية، المدينة)" : "Enter your full residential address (Street, Building, City)"}
                                 />
                             </div>

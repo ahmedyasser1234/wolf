@@ -78,7 +78,12 @@ export class CollectionsService {
         }
     }
 
-    async findAll() {
+    async findAll(categoryId?: number) {
+        let whereClause;
+        if (categoryId) {
+            whereClause = eq(collections.categoryId, categoryId);
+        }
+
         const query = this.db.db
             .select({
                 id: collections.id,
@@ -87,16 +92,19 @@ export class CollectionsService {
                 description: collections.description,
                 coverImage: collections.coverImage,
                 slug: collections.slug,
-                categoryId: collections.categoryId, // Return categoryId
+                categoryId: collections.categoryId,
                 downPaymentPercentage: collections.downPaymentPercentage,
                 createdAt: collections.createdAt,
                 productsCount: sql<number>`count(${products.id})`.as('productsCount')
             })
             .from(collections)
-            .leftJoin(products, eq(collections.id, products.collectionId))
-            .groupBy(collections.id);
+            .leftJoin(products, eq(collections.id, products.collectionId));
 
-        return query.orderBy(desc(collections.createdAt));
+        if (whereClause) {
+            query.where(whereClause);
+        }
+
+        return query.groupBy(collections.id).orderBy(desc(collections.createdAt));
     }
 
     async findOne(id: number) {

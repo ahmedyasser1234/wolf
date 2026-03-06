@@ -699,14 +699,16 @@ export default function Home() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <Button
-                    size="lg"
-                    className="h-14 sm:h-18 px-10 sm:px-14 rounded-2xl bg-primary text-white hover:bg-primary/90 text-lg sm:text-2xl font-black shadow-primary/30 shadow-2xl transition-all relative group overflow-hidden"
-                  >
-                    <span className="relative z-10">{t('discoverExclusive')}</span>
-                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                    <div className="absolute -inset-1 bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity animate-pulse" />
-                  </Button>
+                  <Link href="/categories">
+                    <Button
+                      size="lg"
+                      className="h-14 sm:h-18 px-10 sm:px-14 rounded-2xl bg-primary text-white hover:bg-primary/90 text-lg sm:text-2xl font-black shadow-primary/30 shadow-2xl transition-all relative group overflow-hidden"
+                    >
+                      <span className="relative z-10">{t('discoverExclusive')}</span>
+                      <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                      <div className="absolute -inset-1 bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity animate-pulse" />
+                    </Button>
+                  </Link>
                 </motion.div>
               </div>
             </motion.div>
@@ -777,49 +779,6 @@ export default function Home() {
           </div>
         </div>
       </section >
-
-      {/* Social Feed Section */}
-      <section className="py-12 relative z-20" >
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between mb-12 gap-6">
-            <div>
-              <h2 className="text-3xl font-black mb-2 flex items-center gap-3">
-                <Instagram className="text-primary" size={32} />
-                @ahmedkrishna
-              </h2>
-              <p className="text-gray-500 font-bold">{language === 'ar' ? "تابعينا على انستقرام" : "Follow us on Instagram"}</p>
-            </div>
-            <a href="https://www.instagram.com/ahmedkrishna/ogdg" target="_blank" rel="noopener noreferrer">
-              <Button variant="outline" className="rounded-full px-8 h-12 border-2 border-gray-200 text-gray-900 dark:text-gray-100 hover:border-primary hover:text-primary font-bold">
-                {language === 'ar' ? "مشاهدة الكل" : "View All"}
-              </Button>
-            </a>
-          </div>
-
-          {socialLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {[...Array(6)].map((_, i) => <Skeleton key={i} className="aspect-square rounded-[2rem]" />)}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {(socialFeedData as any[] || []).map((item: any, i: number) => (
-                <a
-                  key={i}
-                  href={item.data.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="aspect-square rounded-[2rem] overflow-hidden group relative cursor-pointer block"
-                >
-                  <img src={item.data.imageUrl} alt="Instagram" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                  <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
-                    <Instagram size={28} />
-                  </div>
-                </a>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
 
       {/* Professional Newsletter - Elite Club Design */}
       <section className="py-24 bg-black relative z-20">

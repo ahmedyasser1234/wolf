@@ -234,7 +234,7 @@ export default function Notifications() {
                       <div className="flex items-center gap-2">
                         {notification.actionUrl && (
                           <Link href={notification.actionUrl}>
-                            <Button size="sm" variant="outline">
+                            <Button size="sm" variant="outline" className="text-black border-gray-300 hover:bg-gray-100">
                               عرض التفاصيل
                             </Button>
                           </Link>
@@ -244,6 +244,7 @@ export default function Notifications() {
                             size="sm"
                             variant="ghost"
                             onClick={() => handleMarkAsRead(notification.id)}
+                            className="text-black hover:bg-gray-100"
                           >
                             <Check className="w-4 h-4 ml-1" />
                             تحديث كمقروء

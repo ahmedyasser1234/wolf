@@ -257,13 +257,15 @@ export default function InstallmentOrdersTab() {
                                     <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">{language === 'ar' ? 'المنتج المختار' : 'Chosen Product'}</p>
                                     <div className="flex items-center gap-4">
                                         <img
-                                            src={kycModalOrder.items[0].productImage}
+                                            src={kycModalOrder.items[0].product?.images?.[0] || kycModalOrder.items[0].productImage?.[0] || ''}
                                             alt="Product"
                                             className="w-16 h-16 rounded-xl object-cover border border-gray-700"
                                         />
                                         <div>
                                             <p className="text-white font-bold text-sm line-clamp-1">
-                                                {language === 'ar' ? kycModalOrder.items[0].productNameAr : kycModalOrder.items[0].productNameEn}
+                                                {language === 'ar'
+                                                    ? (kycModalOrder.items[0].product?.nameAr || kycModalOrder.items[0].productNameAr)
+                                                    : (kycModalOrder.items[0].product?.nameEn || kycModalOrder.items[0].productNameEn)}
                                             </p>
                                             <p className="text-gray-400 text-xs mt-1">
                                                 {kycModalOrder.items[0].quantity} × {Number(kycModalOrder.items[0].price).toFixed(2)} {t('currency')}
@@ -329,7 +331,11 @@ export default function InstallmentOrdersTab() {
                                                 src={kycModalOrder.kycData.faceIdImage || kycModalOrder.kycData.faceId || kycModalOrder.kycData.faceImage}
                                                 alt="Face"
                                                 className="w-full h-40 rounded-xl object-cover border-2 border-gray-700 cursor-zoom-in"
-                                                onClick={() => window.open(kycModalOrder.kycData.faceIdImage || kycModalOrder.kycData.faceId || kycModalOrder.kycData.faceImage, '_blank')}
+                                                onClick={() => {
+                                                    const url = kycModalOrder.kycData.faceIdImage || kycModalOrder.kycData.faceId || kycModalOrder.kycData.faceImage;
+                                                    const fullUrl = url.startsWith('http') ? url : `http://${window.location.hostname}:5000${url}`;
+                                                    window.open(fullUrl, '_blank');
+                                                }}
                                             />
                                         </div>
                                     )}
@@ -344,22 +350,30 @@ export default function InstallmentOrdersTab() {
                                                 src={kycModalOrder.kycData.residencyImage || kycModalOrder.kycData.residencyDoc || kycModalOrder.kycData.idImage}
                                                 alt="ID"
                                                 className="w-full h-40 rounded-xl object-cover border-2 border-gray-700 cursor-zoom-in"
-                                                onClick={() => window.open(kycModalOrder.kycData.residencyImage || kycModalOrder.kycData.residencyDoc || kycModalOrder.kycData.idImage, '_blank')}
+                                                onClick={() => {
+                                                    const url = kycModalOrder.kycData.residencyImage || kycModalOrder.kycData.residencyDoc || kycModalOrder.kycData.idImage;
+                                                    const fullUrl = url.startsWith('http') ? url : `http://${window.location.hostname}:5000${url}`;
+                                                    window.open(fullUrl, '_blank');
+                                                }}
                                             />
                                         </div>
                                     )}
 
-                                    {(kycModalOrder.kycData.passportImage || kycModalOrder.kycData.passportDoc || kycModalOrder.kycData.passportImage) && (
+                                    {(kycModalOrder.kycData.passportImage || kycModalOrder.kycData.passportDoc) && (
                                         <div className="bg-gray-900 p-4 rounded-2xl border border-gray-800 sm:col-span-2">
                                             <div className="flex items-center gap-2 mb-3">
                                                 <FileText className="w-4 h-4 text-purple-400" />
-                                                <span className="text-xs font-black text-white">{language === 'ar' ? 'جواز السفر' : 'Passport'}</span>
+                                                <span className="text-xs font-black text-white">{language === 'ar' ? 'جواز السفر / ملف إضافي' : 'Passport / Extra Doc'}</span>
                                             </div>
                                             <img
-                                                src={kycModalOrder.kycData.passportImage || kycModalOrder.kycData.passportDoc || kycModalOrder.kycData.passportImage}
+                                                src={kycModalOrder.kycData.passportImage || kycModalOrder.kycData.passportDoc}
                                                 alt="Passport"
                                                 className="w-full h-48 rounded-xl object-cover border-2 border-gray-700 cursor-zoom-in"
-                                                onClick={() => window.open(kycModalOrder.kycData.passportImage || kycModalOrder.kycData.passportDoc || kycModalOrder.kycData.passportImage, '_blank')}
+                                                onClick={() => {
+                                                    const url = kycModalOrder.kycData.passportImage || kycModalOrder.kycData.passportDoc;
+                                                    const fullUrl = url.startsWith('http') ? url : `http://${window.location.hostname}:5000${url}`;
+                                                    window.open(fullUrl, '_blank');
+                                                }}
                                             />
                                         </div>
                                     )}

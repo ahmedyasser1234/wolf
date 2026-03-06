@@ -116,12 +116,12 @@ export default function Orders() {
               <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary">
                 <RefreshCcw className="w-6 h-6" />
               </div>
-              <h3 className="font-bold text-gray-900">{language === 'ar' ? 'إرجاع خلال 7 أيام' : 'Return within 7 Days'}</h3>
+              <h3 className="font-bold text-gray-900">{language === 'ar' ? 'إرجاع خلال 14 أيام' : 'Return within 14 Days'}</h3>
             </div>
             <p className="text-sm text-gray-500 leading-relaxed">
               {language === 'ar'
-                ? 'لديك 7 أيام من تاريخ استلام الطلب لتقديم طلب إرجاع المنتجات المستلمة حديثاً قابلة للإرجاع بسهولة.'
-                : 'You have 7 days from the date of receipt to submit a return request for the products easily.'}
+                ? 'لديك 14 أيام من تاريخ استلام الطلب لتقديم طلب إرجاع المنتجات المستلمة حديثاً قابلة للإرجاع بسهولة.'
+                : 'You have 14 days from the date of receipt to submit a return request for the products easily.'}
             </p>
           </Card>
 
@@ -144,8 +144,8 @@ export default function Orders() {
           <AlertCircle className="w-5 h-5 text-primary" />
           <p className="text-xs font-bold text-gray-700">
             {language === 'ar'
-              ? 'ملاحظة: الطلبات المكتملة (بعد 7 أيام من الاستلام) غير قابلة للإلغاء أو الإرجاع. يمكنك إلغاء الطلب في أي وقت قبل اكتماله، حتى بعد خروجه للتوصيل.'
-              : 'Note: Completed orders (7 days after receipt) are non-cancellable and non-returnable. You can cancel the order anytime before completion.'}
+              ? 'ملاحظة: الطلبات المكتملة (بعد 14 أيام من الاستلام) غير قابلة للإلغاء أو الإرجاع. يمكنك إلغاء الطلب في أي وقت قبل اكتماله، حتى بعد خروجه للتوصيل.'
+              : 'Note: Completed orders (14 days after receipt) are non-cancellable and non-returnable. You can cancel the order anytime before completion.'}
           </p>
         </div>
       </div>
@@ -263,15 +263,15 @@ export default function Orders() {
                   <Card key={order.id} className="border border-gray-100 shadow-sm hover:shadow-xl transition-all rounded-[2rem] overflow-hidden group">
                     <CardContent className="p-0">
                       <div className="flex flex-col lg:flex-row">
-                        <div className="p-8 flex-1 border-b lg:border-b-0 lg:border-e border-gray-100 bg-white group-hover:bg-primary/5 transition-colors">
+                        <div className="p-8 flex-1 border-b lg:border-b-0 lg:border-e border-gray-900 bg-gray-950 group-hover:bg-gray-900 transition-colors">
                           <div className="flex justify-between items-start mb-6">
                             <div>
                               <p className="text-xs font-black text-primary uppercase tracking-widest mb-1">{language === 'ar' ? 'رقم الطلب' : 'ORDER NO'}</p>
-                              <h3 className="text-2xl font-black text-gray-900">#{order.orderNumber}</h3>
+                              <h3 className="text-2xl font-black text-white">#{order.orderNumber}</h3>
                             </div>
                             <div className="text-end">
                               <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'التاريخ' : 'DATE'}</p>
-                              <p className="font-bold text-gray-900">
+                              <p className="font-bold text-white">
                                 {new Date(order.createdAt).toLocaleDateString(language === 'ar' ? "ar-SA" : "en-US")}
                               </p>
                             </div>
@@ -280,9 +280,9 @@ export default function Orders() {
                           <div className="flex items-center gap-6">
                             <div className="flex-1">
                               <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">{language === 'ar' ? 'حالة الشحن' : 'SHIPPING STATUS'}</p>
-                              <div className="h-2 bg-gray-100 rounded-full overflow-hidden mb-2">
+                              <div className="h-2 bg-gray-800 rounded-full overflow-hidden mb-2">
                                 <div
-                                  className="h-full bg-primary"
+                                  className="h-full bg-white"
                                   style={{
                                     width:
                                       order.status === 'delivered' ? '100%' :
@@ -291,7 +291,7 @@ export default function Orders() {
                                   }}
                                 ></div>
                               </div>
-                              <p className="text-sm font-black text-gray-900">
+                              <p className="text-sm font-black text-white">
                                 {ORDER_STATUSES.find(s => s.id === order.status)?.labelAr || order.status}
                               </p>
                             </div>

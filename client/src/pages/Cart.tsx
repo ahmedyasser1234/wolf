@@ -481,7 +481,7 @@ export default function Cart() {
                         value={appliedCoupon ? appliedCoupon.code : couponCode}
                         onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                         disabled={!!appliedCoupon}
-                        className={`w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 ${language === 'ar' ? 'text-right' : 'text-left'} focus:outline-none focus:ring-primary/40`}
+                        className={`w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 ${language === 'ar' ? 'text-right' : 'text-left'} focus:outline-none focus:ring-primary/40 text-black`}
                       />
                     </div>
                     {/* Discounts Display */}

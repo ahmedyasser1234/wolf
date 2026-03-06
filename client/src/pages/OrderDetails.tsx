@@ -135,7 +135,9 @@ export default function OrderDetails() {
                             {isCancelled ? (
                                 <div className="flex items-center justify-center text-red-600 gap-2 p-4 bg-red-50 rounded-xl">
                                     <AlertCircle className="w-6 h-6" />
-                                    <span className="font-bold text-lg">هذا الطلب ملغى</span>
+                                    <span className="font-bold text-lg">
+                                        {language === 'ar' ? 'هذا الطلب ملغى' : 'This order is cancelled'}
+                                    </span>
                                 </div>
                             ) : (
                                 <div className="space-y-8">
@@ -162,13 +164,8 @@ export default function OrderDetails() {
                                         </div>
                                     )}
                                     <div className="relative pt-8 pb-4">
-                                        <div className="absolute top-1/2 left-0 right-0 h-1.5 bg-gray-100 -translate-y-1/2 z-0 rounded-full" />
-                                        <div
-                                            className="absolute top-1/2 right-0 h-1.5 bg-green-500 -translate-y-1/2 z-0 transition-all duration-500 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.3)]"
-                                            style={{ width: `${((currentStatus.step - 1) / 4) * 100}%` }}
-                                        />
                                         <div className="relative z-10 flex justify-between">
-                                            {['pending', 'preparing_shipment', 'shipped', 'delivered'].map((statusKey) => {
+                                            {['pending', 'shipped', 'delivered'].map((statusKey) => {
                                                 const s = ORDER_STATUSES[statusKey];
                                                 const isCompleted = s.step <= currentStatus.step;
                                                 const isCurrent = s.step === currentStatus.step;
@@ -179,7 +176,7 @@ export default function OrderDetails() {
                                                             }`}>
                                                             <s.icon className="w-5 h-5" />
                                                         </div>
-                                                        <span className={`text-sm font-bold transition-colors ${isCurrent ? 'text-gray-900' : 'text-gray-400'}`}>
+                                                        <span className={`text-sm font-bold transition-colors ${isCurrent ? 'text-white' : 'text-gray-400'}`}>
                                                             {language === 'ar' ? s.labelAr : s.labelEn}
                                                         </span>
                                                     </div>
@@ -213,10 +210,10 @@ export default function OrderDetails() {
                                     <div className="flex-1">
                                         <div className="flex justify-between items-start">
                                             <div>
-                                                <h3 className="font-bold text-gray-900 mb-1">
+                                                <h3 className="font-bold text-white mb-1">
                                                     {language === 'ar' ? item.productNameAr : item.productNameEn}
                                                 </h3>
-                                                <p className="text-sm text-gray-500 mb-2">
+                                                <p className="text-sm text-gray-300 mb-2">
                                                     {language === 'ar' ? item.storeNameAr : item.storeNameEn}
                                                 </p>
                                                 {item.size && (
@@ -226,16 +223,16 @@ export default function OrderDetails() {
                                                 )}
                                             </div>
                                             <div className={`${language === 'ar' ? 'text-left' : 'text-right'}`}>
-                                                <p className="font-bold text-gray-900">
+                                                <p className="font-bold text-white">
                                                     {formatPrice(item.price)}
                                                 </p>
-                                                <p className="text-sm text-gray-500">
+                                                <p className="text-sm text-white">
                                                     {language === 'ar' ? 'الكمية' : 'Quantity'}: {item.quantity}
                                                 </p>
                                             </div>
                                         </div>
                                         <div className={`mt-2 flex ${language === 'ar' ? 'justify-end' : 'justify-start'}`}>
-                                            <span className="font-black -primary">
+                                            <span className="font-black text-white">
                                                 {language === 'ar' ? 'الإجمالي' : 'Total'}: {formatPrice(item.total)}
                                             </span>
                                         </div>
@@ -261,12 +258,12 @@ export default function OrderDetails() {
                         <CardHeader>
                             <CardTitle>{language === 'ar' ? 'ملخص الفاتورة' : 'Invoice Summary'}</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex justify-between text-gray-600">
+                        <CardContent className="space-y-4 text-white">
+                            <div className="flex justify-between text-white">
                                 <span>{language === 'ar' ? 'المجموع الفرعي' : 'Subtotal'}</span>
                                 <span>{formatPrice(order.subtotal)}</span>
                             </div>
-                            <div className="flex justify-between text-gray-600">
+                            <div className="flex justify-between text-white">
                                 <span>{language === 'ar' ? 'تكلفة الشحن' : 'Shipping Cost'}</span>
                                 <span>{formatPrice(order.shippingCost)}</span>
                             </div>
@@ -277,7 +274,7 @@ export default function OrderDetails() {
                                 </div>
                             )}
                             {Number(order.tax) > 0 && (
-                                <div className="flex justify-between text-gray-600">
+                                <div className="flex justify-between text-white">
                                     <span>{language === 'ar' ? 'الضريبة (15%)' : 'Tax (15%)'}</span>
                                     <span>{formatPrice(order.tax)}</span>
                                 </div>
@@ -290,8 +287,8 @@ export default function OrderDetails() {
                             )}
                             <div className="border-t border-dashed border-gray-200 my-4 pt-4">
                                 <div className="flex justify-between items-center">
-                                    <span className="font-bold text-lg text-gray-900">{language === 'ar' ? 'الإجمالي النهائي' : 'Final Total'}</span>
-                                    <span className="font-black text-xl -primary">
+                                    <span className="font-bold text-lg text-white">{language === 'ar' ? 'الإجمالي النهائي' : 'Final Total'}</span>
+                                    <span className="font-black text-xl text-white">
                                         {formatPrice(order.total)}
                                     </span>
                                 </div>
@@ -308,8 +305,8 @@ export default function OrderDetails() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className={`text-sm text-gray-600 space-y-1 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
-                                <p className="font-bold text-gray-900">{order.shippingAddress?.name}</p>
+                            <div className={`text-sm text-white space-y-1 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
+                                <p className="font-bold text-white">{order.shippingAddress?.name}</p>
                                 <p>{order.shippingAddress?.address}</p>
                                 <p>{order.shippingAddress?.city}, {order.shippingAddress?.country}</p>
                                 <p>{order.shippingAddress?.phone}</p>
@@ -326,7 +323,7 @@ export default function OrderDetails() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
+                            <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg text-black">
                                 {order.paymentMethod === 'cod' ? (
                                     <>
                                         <span className="text-sm font-bold">{language === 'ar' ? 'الدفع عند الاستلام' : 'Cash on Delivery'}</span>
@@ -338,8 +335,8 @@ export default function OrderDetails() {
                                     </>
                                 ) : (
                                     <>
-                                        <CreditCard className="w-4 h-4" />
-                                        <span className="text-sm font-bold">{language === 'ar' ? 'بطاقة ائتمان' : 'Credit Card'} ({order.paymentMethod})</span>
+                                        <CreditCard className="w-4 h-4 text-black" />
+                                        <span className="text-sm font-bold text-black">{language === 'ar' ? 'بطاقة ائتمان' : 'Credit Card'} ({order.paymentMethod})</span>
                                     </>
                                 )}
                             </div>
