@@ -260,129 +260,131 @@ export default function Orders() {
                 </Link>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-6">
-                {filteredOrders.map((order: any) => (
-                  <Card key={order.id} className="border border-gray-100 shadow-sm hover:shadow-xl transition-all rounded-[2rem] overflow-hidden group">
-                    <CardContent className="p-0">
-                      <div className="flex flex-col lg:flex-row">
-                        <div className="p-8 flex-1 border-b lg:border-b-0 lg:border-e border-gray-900 bg-gray-950 group-hover:bg-gray-900 transition-colors">
-                          <div className="flex justify-between items-start mb-6">
-                            <div>
-                              <p className="text-xs font-black text-primary uppercase tracking-widest mb-1">{language === 'ar' ? 'رقم الطلب' : 'ORDER NO'}</p>
-                              <h3 className="text-2xl font-black text-white">#{order.orderNumber}</h3>
+              <>
+                <div className="grid grid-cols-1 gap-6">
+                  {filteredOrders.map((order: any) => (
+                    <Card key={order.id} className="border border-gray-100 shadow-sm hover:shadow-xl transition-all rounded-[2rem] overflow-hidden group">
+                      <CardContent className="p-0">
+                        <div className="flex flex-col lg:flex-row">
+                          <div className="p-8 flex-1 border-b lg:border-b-0 lg:border-e border-gray-900 bg-gray-950 group-hover:bg-gray-900 transition-colors">
+                            <div className="flex justify-between items-start mb-6">
+                              <div>
+                                <p className="text-xs font-black text-primary uppercase tracking-widest mb-1">{language === 'ar' ? 'رقم الطلب' : 'ORDER NO'}</p>
+                                <h3 className="text-2xl font-black text-white">#{order.orderNumber}</h3>
+                              </div>
+                              <div className="text-end">
+                                <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'التاريخ' : 'DATE'}</p>
+                                <p className="font-bold text-white">
+                                  {new Date(order.createdAt).toLocaleDateString(language === 'ar' ? "ar-SA" : "en-US")}
+                                </p>
+                              </div>
                             </div>
-                            <div className="text-end">
-                              <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'التاريخ' : 'DATE'}</p>
-                              <p className="font-bold text-white">
-                                {new Date(order.createdAt).toLocaleDateString(language === 'ar' ? "ar-SA" : "en-US")}
-                              </p>
+
+                            <div className="flex items-center gap-6">
+                              <div className="flex-1">
+                                <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">{language === 'ar' ? 'حالة الشحن' : 'SHIPPING STATUS'}</p>
+                                <div className="h-2 bg-gray-800 rounded-full overflow-hidden mb-2">
+                                  <div
+                                    className="h-full bg-white"
+                                    style={{
+                                      width:
+                                        order.status === 'delivered' ? '100%' :
+                                          order.status === 'shipped' ? '70%' :
+                                            order.status === 'processing' ? '40%' : '15%'
+                                    }}
+                                  ></div>
+                                </div>
+                                <p className="text-sm font-black text-white">
+                                  {ORDER_STATUSES.find(s => s.id === order.status)?.labelAr || order.status}
+                                </p>
+                              </div>
+                              <div className="text-end">
+                                <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'الإجمالي' : 'TOTAL'}</p>
+                                <p className="text-2xl font-black text-primary">{formatPrice(order.total)}</p>
+                              </div>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-6">
-                            <div className="flex-1">
-                              <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">{language === 'ar' ? 'حالة الشحن' : 'SHIPPING STATUS'}</p>
-                              <div className="h-2 bg-gray-800 rounded-full overflow-hidden mb-2">
-                                <div
-                                  className="h-full bg-white"
-                                  style={{
-                                    width:
-                                      order.status === 'delivered' ? '100%' :
-                                        order.status === 'shipped' ? '70%' :
-                                          order.status === 'processing' ? '40%' : '15%'
-                                  }}
-                                ></div>
+                          <div className="p-8 bg-gray-50 flex flex-row lg:flex-col gap-3 justify-center items-center lg:items-stretch w-full lg:w-64">
+
+                            {/* KYC Review Status Banner */}
+                            {order.paymentStatus === 'pending_kyc_review' && (
+                              <div className="w-full bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center">
+                                <div className="flex items-center gap-2 justify-center mb-1">
+                                  <Loader2 className="w-4 h-4 text-amber-600 animate-spin" />
+                                  <span className="text-sm font-black text-amber-700">{language === 'ar' ? 'قيد المراجعة' : 'Under Review'}</span>
+                                </div>
+                                <p className="text-xs text-amber-600 font-bold">{language === 'ar' ? 'سيتم إشعارك فور الموافقة' : 'You will be notified once approved'}</p>
                               </div>
-                              <p className="text-sm font-black text-white">
-                                {ORDER_STATUSES.find(s => s.id === order.status)?.labelAr || order.status}
-                              </p>
-                            </div>
-                            <div className="text-end">
-                              <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'الإجمالي' : 'TOTAL'}</p>
-                              <p className="text-2xl font-black text-primary">{formatPrice(order.total)}</p>
-                            </div>
+                            )}
+
+                            {/* Pay Down Payment Button */}
+                            {order.paymentStatus === 'pending_payment' && (
+                              <Button
+                                onClick={() => payDownPaymentMutation.mutate(order.id)}
+                                disabled={payDownPaymentMutation.isPending}
+                                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl h-14 font-black gap-2 text-sm shadow-lg shadow-emerald-200"
+                              >
+                                {payDownPaymentMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+                                {language === 'ar' ? 'دفع الدفعة الأولى' : 'Pay Down Payment'}
+                              </Button>
+                            )}
+
+                            <Link href={`/orders/${order.id}`} className="flex-1 lg:flex-none">
+                              <Button className="w-full bg-gray-900 text-white hover:bg-black rounded-xl h-12 font-bold gap-2">
+                                <Eye className="w-4 h-4" />
+                                {t('viewDetails')}
+                              </Button>
+                            </Link>
+                            <Button variant="outline" className="flex-1 lg:flex-none border-gray-300 text-gray-900 hover:bg-gray-100 rounded-xl h-12 font-bold gap-2">
+                              <Download className="w-4 h-4" />
+                              {language === 'ar' ? 'الفاتورة' : 'Invoice'}
+                            </Button>
                           </div>
                         </div>
-
-                        <div className="p-8 bg-gray-50 flex flex-row lg:flex-col gap-3 justify-center items-center lg:items-stretch w-full lg:w-64">
-
-                          {/* KYC Review Status Banner */}
-                          {order.paymentStatus === 'pending_kyc_review' && (
-                            <div className="w-full bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center">
-                              <div className="flex items-center gap-2 justify-center mb-1">
-                                <Loader2 className="w-4 h-4 text-amber-600 animate-spin" />
-                                <span className="text-sm font-black text-amber-700">{language === 'ar' ? 'قيد المراجعة' : 'Under Review'}</span>
-                              </div>
-                              <p className="text-xs text-amber-600 font-bold">{language === 'ar' ? 'سيتم إشعارك فور الموافقة' : 'You will be notified once approved'}</p>
-                            </div>
-                          )}
-
-                          {/* Pay Down Payment Button */}
-                          {order.paymentStatus === 'pending_payment' && (
-                            <Button
-                              onClick={() => payDownPaymentMutation.mutate(order.id)}
-                              disabled={payDownPaymentMutation.isPending}
-                              className="w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl h-14 font-black gap-2 text-sm shadow-lg shadow-emerald-200"
-                            >
-                              {payDownPaymentMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-                              {language === 'ar' ? 'دفع الدفعة الأولى' : 'Pay Down Payment'}
-                            </Button>
-                          )}
-
-                          <Link href={`/orders/${order.id}`} className="flex-1 lg:flex-none">
-                            <Button className="w-full bg-gray-900 text-white hover:bg-black rounded-xl h-12 font-bold gap-2">
-                              <Eye className="w-4 h-4" />
-                              {t('viewDetails')}
-                            </Button>
-                          </Link>
-                          <Button variant="outline" className="flex-1 lg:flex-none border-gray-300 text-gray-900 hover:bg-gray-100 rounded-xl h-12 font-bold gap-2">
-                            <Download className="w-4 h-4" />
-                            {language === 'ar' ? 'الفاتورة' : 'Invoice'}
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              {/* Pagination Controls */}
-            {meta && meta.lastPage > 1 && (
-              <div className="flex justify-center items-center gap-4 mt-12 pb-10">
-                <Button
-                  variant="outline"
-                  disabled={page <= 1}
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  className="rounded-xl border-gray-200 font-bold"
-                >
-                  {language === 'ar' ? 'السابق' : 'Previous'}
-                </Button>
-
-                <div className="flex items-center gap-2">
-                  {[...Array(meta.lastPage)].map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setPage(i + 1)}
-                      className={`w-10 h-10 rounded-xl font-bold transition-all ${page === i + 1
-                          ? 'bg-primary text-white shadow-lg'
-                          : 'text-gray-400 hover:bg-gray-100'
-                        }`}
-                    >
-                      {i + 1}
-                    </button>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
 
-                <Button
-                  variant="outline"
-                  disabled={page >= meta.lastPage}
-                  onClick={() => setPage(p => Math.min(meta.lastPage, p + 1))}
-                  className="rounded-xl border-gray-200 font-bold"
-                >
-                  {language === 'ar' ? 'التالي' : 'Next'}
-                </Button>
-              </div>
-            )}
+                {/* Pagination Controls */}
+                {meta && meta.lastPage > 1 && (
+                  <div className="flex justify-center items-center gap-4 mt-12 pb-10">
+                    <Button
+                      variant="outline"
+                      disabled={page <= 1}
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                      className="rounded-xl border-gray-200 font-bold"
+                    >
+                      {language === 'ar' ? 'السابق' : 'Previous'}
+                    </Button>
+
+                    <div className="flex items-center gap-2">
+                      {[...Array(meta.lastPage)].map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setPage(i + 1)}
+                          className={`w-10 h-10 rounded-xl font-bold transition-all ${page === i + 1
+                            ? 'bg-primary text-white shadow-lg'
+                            : 'text-gray-400 hover:bg-gray-100'
+                            }`}
+                        >
+                          {i + 1}
+                        </button>
+                      ))}
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      disabled={page >= meta.lastPage}
+                      onClick={() => setPage(p => Math.min(meta.lastPage, p + 1))}
+                      className="rounded-xl border-gray-200 font-bold"
+                    >
+                      {language === 'ar' ? 'التالي' : 'Next'}
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
