@@ -46,6 +46,16 @@ export default function OrderDetailsView({ orderId, onClose }: OrderDetailsViewP
         content += `${language === 'ar' ? 'الهاتف' : 'Phone'}: ${customerPhone}\n`;
         content += `${language === 'ar' ? 'البريد' : 'Email'}: ${customerEmail}\n\n`;
 
+        const downloadFile = (dataUrl: string, filename: string) => {
+            if (!dataUrl) return;
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
         if (order.kycData) {
             content += `${language === 'ar' ? 'بيانات التحقق (KYC)' : 'Verification (KYC)'}:\n`;
             content += `-----------------\n`;
@@ -54,15 +64,18 @@ export default function OrderDetailsView({ orderId, onClose }: OrderDetailsViewP
             content += `${language === 'ar' ? 'تاريخ الميلاد' : 'DOB'}: ${order.kycData.dob || 'N/A'}\n`;
             content += `${language === 'ar' ? 'عنوان السكن' : 'Address'}: ${order.kycData.residentialAddress || 'N/A'}\n\n`;
 
-            content += `${language === 'ar' ? 'روابط المستندات' : 'Document Links'}:\n`;
+            content += `${language === 'ar' ? 'المستندات (تم تحميلها بشكل منفصل)' : 'Documents (Downloaded Separately)'}:\n`;
             if (order.kycData.faceId || order.kycData.faceImage) {
-                content += `- ${language === 'ar' ? 'صورة الوجه' : 'Face Image'}: ${order.kycData.faceId || order.kycData.faceImage}\n`;
+                content += `- ${language === 'ar' ? 'صورة الوجه' : 'Face Image'}: [File: order_${order.orderNumber}_face.jpg]\n`;
+                downloadFile(order.kycData.faceId || order.kycData.faceImage, `order_${order.orderNumber}_face.jpg`);
             }
             if (order.kycData.residencyDoc || order.kycData.idImage) {
-                content += `- ${language === 'ar' ? 'صورة الهوية' : 'ID Image'}: ${order.kycData.residencyDoc || order.kycData.idImage}\n`;
+                content += `- ${language === 'ar' ? 'صورة الهوية' : 'ID Image'}: [File: order_${order.orderNumber}_id.jpg]\n`;
+                downloadFile(order.kycData.residencyDoc || order.kycData.idImage, `order_${order.orderNumber}_id.jpg`);
             }
             if (order.kycData.passportDoc || order.kycData.passportImage) {
-                content += `- ${language === 'ar' ? 'صورة الباسبور' : 'Passport Image'}: ${order.kycData.passportDoc || order.kycData.passportImage}\n`;
+                content += `- ${language === 'ar' ? 'صورة الباسبور' : 'Passport Image'}: [File: order_${order.orderNumber}_passport.jpg]\n`;
+                downloadFile(order.kycData.passportDoc || order.kycData.passportImage, `order_${order.orderNumber}_passport.jpg`);
             }
             content += `\n`;
         }
