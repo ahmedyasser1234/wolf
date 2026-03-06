@@ -747,7 +747,7 @@ export class OrdersService {
         if (!order) return;
 
         const isInstallment = !!order.installmentPlanId;
-        const isPaidStatus = ['pending_kyc_review', 'paid'].includes(order.paymentStatus || '');
+        const isPaidStatus = ['pending_kyc_review', 'paid', 'rejected'].includes(order.paymentStatus || '');
         const hasDeposit = Number(order.depositAmount) > 0;
 
         if (isInstallment && isPaidStatus && hasDeposit) {
@@ -831,7 +831,7 @@ export class OrdersService {
                 .update(orders)
                 .set({
                     status: 'cancelled',
-                    paymentStatus: 'failed',
+                    paymentStatus: 'rejected',
                     updatedAt: new Date()
                 })
                 .where(eq(orders.id, orderId))

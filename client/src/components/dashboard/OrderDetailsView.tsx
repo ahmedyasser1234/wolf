@@ -51,6 +51,7 @@ export default function OrderDetailsView({ orderId, onClose }: OrderDetailsViewP
         shipped: "bg-purple-100 text-purple-700",
         delivered: "bg-green-100 text-green-700",
         cancelled: "bg-red-100 text-red-700",
+        rejected: "bg-red-100 text-red-700",
     };
 
     const STATUS_LABELS: Record<string, string> = {
@@ -300,7 +301,7 @@ export default function OrderDetailsView({ orderId, onClose }: OrderDetailsViewP
                                             "capitalize font-bold",
                                             order.paymentStatus === 'paid' ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" :
                                                 order.paymentStatus === 'pending_kyc_review' ? "bg-amber-100 text-amber-700" :
-                                                    order.paymentStatus === 'failed' ? "bg-red-100 text-red-700" :
+                                                    order.paymentStatus === 'failed' || order.paymentStatus === 'rejected' ? "bg-red-100 text-red-700" :
                                                         order.paymentStatus === 'refunded' ? "bg-blue-100 text-blue-700" :
                                                             "bg-slate-100 text-slate-700"
                                         )}>
@@ -309,6 +310,7 @@ export default function OrderDetailsView({ orderId, onClose }: OrderDetailsViewP
                                                 'paid': 'تم الدفع',
                                                 'pending_kyc_review': 'مراجعة الأوراق',
                                                 'failed': 'فشل الدفع',
+                                                'rejected': 'مرفوض',
                                                 'refunded': 'مُستردّ',
                                                 'on_delivery': 'يُدفع عند الاستلام',
                                             } as any)[order.paymentStatus] || order.paymentStatus : ({
@@ -316,6 +318,7 @@ export default function OrderDetailsView({ orderId, onClose }: OrderDetailsViewP
                                                 'paid': 'Paid',
                                                 'pending_kyc_review': 'KYC Under Review',
                                                 'failed': 'Failed',
+                                                'rejected': 'Rejected',
                                                 'refunded': 'Refunded',
                                                 'on_delivery': 'Pay on Delivery',
                                             } as any)[order.paymentStatus] || order.paymentStatus}

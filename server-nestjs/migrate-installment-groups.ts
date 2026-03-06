@@ -28,7 +28,7 @@ async function migrateInstallmentGroups() {
         console.log('✅ Existing collectionId data migrated to collectionIds array');
 
         console.log('🚀 Migration completed successfully!');
-    } catch (error) {
+    } catch (error: any) {
         console.error('❌ Error during migration:', error.message);
     } finally {
         await sql.end();

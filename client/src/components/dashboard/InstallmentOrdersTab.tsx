@@ -64,7 +64,8 @@ export default function InstallmentOrdersTab() {
     const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
         pending_kyc_review: { label: language === 'ar' ? 'قيد المراجعة' : 'Under Review', color: 'bg-amber-500/20 text-amber-400 border border-amber-500/30' },
         paid: { label: language === 'ar' ? 'مدفوع' : 'Paid', color: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' },
-        failed: { label: language === 'ar' ? 'مرفوض' : 'Rejected', color: 'bg-red-500/20 text-red-400 border border-red-500/30' },
+        failed: { label: language === 'ar' ? 'فشل' : 'Failed', color: 'bg-red-500/20 text-red-400 border border-red-500/30' },
+        rejected: { label: language === 'ar' ? 'مرفوض' : 'Rejected', color: 'bg-red-500/20 text-red-400 border border-red-500/30' },
         pending: { label: language === 'ar' ? 'معلق' : 'Pending', color: 'bg-gray-500/20 text-gray-400 border border-gray-500/30' },
         awaiting_deposit_payment: { label: language === 'ar' ? 'تم الدفع / قيد المراجعة' : 'Paid / Under Review', color: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' },
     };

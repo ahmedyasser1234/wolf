@@ -41,6 +41,7 @@ import {
   Search,
   Settings,
   ShoppingCart,
+  ShoppingBag,
   Star,
   Store,
   Ticket,
