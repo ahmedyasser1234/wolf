@@ -42,6 +42,7 @@ import {
   Settings,
   ShoppingCart,
   ShoppingBag,
+  History,
   Star,
   Store,
   Ticket,
