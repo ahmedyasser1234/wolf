@@ -105,55 +105,37 @@ export default function OrderDetails() {
                                     <p className="text-gray-500 font-bold">{language === 'ar' ? 'عذراً، هذا الطلب ملغى ولا يمكن تتبعه.' : 'Sorry, this order is cancelled and cannot be tracked.'}</p>
                                 </div>
                             ) : (
-                                <div className="relative">
-                                    {/* Progress Line */}
-                                    <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-100 -translate-y-1/2 hidden md:block">
-                                        <div
-                                            className="h-full bg-primary transition-all duration-1000 ease-in-out"
-                                            style={{ width: `${Math.max(0, (currentStatus.step - 1) / 3 * 100)}%` }}
-                                        />
-                                    </div>
+                                <div className="relative flex flex-col md:flex-row justify-between items-end md:items-center gap-12 md:gap-4">
+                                    {Object.entries(ORDER_STATUSES)
+                                        .filter(([key]) => key !== 'cancelled')
+                                        .sort((a, b) => a[1].step - b[1].step)
+                                        .map(([key, status], index) => {
+                                            const isActive = currentStatus.step >= status.step;
+                                            const isCurrent = currentStatus.step === status.step;
+                                            const Icon = status.icon;
 
-                                    {/* Vertical line for mobile */}
-                                    <div className="absolute top-0 right-6 w-1 h-full bg-gray-100 md:hidden">
-                                        <div
-                                            className="w-full bg-primary transition-all duration-1000 ease-in-out"
-                                            style={{ height: `${Math.max(0, (currentStatus.step - 1) / 3 * 100)}%` }}
-                                        />
-                                    </div>
-
-                                    <div className="relative flex flex-col md:flex-row justify-between items-end md:items-center gap-12 md:gap-4">
-                                        {Object.entries(ORDER_STATUSES)
-                                            .filter(([key]) => key !== 'cancelled')
-                                            .sort((a, b) => a[1].step - b[1].step)
-                                            .map(([key, status], index) => {
-                                                const isActive = currentStatus.step >= status.step;
-                                                const isCurrent = currentStatus.step === status.step;
-                                                const Icon = status.icon;
-
-                                                return (
-                                                    <div key={key} className="flex md:flex-col items-center gap-6 md:gap-4 group relative w-full md:w-auto">
-                                                        <div className={`
-                                                            w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center transition-all duration-500 z-10
-                                                            ${isActive ? 'bg-primary text-white shadow-xl shadow-primary/20 scale-110' : 'bg-white text-gray-300 border-2 border-gray-100'}
-                                                            ${isCurrent ? 'ring-4 ring-primary/20 animate-pulse' : ''}
-                                                        `}>
-                                                            <Icon className="w-6 h-6 sm:w-8 sm:h-8" />
-                                                        </div>
-                                                        <div className={`flex flex-col md:items-center ${language === 'ar' ? 'text-right md:text-center' : 'text-left md:text-center'} flex-1 md:flex-none`}>
-                                                            <span className={`text-sm sm:text-base font-black transition-colors duration-500 ${isActive ? 'text-gray-900' : 'text-gray-400'}`}>
-                                                                {language === 'ar' ? status.labelAr : status.labelEn}
-                                                            </span>
-                                                            {isCurrent && (
-                                                                <span className="text-[10px] sm:text-xs text-primary font-bold animate-bounce mt-1">
-                                                                    {language === 'ar' ? 'الحالة الحالية' : 'Current Status'}
-                                                                </span>
-                                                            )}
-                                                        </div>
+                                            return (
+                                                <div key={key} className="flex md:flex-col items-center gap-6 md:gap-4 group relative w-full md:w-auto">
+                                                    <div className={`
+                                                                    w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center transition-all duration-500 z-10
+                                                                    ${isActive ? 'bg-primary text-black shadow-xl shadow-primary/20 scale-110' : 'bg-white text-gray-300 border-2 border-gray-100'}
+                                                                    ${isCurrent ? 'ring-4 ring-primary/20 animate-pulse' : ''}
+                                                                `}>
+                                                        <Icon className="w-6 h-6 sm:w-8 sm:h-8" />
                                                     </div>
-                                                );
-                                            })}
-                                    </div>
+                                                    <div className={`flex flex-col md:items-center ${language === 'ar' ? 'text-right md:text-center' : 'text-left md:text-center'} flex-1 md:flex-none`}>
+                                                        <span className={`text-sm sm:text-base font-black transition-colors duration-500 text-black`}>
+                                                            {language === 'ar' ? status.labelAr : status.labelEn}
+                                                        </span>
+                                                        {isCurrent && (
+                                                            <span className="text-[10px] sm:text-xs text-black font-bold animate-bounce mt-1">
+                                                                {language === 'ar' ? 'الحالة الحالية' : 'Current Status'}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                 </div>
                             )}
                         </CardContent>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Clock, Loader2, Package, ShoppingCart, Eye, CheckCircle, XCircle, FileText, ScanFace, CreditCard, Search, Filter } from "lucide-react";
+import { Clock, Loader2, Package, ShoppingCart, Eye, CheckCircle, XCircle, FileText, ScanFace, CreditCard, Search, Filter, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -74,6 +74,80 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
         },
         onError: () => toast.error(language === 'ar' ? 'فشلت العملية' : 'Operation failed'),
     });
+
+    const handleDownloadFullOrderData = (order: any) => {
+        const customerName = order.customer?.name || order.shippingAddress?.name || 'Guest';
+        const customerPhone = order.customer?.phone || order.shippingAddress?.phone || 'N/A';
+        const customerEmail = order.customer?.email || 'N/A';
+
+        let content = `========================================\n`;
+        content += `${language === 'ar' ? 'بيانات الطلب رقم' : 'Order Details #'}: ${order.orderNumber}\n`;
+        content += `========================================\n\n`;
+
+        content += `${language === 'ar' ? 'بيانات العميل' : 'Customer Info'}:\n`;
+        content += `-----------------\n`;
+        content += `${language === 'ar' ? 'الاسم' : 'Name'}: ${customerName}\n`;
+        content += `${language === 'ar' ? 'الهاتف' : 'Phone'}: ${customerPhone}\n`;
+        content += `${language === 'ar' ? 'البريد' : 'Email'}: ${customerEmail}\n\n`;
+
+        if (order.kycData) {
+            content += `${language === 'ar' ? 'بيانات التحقق (KYC)' : 'Verification (KYC)'}:\n`;
+            content += `-----------------\n`;
+            content += `${language === 'ar' ? 'رقم الهوية' : 'ID Number'}: ${order.kycData.idNumber || 'N/A'}\n`;
+            content += `${language === 'ar' ? 'رقم الباسبور' : 'Passport Number'}: ${order.kycData.passportNumber || 'N/A'}\n`;
+            content += `${language === 'ar' ? 'تاريخ الميلاد' : 'DOB'}: ${order.kycData.dob || 'N/A'}\n`;
+            content += `${language === 'ar' ? 'عنوان السكن' : 'Address'}: ${order.kycData.residentialAddress || 'N/A'}\n\n`;
+
+            content += `${language === 'ar' ? 'روابط المستندات' : 'Document Links'}:\n`;
+            if (order.kycData.faceId || order.kycData.faceImage) {
+                content += `- ${language === 'ar' ? 'صورة الوجه' : 'Face Image'}: ${order.kycData.faceId || order.kycData.faceImage}\n`;
+            }
+            if (order.kycData.residencyDoc || order.kycData.idImage) {
+                content += `- ${language === 'ar' ? 'صورة الهوية' : 'ID Image'}: ${order.kycData.residencyDoc || order.kycData.idImage}\n`;
+            }
+            if (order.kycData.passportDoc || order.kycData.passportImage) {
+                content += `- ${language === 'ar' ? 'صورة الباسبور' : 'Passport Image'}: ${order.kycData.passportDoc || order.kycData.passportImage}\n`;
+            }
+            content += `\n`;
+        }
+
+        if (order.installmentPlan) {
+            content += `${language === 'ar' ? 'خطة التقسيط' : 'Installment Plan'}:\n`;
+            content += `-----------------\n`;
+            content += `${language === 'ar' ? 'الخطة' : 'Plan'}: ${order.installmentPlan.name}\n`;
+            content += `${language === 'ar' ? 'المدة' : 'Duration'}: ${order.installmentPlan.months} ${language === 'ar' ? 'شهر' : 'Months'}\n`;
+            content += `${language === 'ar' ? 'نسبة المقدم' : 'Downpayment %'}: ${order.installmentPlan.downPaymentPercentage}%\n`;
+            if (order.depositAmount) {
+                content += `${language === 'ar' ? 'المبلغ المدفوع' : 'Amount Paid'}: ${Number(order.depositAmount).toFixed(2)} ${t('currency')}\n`;
+            }
+            content += `\n`;
+        }
+
+        content += `${language === 'ar' ? 'المنتجات المطلوبة' : 'Products Ordered'}:\n`;
+        content += `-----------------\n`;
+        order.items?.forEach((item: any, idx: number) => {
+            content += `${idx + 1}. ${language === 'ar' ? item.product?.nameAr : item.product?.nameEn}\n`;
+            content += `   ${language === 'ar' ? 'الكمية' : 'Qty'}: ${item.quantity}\n`;
+            content += `   ${language === 'ar' ? 'السعر' : 'Price'}: ${Number(item.price).toFixed(2)} ${t('currency')}\n`;
+            const img = item.product?.images?.[0] || item.productImage?.[0];
+            if (img) content += `   ${language === 'ar' ? 'رابط الصورة' : 'Image Link'}: ${img}\n`;
+            content += `\n`;
+        });
+
+        content += `-----------------\n`;
+        content += `${language === 'ar' ? 'الإجمالي' : 'Total'}: ${Number(order.total).toFixed(2)} ${t('currency')}\n`;
+
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `order_${order.orderNumber}_data.txt`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        toast.success(language === 'ar' ? "تم تنزيل بيانات الطلب" : "Order data downloaded");
+    };
 
     const orders = ordersData?.orders || [];
     const totalPages = ordersData?.totalPages || 0;
@@ -227,6 +301,15 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
                                                     onClick={() => setSelectedOrderId(order.id)}
                                                 >
                                                     <Eye className="w-4 h-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="w-8 h-8 rounded-full text-emerald-400 hover:text-emerald-300 hover:bg-gray-800"
+                                                    onClick={() => handleDownloadFullOrderData(order)}
+                                                    title={language === 'ar' ? 'تنزيل كافة البيانات' : 'Download All Data'}
+                                                >
+                                                    <Download className="w-4 h-4" />
                                                 </Button>
                                             </div>
                                         </div>
