@@ -417,7 +417,7 @@ export default function AdminDashboard() {
     { id: "coupons", label: language === 'ar' ? 'الكوبونات' : 'Coupons', icon: Ticket, color: "from-amber-400 to-orange-600 shadow-amber-500/30" },
     { id: "giftcards", label: language === 'ar' ? 'الجيفت كارد' : 'Gift Cards', icon: Gift, color: "from-emerald-400 to-teal-600 shadow-emerald-500/30" },
     { id: "installments", label: language === 'ar' ? 'التقسيط' : 'Installments', icon: CreditCard, color: "from-violet-400 to-purple-600 shadow-violet-500/30" },
-    { id: "installment-orders", label: language === 'ar' ? 'طلبات التقسيط' : 'Installment Orders', icon: ShoppingCart, badge: pendingInstallmentReviews || undefined, color: "from-amber-400 to-orange-500 shadow-amber-500/30" },
+    { id: "installment-orders", label: language === 'ar' ? 'طلبات التقسيط' : 'Installment Orders', icon: ShoppingCart, badge: dashboardStats?.pendingKycReviews || undefined, color: "from-amber-400 to-orange-500 shadow-amber-500/30" },
     { id: "payments", label: language === 'ar' ? 'بوابات الدفع' : 'Payment Gateways', icon: DollarSign, color: "from-emerald-400 to-teal-600 shadow-emerald-500/30" },
     { id: "orders", label: t('orders'), icon: ShoppingCart, color: "from-orange-500 to-red-600 shadow-orange-500/30" },
     { id: "customers", label: t('customers'), icon: Users, color: "from-sky-500 to-blue-600 shadow-sky-500/30" },
@@ -1635,7 +1635,7 @@ export default function AdminDashboard() {
                       <SelectItem value="delivered" disabled={['cancelled'].includes(selectedOrder?.status)}>
                         {language === 'ar' ? "تم التوصيل 📦" : "Delivered 📦"}
                       </SelectItem>
-                      <SelectItem value="cancelled" disabled={['delivered'].includes(selectedOrder?.status)}>
+                      <SelectItem value="cancelled" disabled={['delivered'].includes(selectedOrder?.status) || !!selectedOrder?.installmentPlanId}>
                         {language === 'ar' ? "إلغاء ❌" : "Cancel ❌"}
                       </SelectItem>
                     </SelectGroup>

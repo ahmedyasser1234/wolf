@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { endpoints } from "@/lib/api";
 import { toast } from "sonner";
@@ -10,12 +10,13 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { formatPrice, cn } from "@/lib/utils";
 
 export default function WalletPage() {
     const { language } = useLanguage();
     const queryClient = useQueryClient();
+    const [, setLocation] = useLocation();
     const [giftCode, setGiftCode] = useState("");
     const [redeemed, setRedeemed] = useState<number | null>(null);
     const [topUpAmount, setTopUpAmount] = useState<string>("");
@@ -36,6 +37,12 @@ export default function WalletPage() {
     const txns: any[] = (data as any)?.transactions ?? [];
     const balance = wallet?.balance ?? 0;
 
+    const { data: cartData } = useQuery({
+        queryKey: ["cart"],
+        queryFn: () => endpoints.cart.get(),
+    });
+    const items = (cartData as any)?.items || [];
+
     const redeemMutation = useMutation({
         mutationFn: () => endpoints.giftCards.redeem(giftCode.trim().toUpperCase()),
         onSuccess: (updated: any) => {
@@ -49,6 +56,38 @@ export default function WalletPage() {
             toast.error(err?.response?.data?.message || (language === "ar" ? "كود غير صالح أو مستخدم من قبل" : "Invalid or already used code"));
         },
     });
+
+    const confirmTopUpMutation = useMutation({
+        mutationFn: ({ amount, referenceId }: { amount: number; referenceId: string }) =>
+            endpoints.wallets.confirmTopUp(amount, referenceId),
+        onSuccess: () => {
+            toast.success(language === "ar" ? "✅ تم تحديث الرصيد بنجاح!" : "✅ Balance updated successfully!");
+            queryClient.invalidateQueries({ queryKey: ["wallet"] });
+            // Clean URL
+            const url = new URL(window.location.href);
+            url.searchParams.delete('topup_success');
+            url.searchParams.delete('amount');
+            window.history.replaceState({}, '', url.pathname + url.search);
+        },
+        onError: (err: any) => {
+            toast.error(err?.response?.data?.message || (language === "ar" ? "فشل تحديث الرصيد" : "Failed to update balance"));
+        }
+    });
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const isSuccess = params.get('topup_success') === 'true';
+        const amount = parseFloat(params.get('amount') || "0");
+
+        if (isSuccess && amount > 0) {
+            confirmTopUpMutation.mutate({ amount, referenceId: `STRIPE_RETURN_${Date.now()}` });
+        } else if (params.get('topup_cancel') === 'true') {
+            toast.error(language === "ar" ? "تم إلغاء عملية الشحن" : "Top up cancelled");
+            const url = new URL(window.location.href);
+            url.searchParams.delete('topup_cancel');
+            window.history.replaceState({}, '', url.pathname + url.search);
+        }
+    }, []);
 
     const handleRedeem = () => {
         if (!giftCode.trim()) {
@@ -71,15 +110,14 @@ export default function WalletPage() {
 
         setIsTopUpLoading(true);
         try {
-            // The backend's top-up endpoint currently bypasses the 2-step gateway verification for simulation
-            // and expects a referenceId. We send the gateway name as the reference in this mock flow.
-            await endpoints.wallets.topUp(amount, `TOPUP_${selectedGateway}_${Date.now()}`);
-
-            toast.success(language === "ar" ? "✅ تم شحن المحفظة بنجاح!" : "✅ Wallet topped up successfully!");
-            setTopUpAmount("");
-            queryClient.invalidateQueries({ queryKey: ["wallet"] });
+            const { url } = await endpoints.wallets.createTopUpSession(amount, selectedGateway);
+            if (url) {
+                window.location.href = url;
+            } else {
+                throw new Error("Missing redirect URL");
+            }
         } catch (err: any) {
-            toast.error(language === "ar" ? "فشل شحن المحفظة" : "Top up failed");
+            toast.error(err?.response?.data?.message || (language === "ar" ? "فشل شحن المحفظة" : "Top up failed"));
         } finally {
             setIsTopUpLoading(false);
         }
@@ -253,19 +291,34 @@ export default function WalletPage() {
                                 <ChevronRight size={12} />
                             </button>
                         </Link>
-                        <Link href="/checkout">
-                            <button className="text-xs text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1 transition-colors">
-                                {language === "ar" ? "ادفع بالمحفظة" : "Pay with wallet"}
-                                <ChevronRight size={12} />
-                            </button>
-                        </Link>
+                        <button
+                            onClick={() => {
+                                if (items.length === 0) {
+                                    toast.error(language === "ar" ? "السلة فارغة! أضف منتجات أولاً" : "Cart is empty! Add products first");
+                                    return;
+                                }
+                                setLocation("/checkout?from=wallet");
+                            }}
+                            className="text-xs text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1 transition-colors"
+                        >
+                            {language === "ar" ? "ادفع بالمحفظة" : "Pay with wallet"}
+                            <ChevronRight size={12} />
+                        </button>
                     </div>
                 </motion.div>
 
                 {/* Quick Action */}
                 <div className="grid grid-cols-2 gap-4">
-                    <Link href="/checkout">
-                        <div className="bg-emerald-600/10 border border-emerald-600/30 rounded-2xl p-5 flex flex-col gap-3 cursor-pointer hover:bg-emerald-600/20 transition-colors">
+                    <button
+                        onClick={() => {
+                            if (items.length === 0) {
+                                toast.error(language === "ar" ? "السلة فارغة! أضف منتجات أولاً" : "Cart is empty! Add products first");
+                                return;
+                            }
+                            setLocation("/checkout?from=wallet");
+                        }}
+                    >
+                        <div className="bg-emerald-600/10 border border-emerald-600/30 rounded-2xl p-5 flex flex-col gap-3 cursor-pointer hover:bg-emerald-600/20 transition-colors text-right">
                             <TrendingUp className="text-emerald-500 w-7 h-7" />
                             <p className="font-black text-white text-sm">
                                 {language === "ar" ? "الدفع بالمحفظة" : "Pay with Wallet"}
@@ -274,7 +327,7 @@ export default function WalletPage() {
                                 {language === "ar" ? "استخدم رصيدك في الطلبات" : "Use balance for orders"}
                             </p>
                         </div>
-                    </Link>
+                    </button>
                     <Link href="/gift-cards">
                         <div className="bg-purple-600/10 border border-purple-600/30 rounded-2xl p-5 flex flex-col gap-3 cursor-pointer hover:bg-purple-600/20 transition-colors">
                             <Gift className="text-purple-400 w-7 h-7" />

@@ -8,6 +8,7 @@ import { CouponsService } from '../coupons/coupons.service';
 import { WalletsService } from '../wallets/wallets.service';
 import { PointsService } from '../points/points.service';
 import { PaymentsService } from '../payments/payments.service';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class OrdersService {
@@ -17,7 +18,8 @@ export class OrdersService {
         private couponsService: CouponsService,
         private walletsService: WalletsService,
         private pointsService: PointsService,
-        private paymentsService: PaymentsService
+        private paymentsService: PaymentsService,
+        private mailService: MailService
     ) { }
 
     async findAll(customerId: number, limit = 20, offset = 0) {
@@ -107,7 +109,7 @@ export class OrdersService {
         if (cart.length === 0) throw new BadRequestException('السلة فارغة');
 
         const [customerRecord] = await this.databaseService.db
-            .select({ status: users.status })
+            .select({ status: users.status, email: users.email })
             .from(users)
             .where(eq(users.id, customerId));
         if (customerRecord?.status === 'blocked') throw new BadRequestException('حسابك موقوف ولا يمكنك إتمام الطلب.');
@@ -171,6 +173,7 @@ export class OrdersService {
 
         let depositAmount = 0;
         let stripeCheckoutUrl: string | null = null;
+        let totalPaidByGiftCard = 0;
         let resolvedDepositPaymentMethod = (depositPaymentMethod || 'card') as 'card' | 'wallet' | 'gift_card';
         console.log(`   - [Installment Check] depositPaymentMethod: ${depositPaymentMethod}, resolved: ${resolvedDepositPaymentMethod}`);
 
@@ -225,38 +228,53 @@ export class OrdersService {
                     .where(eq(giftCards.code, depositGiftCardCode.toUpperCase()))
                     .limit(1);
                 if (!giftCard) throw new BadRequestException('كود كارت الهدية غير صحيح');
-                if (giftCard.isRedeemed) throw new BadRequestException('هذا الكارت تم استخدامه بالفعل');
-                if (Number(giftCard.amount) < depositAmount) {
-                    throw new BadRequestException(`قيمة الكارت (${giftCard.amount}) أقل من المقدم المطلوب (${depositAmount})`);
-                }
+                if (giftCard.isRedeemed || Number(giftCard.amount) <= 0) throw new BadRequestException('هذا الكارت تم استخدامه بالفعل أو رصيده انتهى');
+                if (!giftCard.isActive) throw new BadRequestException('بطاقة الهدية غير مفعلة أو بانتظار الدفع');
 
-                const newBalance = Number(giftCard.amount) - depositAmount;
-                const isFullyRedeemed = newBalance <= 0;
+                const amountFromCard = Math.min(Number(giftCard.amount), depositAmount);
+                const remainingToPay = depositAmount - amountFromCard;
+
+                // Update card balance
+                const newCardBalance = Number(giftCard.amount) - amountFromCard;
+                const isFullyRedeemed = newCardBalance <= 0;
 
                 await this.databaseService.db
                     .update(giftCards)
                     .set({
-                        amount: newBalance,
+                        amount: newCardBalance,
                         isRedeemed: isFullyRedeemed,
                         redeemedByUserId: isFullyRedeemed ? customerId : null,
                         redeemedAt: isFullyRedeemed ? new Date() : null
                     })
                     .where(eq(giftCards.id, giftCard.id));
-                console.log(`  - [Deposit] Gift card ${depositGiftCardCode} used for deposit. Remaining: ${newBalance}`);
+                totalPaidByGiftCard = amountFromCard;
+
+                if (remainingToPay > 0) {
+                    // Try to deduct from wallet first, otherwise fallback to card
+                    const [wallet] = await this.databaseService.db.select().from(customerWallets).where(eq(customerWallets.userId, customerId)).limit(1);
+                    if (wallet && Number(wallet.balance) >= remainingToPay) {
+                        await this.walletsService.deductBalance(customerId, remainingToPay, `تكملة دفع مقدم تقسيط - طلب #${depositGiftCardCode}`);
+                        resolvedDepositPaymentMethod = 'gift_card';
+                    } else {
+                        // User needs to pay the rest via card
+                        resolvedDepositPaymentMethod = 'card';
+                        depositAmount = remainingToPay; // This will trigger Stripe session later
+                        console.log(`  - [Deposit] Partial Gift Card used. Remaining ${remainingToPay} will be paid via Card.`);
+                    }
+                } else {
+                    resolvedDepositPaymentMethod = 'gift_card';
+                    console.log(`  - [Deposit] Gift Card fully covered the deposit.`);
+                }
 
             } else if (depositPaymentMethod === 'card') {
-                // For card payments we create a gateway session.
-                // The order is created BEFORE redirect so we have an orderId for the session metadata.
-                // We mark it with paymentStatus='awaiting_deposit_payment'.
-                // The webhook will flip it to 'pending_kyc_review' after payment confirmation.
-                // SIMPLIFICATION: We create the order and return checkoutUrl; webhook updates payment status.
+                // ...existing logic...
                 resolvedDepositPaymentMethod = 'card';
             }
         } else {
             // ============================================================
             // REGULAR ORDER FLOW: Process full payment if wallet/gift_card
             // ============================================================
-            const grossTotal = Array.from(vendorGroups.values()).reduce((sum, g) => sum + g.subtotal, 0);
+            let grossTotal = Array.from(vendorGroups.values()).reduce((sum, g) => sum + g.subtotal, 0);
 
             if (paymentMethod === 'wallet') {
                 const [wallet] = await this.databaseService.db
@@ -278,28 +296,40 @@ export class OrdersService {
                     .where(eq(giftCards.code, depositGiftCardCode.toUpperCase()))
                     .limit(1);
                 if (!giftCard) throw new BadRequestException('كود كارت الهدية غير صحيح');
-                if (giftCard.isRedeemed) throw new BadRequestException('هذا الكارت تم استخدامه بالفعل');
-                if (Number(giftCard.amount) < grossTotal) {
-                    throw new BadRequestException(
-                        language === 'ar'
-                            ? `رصيد البطاقة (${giftCard.amount}) أقل من إجمالي الطلب (${grossTotal}). يرجى شحن البطاقة في محفظتك أولاً لاستخدام الرصيد مع طرق دفع أخرى.`
-                            : `Card balance (${giftCard.amount}) is less than total (${grossTotal}). Please redeem the card to your wallet first to use it with other payment methods.`
-                    );
-                }
+                if (giftCard.isRedeemed || Number(giftCard.amount) <= 0) throw new BadRequestException('هذا الكارت تم استخدامه بالفعل أو رصيده انتهى');
+                if (!giftCard.isActive) throw new BadRequestException('بطاقة الهدية غير مفعلة');
 
-                const newBalance = Number(giftCard.amount) - grossTotal;
-                const isFullyRedeemed = newBalance <= 0;
+                const amountFromCard = Math.min(Number(giftCard.amount), grossTotal);
+                const remainingToPay = grossTotal - amountFromCard;
+
+                // Update card balance
+                const newCardBalance = Number(giftCard.amount) - amountFromCard;
+                const isFullyRedeemed = newCardBalance <= 0;
 
                 await this.databaseService.db
                     .update(giftCards)
                     .set({
-                        amount: newBalance,
+                        amount: newCardBalance,
                         isRedeemed: isFullyRedeemed,
                         redeemedByUserId: isFullyRedeemed ? customerId : null,
                         redeemedAt: isFullyRedeemed ? new Date() : null
                     })
                     .where(eq(giftCards.id, giftCard.id));
-                console.log(`  - [Payment] Gift card ${depositGiftCardCode} used for full payment. Remaining: ${newBalance}`);
+                totalPaidByGiftCard = amountFromCard;
+
+                if (remainingToPay > 0) {
+                    // Try wallet, else fallback to card
+                    const [wallet] = await this.databaseService.db.select().from(customerWallets).where(eq(customerWallets.userId, customerId)).limit(1);
+                    if (wallet && Number(wallet.balance) >= remainingToPay) {
+                        await this.walletsService.deductBalance(customerId, remainingToPay, `تكملة دفع طلب شراء - كارت هدية ${depositGiftCardCode}`);
+                    } else {
+                        // Mark for card payment
+                        paymentMethod = 'card';
+                        // grossTotal is used for Stripe session later
+                        // We need to update grossTotal or whatever is used for grandTotal
+                    }
+                }
+                console.log(`  - [Payment] Gift card used. Remaining: ${newCardBalance}. Was partial: ${remainingToPay > 0}`);
             }
         }
 
@@ -449,36 +479,58 @@ export class OrdersService {
             } else if (!installmentPlanId && paymentMethod === 'card' && createdOrders.length > 0) {
                 // Regular order card payment
                 const [customer] = await this.databaseService.db.select().from(users).where(eq(users.id, customerId)).limit(1);
-                const grandTotal = createdOrders.reduce((sum, o) => sum + Number(o.total), 0);
-                const session = await this.paymentsService.createCheckoutSession(
-                    'stripe',
-                    createdOrders[0].id, // For multi-vendor simple fix use first order id, but webhook should handle grouped
-                    grandTotal,
-                    customer.email!
-                );
-                stripeCheckoutUrl = session.url;
+                const grandTotal = createdOrders.reduce((sum, o) => sum + Number(o.total), 0) - totalPaidByGiftCard;
+
+                if (grandTotal > 0) {
+                    const session = await this.paymentsService.createCheckoutSession(
+                        'stripe',
+                        createdOrders[0].id,
+                        grandTotal,
+                        customer.email!
+                    );
+                    stripeCheckoutUrl = session.url;
+                }
             }
 
-            // Notify admins ONLY for orders with 'paid' or 'pending_kyc_review' (Internal success)
+            // Notify admins for ALL new orders
             for (const order of createdOrders) {
-                const isPaid = order.paymentStatus === 'paid';
-                const isInternalInstallment = order.installmentPlanId && order.paymentStatus === 'pending_kyc_review' && (order.depositPaymentMethod === 'wallet' || order.depositPaymentMethod === 'gift_card');
+                try {
+                    const isInstallment = !!order.installmentPlanId;
+                    let title = '🛒 طلب جديد';
+                    let message = `طلب جديد رقم #${order.orderNumber} بقيمة ${order.total}`;
 
-                if (isPaid || isInternalInstallment) {
-                    try {
-                        const isInstallment = !!order.installmentPlanId;
-                        await this.notificationsService.notifyAdmins(
-                            'new_order',
-                            isInstallment ? '📋 طلب تقسيط جديد (مدفوع المقدم)' : '🛒 طلب جديد تم دفعه',
-                            isInstallment
-                                ? `طلب تقسيط جديد #${order.orderNumber} بمقدم ${order.depositAmount} (تم الدفع داخلياً)`
-                                : `طلب رقم #${order.orderNumber} تم دفعه بالكامل بقيمة ${order.total}`,
-                            order.id
-                        );
-                    } catch (e) {
-                        console.error('Failed to notify admin:', e.message);
+                    if (isInstallment) {
+                        const isPaid = order.paymentStatus === 'pending_kyc_review';
+                        title = isPaid ? '📋 طلب تقسيط جديد (مدفوع المقدم)' : '⏳ طلب تقسيط جديد (في انتظار الدفع)';
+                        message = isPaid
+                            ? `طلب تقسيط جديد #${order.orderNumber} بمقدم ${order.depositAmount} (تم الدفع داخلياً)`
+                            : `طلب تقسيط جديد #${order.orderNumber} بمقدم ${order.depositAmount} (في انتظار الدفع)`;
+                    } else {
+                        const isPaid = order.paymentStatus === 'paid';
+                        title = isPaid ? '✅ طلب جديد (مدفوع)' : '📦 طلب جديد (كاش)';
+                        message = isPaid
+                            ? `طلب رقم #${order.orderNumber} تم دفعه بالكامل بقيمة ${order.total}`
+                            : `طلب جديد رقم #${order.orderNumber} (الدفع عند الاستلام) بقيمة ${order.total}`;
                     }
+
+                    await this.notificationsService.notifyAdmins(
+                        'new_order',
+                        title,
+                        message,
+                        order.id
+                    );
+                } catch (e) {
+                    console.error('Failed to notify admin:', e.message);
                 }
+            }
+
+            // Send order confirmation email
+            if (customerRecord?.email) {
+                const firstOrder = createdOrders[0];
+                const orderNumbers = createdOrders.map(o => o.orderNumber).join(', ');
+                this.mailService.sendOrderConfirmation(customerRecord.email, orderNumbers).catch(err => {
+                    console.error('Failed to send order confirmation email:', err);
+                });
             }
 
             return { orders: createdOrders, checkoutUrl: stripeCheckoutUrl };
@@ -537,9 +589,36 @@ export class OrdersService {
             throw new BadRequestException('Cannot revert order to a previous status.');
         }
 
-        // Feature: Refund deposit if installment order is cancelled and deposit was paid
+        const isInstallment = !!currentOrder.installmentPlanId;
+
+        // Prevent cancellation for installment orders (User requested: "ولو الطلب دا تقسيط تشيل منه الالغاء لانى لو هلغيه هرفضه من الاول")
+        if (newStatusNormalized === 'cancelled' && isInstallment) {
+            throw new BadRequestException('لا يمكن إلغاء طلبات التقسيط من هنا. يرجى استخدام الرفض في مراجعة الأوراق لضمان معالجة الإجراء بشكل صحيح.');
+        }
+
+        // Feature: Refund deposit if installment order is cancelled
+        // Feature 2: Refund full amount if regular PAID order is cancelled (User requested: "الغاء لطلب مدفوع كاش الفلوس ترجع ع المحفظه")
         if (newStatusNormalized === 'cancelled' && currentStatusNormalized !== 'cancelled') {
-            await this.refundOrderDeposit(orderId);
+            if (isInstallment) {
+                await this.refundOrderDeposit(orderId);
+            } else if (currentOrder.paymentStatus === 'paid') {
+                // Check if already refunded to prevent duplicates
+                const [existingRefund] = await this.databaseService.db
+                    .select()
+                    .from(walletTransactions)
+                    .where(eq(walletTransactions.referenceId, `refund_full_${orderId}`))
+                    .limit(1);
+
+                if (!existingRefund) {
+                    await this.walletsService.topUpBalance(
+                        currentOrder.customerId,
+                        Number(currentOrder.total),
+                        `refund_full_${orderId}`,
+                        `استرجاع كامل المبلغ للطلب رقم #${currentOrder.orderNumber} (بسبب الإلغاء)`
+                    );
+                    console.log(`💰 [OrdersService] Successfully refunded full total of ${currentOrder.total} for regular order #${orderId}`);
+                }
+            }
         }
 
         // Feature 2: Cancel Points if the order is cancelled and it previously earned points

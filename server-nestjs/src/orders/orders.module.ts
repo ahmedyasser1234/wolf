@@ -8,9 +8,10 @@ import { CouponsModule } from '../coupons/coupons.module';
 import { WalletsModule } from '../wallets/wallets.module';
 import { PointsModule } from '../points/points.module';
 import { PaymentsModule } from '../payments/payments.module';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
-    imports: [DatabaseModule, AuthModule, NotificationsModule, CouponsModule, WalletsModule, PointsModule, PaymentsModule],
+    imports: [DatabaseModule, AuthModule, NotificationsModule, CouponsModule, WalletsModule, PointsModule, PaymentsModule, MailModule],
     providers: [OrdersService],
     controllers: [OrdersController],
     exports: [OrdersService],

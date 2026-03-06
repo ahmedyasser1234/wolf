@@ -150,8 +150,9 @@ export class AdminService {
         dateFrom?: string,
         dateTo?: string,
         page = 1,
-        limit = 100,
-        isInstallmentOnly = false
+        limit = 10,
+        isInstallmentOnly = false,
+        status?: string
     ) {
         const offset = (page - 1) * limit;
         const conditions = [];
@@ -169,14 +170,21 @@ export class AdminService {
         if (dateTo) {
             conditions.push(sql`${orders.createdAt} <= ${dateTo}::timestamp + interval '1 day'`);
         }
+
+        if (status && status !== 'all') {
+            if (status === 'pending_review') {
+                conditions.push(inArray(orders.paymentStatus, ['pending_kyc_review', 'awaiting_deposit_payment']));
+            } else if (status === 'paid') {
+                conditions.push(eq(orders.paymentStatus, 'paid'));
+            } else if (status === 'cancelled') {
+                conditions.push(sql`(${orders.paymentStatus} IN ('failed', 'rejected') OR ${orders.status} = 'cancelled')`);
+            }
+        }
+
         if (isInstallmentOnly) {
             conditions.push(sql`${orders.installmentPlanId} IS NOT NULL`);
-            // For installment-only view (review tab), we usually want those awaiting review or confirmed
-            // But we can leave it broad and let the frontend filter if needed, 
-            // though it's better to be specific.
         } else {
-            // In general orders tab, hide "temporary" installment orders that haven't paid deposit yet
-            // to match the previous frontend logic and ensure correct pagination counts.
+            // General orders view: filter out temporary drawer installments
             conditions.push(sql`NOT (${orders.installmentPlanId} IS NOT NULL AND ${orders.paymentStatus} IN ('awaiting_deposit_payment', 'pending_payment', 'pending'))`);
         }
 
@@ -190,7 +198,7 @@ export class AdminService {
         const total = Number(totalResult?.count || 0);
 
         console.time(`⏱️ [AdminService] getAllOrders MainQuery - limit: ${limit}`);
-        const query = this.databaseService.db
+        const rows = await this.databaseService.db
             .select({
                 order: orders,
                 customer: {
@@ -203,9 +211,7 @@ export class AdminService {
             .from(orders)
             .leftJoin(users, eq(orders.customerId, users.id))
             .leftJoin(installmentPlans, eq(orders.installmentPlanId, installmentPlans.id))
-            .where(and(...conditions));
-
-        const rows = await query
+            .where(and(...conditions))
             .orderBy(desc(orders.createdAt))
             .limit(limit)
             .offset(offset);

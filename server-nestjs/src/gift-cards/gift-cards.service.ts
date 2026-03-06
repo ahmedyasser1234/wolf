@@ -142,6 +142,26 @@ export class GiftCardsService {
         });
     }
 
+    async validateGiftCard(code: string) {
+        const [card] = await this.databaseService.db
+            .select()
+            .from(giftCards)
+            .where(eq(giftCards.code, code.toUpperCase()))
+            .limit(1);
+
+        if (!card) throw new NotFoundException('رقم بطاقة الهدية غير صحيح');
+        if (card.isRedeemed || Number(card.amount) <= 0) throw new BadRequestException('تم استخدام بطاقة الهدية هذه مسبقاً أو رصيدها انتهى');
+        if (!card.isActive) throw new BadRequestException('بطاقة الهدية غير مفعلة أو بانتظار الدفع');
+
+        return {
+            id: card.id,
+            code: card.code,
+            amount: card.amount,
+            isActive: card.isActive,
+            isRedeemed: card.isRedeemed
+        };
+    }
+
     async deleteGiftCard(id: number) {
         const [deleted] = await this.databaseService.db
             .delete(giftCards)

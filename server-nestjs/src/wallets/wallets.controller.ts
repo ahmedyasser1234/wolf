@@ -19,8 +19,17 @@ export class WalletsController {
         return this.walletsService.getCustomerWallet(userId);
     }
 
-    @Post('top-up')
-    async topUp(@Request() req, @Body('amount') amount: number, @Body('referenceId') referenceId: string) {
+    @Post('topup-session')
+    async createTopUpSession(@Request() req, @Body('amount') amount: number, @Body('gateway') gateway: string = 'stripe') {
+        const userId = req.user.id;
+        const userEmail = req.user.email;
+        // Import PaymentsService or use it if already injected
+        // Wait, I need to check if PaymentsService is injected in WalletsController
+        return this.walletsService.createTopUpSession(userId, userEmail, amount, gateway);
+    }
+
+    @Post('confirm-topup')
+    async confirmTopUp(@Request() req, @Body('amount') amount: number, @Body('referenceId') referenceId: string) {
         const userId = req.user.id;
         return this.walletsService.topUpBalance(userId, amount, referenceId);
     }

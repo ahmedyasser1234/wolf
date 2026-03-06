@@ -134,6 +134,49 @@ export class PaymentsService {
         throw new BadRequestException(`بوابة الدفع ${gatewayName} غير مدعومة بعد لشراء بطاقات الهدايا`);
     }
 
+    async createWalletTopUpSession(gatewayName: string, userId: number, amount: number, customerEmail: string) {
+        const config = await this.getGatewayConfig(gatewayName);
+
+        if (!config) {
+            throw new BadRequestException(`بوابة الدفع ${gatewayName} غير مهيأة بعد`);
+        }
+
+        if (gatewayName === 'stripe') {
+            const stripe = new Stripe(config.secretKey, {
+                apiVersion: '2023-10-16' as any,
+            });
+
+            const session = await stripe.checkout.sessions.create({
+                payment_method_types: ['card'],
+                line_items: [
+                    {
+                        price_data: {
+                            currency: 'sar',
+                            product_data: {
+                                name: `شحن رصيد المحفظة`,
+                            },
+                            unit_amount: Math.round(amount * 100),
+                        },
+                        quantity: 1,
+                    },
+                ],
+                mode: 'payment',
+                success_url: `${this.configService.get('FRONTEND_URL')}/wallet?topup_success=true&amount=${amount}`,
+                cancel_url: `${this.configService.get('FRONTEND_URL')}/wallet?topup_cancel=true`,
+                customer_email: customerEmail,
+                metadata: {
+                    userId: userId.toString(),
+                    amount: amount.toString(),
+                    type: 'wallet_topup'
+                },
+            });
+
+            return { url: session.url };
+        }
+
+        throw new BadRequestException(`بوابة الدفع ${gatewayName} غير مدعومة بعد لشحن المحفظة`);
+    }
+
     private async handleStripePayment(config: any, orderId: number, amount: number, customerEmail: string) {
         const stripe = new Stripe(config.secretKey, {
             apiVersion: '2023-10-16' as any,

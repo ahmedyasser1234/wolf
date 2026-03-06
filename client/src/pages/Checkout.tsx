@@ -58,6 +58,20 @@ export default function Checkout() {
   const [depositGiftCardCode, setDepositGiftCardCode] = useState("");
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [giftCardInfo, setGiftCardInfo] = useState<any>(null);
+
+  // Wallet-initiated flow state
+  const isFromWallet = new URLSearchParams(window.location.search).get('from') === 'wallet';
+  const [walletFlowChoice, setWalletFlowChoice] = useState<'full' | 'installments' | null>(null);
+
+  useEffect(() => {
+    if (isFromWallet) {
+      setDepositMethod('wallet');
+      if (intent?.paymentMethod === 'installments') {
+        setWalletFlowChoice('installments');
+      }
+    }
+  }, [isFromWallet]);
 
   // Show toast if starting at KYC
   useEffect(() => {
@@ -116,7 +130,12 @@ export default function Checkout() {
 
   const total = subtotal; // Shipping would be added here
 
-  const discountAmount = appliedCoupon ? (total * appliedCoupon.discountPercent) / 100 : 0;
+  const discountAmount = useMemo(() => {
+    if (!appliedCoupon) return 0;
+    if (appliedCoupon.type === 'fixed') return Number(appliedCoupon.discountAmount || 0);
+    return (total * (Number(appliedCoupon.discountPercent) || 0)) / 100;
+  }, [appliedCoupon, total]);
+
   const finalTotal = total - discountAmount;
 
   const gateways = (gatewaysData as any[]) || [];
@@ -132,6 +151,27 @@ export default function Checkout() {
       toast.error(err.response?.data?.message || (language === 'ar' ? 'كود الخصم غير صالح' : 'Invalid coupon code'));
     }
   });
+
+  const validateGiftCardMutation = useMutation({
+    mutationFn: (code: string) => endpoints.giftCards.validate(code),
+    onSuccess: (data) => {
+      setGiftCardInfo(data);
+    },
+    onError: () => {
+      setGiftCardInfo(null);
+    }
+  });
+
+  useEffect(() => {
+    if (depositMethod === 'gift_card' && depositGiftCardCode.length >= 4) {
+      const timer = setTimeout(() => {
+        validateGiftCardMutation.mutate(depositGiftCardCode);
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      setGiftCardInfo(null);
+    }
+  }, [depositGiftCardCode, depositMethod]);
 
   // Mutations
   const placeOrderMutation = useMutation({
@@ -359,14 +399,51 @@ export default function Checkout() {
                     </div>
                     <Button
                       onClick={() => {
-                        if (formData.paymentMethod === 'installments') setStep("kyc");
+                        if (isFromWallet && !walletFlowChoice) {
+                          // Show choice dialog/logic
+                          // For now, if installments are intended from a previous selection, go KYC
+                          // if not, we need to ask. Let's add a simple toggle or conditional
+                          return;
+                        }
+                        if (formData.paymentMethod === 'installments' || walletFlowChoice === 'installments') setStep("kyc");
                         else setStep("deposit");
                       }}
                       className="w-full h-14 md:h-16 rounded-full mt-8 md:mt-12 bg-primary hover:bg-primary/90 text-lg md:text-xl font-bold text-white shadow-xl shadow-primary/20 group"
                     >
-                      {formData.paymentMethod === 'installments' ? (language === 'ar' ? 'التالي: رفع الأوراق' : 'Next: Upload Docs') : (language === 'ar' ? 'تأكيد الطلب' : 'Confirm Order')}
+                      {(formData.paymentMethod === 'installments' || walletFlowChoice === 'installments') ? (language === 'ar' ? 'التالي: رفع الأوراق' : 'Next: Upload Docs') : (language === 'ar' ? 'تأكيد الطلب' : 'Confirm Order')}
                       <ChevronLeft className={`mr-2 group-hover:-translate-x-2 transition-transform ${language === 'en' ? 'rotate-180 group-hover:translate-x-2' : ''}`} />
                     </Button>
+
+                    {isFromWallet && !walletFlowChoice && (
+                      <div className="mt-8 grid grid-cols-2 gap-4">
+                        <Button
+                          onClick={() => {
+                            setWalletFlowChoice('full');
+                            setFormData(prev => ({ ...prev, paymentMethod: 'card' })); // 'card' here means full payment route
+                            setStep('deposit');
+                          }}
+                          className="h-20 rounded-2xl bg-emerald-500/10 border-2 border-emerald-500 text-emerald-700 hover:bg-emerald-500/20 flex flex-col gap-1 items-center justify-center shadow-none"
+                        >
+                          <span className="font-black text-lg">{language === 'ar' ? "دفع كامل" : "Full Payment"}</span>
+                          <span className="text-xs opacity-70">{language === 'ar' ? "سحب المبلغ بالكامل" : "Deduct full amount"}</span>
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            if (availablePlans.length === 0) {
+                              toast.error(language === 'ar' ? "لا توجد خطط تقسيط متاحة حالياً" : "No installment plans available");
+                              return;
+                            }
+                            setWalletFlowChoice('installments');
+                            setFormData(prev => ({ ...prev, paymentMethod: 'installments', installmentPlanId: availablePlans[0].id }));
+                            setStep('kyc');
+                          }}
+                          className="h-20 rounded-2xl bg-purple-500/10 border-2 border-purple-500 text-purple-700 hover:bg-purple-500/20 flex flex-col gap-1 items-center justify-center shadow-none"
+                        >
+                          <span className="font-black text-lg">{language === 'ar' ? "تقسيط" : "Installments"}</span>
+                          <span className="text-xs opacity-70">{language === 'ar' ? "دفع مقدم والباقي أقساط" : "Downpayment + Installments"}</span>
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               )}
@@ -400,10 +477,10 @@ export default function Checkout() {
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {[
-                          { id: 'card', label: language === 'ar' ? 'بطاقة بنكية' : 'Bank Card', Icon: CreditCard },
-                          { id: 'wallet', label: language === 'ar' ? 'المحفظة' : 'Wallet', Icon: Wallet },
-                          { id: 'gift_card', label: language === 'ar' ? 'كارت هدية' : 'Gift Card', Icon: Gift },
-                        ].map((m) => (
+                          { id: 'card', label: language === 'ar' ? 'بطاقة بنكية' : 'Bank Card', Icon: CreditCard, hidden: isFromWallet },
+                          { id: 'wallet', label: language === 'ar' ? 'المحفظة' : 'Wallet', Icon: Wallet, hidden: false },
+                          { id: 'gift_card', label: language === 'ar' ? 'كارت هدية' : 'Gift Card', Icon: Gift, hidden: isFromWallet },
+                        ].filter(m => !m.hidden).map((m) => (
                           <div
                             key={m.id}
                             onClick={() => setDepositMethod(m.id as any)}
@@ -416,14 +493,37 @@ export default function Checkout() {
                       </div>
 
                       {depositMethod === 'gift_card' && (
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 space-y-2">
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 space-y-4">
                           <label className="font-bold text-gray-700">{language === 'ar' ? 'كود كارت الهدية' : 'Gift Card Code'}</label>
-                          <Input
-                            value={depositGiftCardCode}
-                            onChange={(e) => setDepositGiftCardCode(e.target.value.toUpperCase())}
-                            placeholder="XXXX-XXXX-XXXX"
-                            className="h-14 rounded-xl text-center font-mono font-bold text-lg border-gray-200"
-                          />
+                          <div className="relative">
+                            <Input
+                              value={depositGiftCardCode}
+                              onChange={(e) => setDepositGiftCardCode(e.target.value.toUpperCase())}
+                              placeholder="XXXX-XXXX-XXXX"
+                              className="h-14 rounded-xl text-center font-mono font-bold text-lg border-gray-200"
+                            />
+                            {validateGiftCardMutation.isPending && (
+                              <div className="absolute left-4 top-4">
+                                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                              </div>
+                            )}
+                          </div>
+
+                          {giftCardInfo && (
+                            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-4 bg-green-50 rounded-xl border border-green-100 flex justify-between items-center">
+                              <span className="font-black text-green-700 text-lg">{formatPrice(giftCardInfo.amount)}</span>
+                              <span className="font-bold text-green-600">رصيد الكارت المتاح</span>
+                            </motion.div>
+                          )}
+
+                          {giftCardInfo && Number(giftCardInfo.amount) < (formData.paymentMethod === 'installments' ? (currentIntent?.downPayment || 0) : finalTotal) && (
+                            <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 text-amber-700 text-sm font-bold text-center">
+                              {language === 'ar'
+                                ? `الرصيد غير كافٍ. سيتم خصم المتاح وسيطلب منك دفع الباقي ${formatPrice((formData.paymentMethod === 'installments' ? (currentIntent?.downPayment || 0) : finalTotal) - Number(giftCardInfo.amount))} عبر المحفظة أو البطاقة.`
+                                : `Insufficient balance. Available will be deducted, and you'll pay the rest ${formatPrice((formData.paymentMethod === 'installments' ? (currentIntent?.downPayment || 0) : finalTotal) - Number(giftCardInfo.amount))} via Wallet or Card.`
+                              }
+                            </div>
+                          )}
                         </motion.div>
                       )}
 
@@ -521,7 +621,11 @@ export default function Checkout() {
             {appliedCoupon && (
               <div className="flex justify-between items-center bg-green-50/50 p-4 rounded-xl mt-4 border border-green-100 mb-4">
                 <span className="font-bold text-green-600 text-lg">-{formatPrice(discountAmount)}</span>
-                <span className="text-green-700 font-bold">{language === 'ar' ? `الخصم (${appliedCoupon.discountPercent}%)` : `Discount (${appliedCoupon.discountPercent}%)`}</span>
+                <span className="text-green-700 font-bold">
+                  {language === 'ar'
+                    ? `الخصم (${appliedCoupon.type === 'fixed' ? formatPrice(appliedCoupon.discountAmount) : `${appliedCoupon.discountPercent}%`})`
+                    : `Discount (${appliedCoupon.type === 'fixed' ? formatPrice(appliedCoupon.discountAmount) : `${appliedCoupon.discountPercent}%`})`}
+                </span>
               </div>
             )}
 

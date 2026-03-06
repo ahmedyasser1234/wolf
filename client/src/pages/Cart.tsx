@@ -282,7 +282,11 @@ export default function Cart() {
     const vendorSubtotal = vendorItems.reduce((total: number, item: any) => {
       return total + (Number(item.quantity) * Number(item.product?.price || 0));
     }, 0);
-    couponDiscount = (vendorSubtotal * appliedCoupon.discountPercent) / 100;
+    if (appliedCoupon.type === 'fixed') {
+      couponDiscount = Math.min(vendorSubtotal, Number(appliedCoupon.discountAmount || 0));
+    } else {
+      couponDiscount = (vendorSubtotal * (Number(appliedCoupon.discountPercent) || 0)) / 100;
+    }
   }
 
   const totalDiscount = automaticDiscount + couponDiscount;
@@ -486,7 +490,11 @@ export default function Cart() {
                         {appliedCoupon && (
                           <div className="flex justify-between items-center text-green-600">
                             <span className="font-bold">-{formatPrice(couponDiscount)}</span>
-                            <span className="text-sm">{language === 'ar' ? `خصم الكوبون (${appliedCoupon.discountPercent}%)` : `Coupon Discount (${appliedCoupon.discountPercent}%)`}</span>
+                            <span className="text-sm">
+                              {language === 'ar'
+                                ? `خصم الكوبون (${appliedCoupon.type === 'fixed' ? formatPrice(appliedCoupon.discountAmount) : `${appliedCoupon.discountPercent}%`})`
+                                : `Coupon Discount (${appliedCoupon.type === 'fixed' ? formatPrice(appliedCoupon.discountAmount) : `${appliedCoupon.discountPercent}%`})`}
+                            </span>
                           </div>
                         )}
                         {automaticDiscount > 0 && (

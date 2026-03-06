@@ -8,7 +8,15 @@ import { eq, and, sql } from 'drizzle-orm';
 export class CouponsService {
     constructor(private databaseService: DatabaseService) { }
 
-    async create(data: { code: string; vendorId: number; discountPercent: number; maxUses?: number }) {
+    async create(data: {
+        code: string;
+        vendorId?: number;
+        type?: string;
+        discountPercent?: number;
+        discountAmount?: number;
+        maxUses?: number;
+        isActive?: boolean;
+    }) {
         // Check if code exists
         const existing = await this.databaseService.db
             .select()
@@ -25,8 +33,11 @@ export class CouponsService {
             .values({
                 code: data.code,
                 vendorId: data.vendorId,
+                type: data.type || 'percentage',
                 discountPercent: data.discountPercent,
+                discountAmount: data.discountAmount,
                 maxUses: data.maxUses,
+                isActive: data.isActive !== undefined ? data.isActive : true,
             })
             .returning();
 
@@ -67,7 +78,14 @@ export class CouponsService {
         return { success: true };
     }
 
-    async update(id: number, data: { code?: string; discountPercent?: number; maxUses?: number; isActive?: boolean }) {
+    async update(id: number, data: {
+        code?: string;
+        type?: string;
+        discountPercent?: number;
+        discountAmount?: number;
+        maxUses?: number;
+        isActive?: boolean
+    }) {
         // Check if code exists for other coupons (if code is being updated)
         if (data.code) {
             const existing = await this.databaseService.db

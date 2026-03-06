@@ -88,18 +88,20 @@ export class AdminController {
         @Query('dateTo') dateTo?: string,
         @Query('page') page?: string,
         @Query('limit') limit?: string,
-        @Query('isInstallmentOnly') isInstallmentOnly?: string
+        @Query('isInstallmentOnly') isInstallmentOnly?: string,
+        @Query('status') status?: string
     ) {
         await this.checkAdmin(req);
-        console.log(`🔍 [AdminController] getOrders - page: ${page}, limit: ${limit}, isInstallmentOnly: ${isInstallmentOnly}`);
+        console.log(`🔍 [AdminController] getOrders - page: ${page}, limit: ${limit}, isInstallmentOnly: ${isInstallmentOnly}, status: ${status}`);
         const start = Date.now();
         const result = await this.adminService.getAllOrders(
             search,
             dateFrom,
             dateTo,
             page ? parseInt(page) : 1,
-            limit ? parseInt(limit) : 100,
-            isInstallmentOnly === 'true'
+            limit ? parseInt(limit) : 10,
+            isInstallmentOnly === 'true',
+            status
         );
         console.log(`⏱️ [AdminController] getOrders took ${Date.now() - start}ms for ${result.orders.length} orders (Total: ${result.total})`);
         return result;

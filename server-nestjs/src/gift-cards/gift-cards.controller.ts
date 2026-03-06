@@ -40,6 +40,12 @@ export class GiftCardsController {
         return this.giftCardsService.redeemGiftCard(code, userId);
     }
 
+    @UseGuards(JwtAuthGuard)
+    @Get('validate/:code')
+    async validate(@Param('code') code: string) {
+        return this.giftCardsService.validateGiftCard(code);
+    }
+
     // Customer: Purchase a new gift card
     @UseGuards(JwtAuthGuard)
     @Post('purchase')

@@ -581,7 +581,7 @@ function EditProfileModal({ isOpen, onClose, user, language, queryClient }: any)
 
         const userFormData = new FormData();
         userFormData.append('name', name);
-        userFormData.append('email', email);
+        // Email is read-only, no need to send it
         if (password) userFormData.append('password', password);
         if (avatarFile) userFormData.append('avatar', avatarFile);
 
@@ -667,7 +667,7 @@ function EditProfileModal({ isOpen, onClose, user, language, queryClient }: any)
                                             </div>
                                             <div className="text-start space-y-2">
                                                 <label className="text-xs font-black text-gray-700 px-1 uppercase tracking-wider">{language === 'ar' ? "البريد الإلكتروني" : "Email Address"}</label>
-                                                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-gray-50 border-0 rounded-2xl h-14 px-6 font-bold focus:ring-2 focus:ring-primary transition-all text-gray-900" required dir="ltr" />
+                                                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-gray-100 border-0 rounded-2xl h-14 px-6 font-bold focus:ring-2 focus:ring-primary transition-all text-gray-400 cursor-not-allowed" disabled dir="ltr" />
                                             </div>
                                             <div className="text-start md:col-span-2 space-y-2">
                                                 <label className="text-xs font-black text-gray-700 px-1 uppercase tracking-wider">{language === 'ar' ? "كلمة المرور الجديدة" : "New Password"}</label>

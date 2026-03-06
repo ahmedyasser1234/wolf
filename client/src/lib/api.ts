@@ -142,7 +142,7 @@ export const endpoints = {
         updateCustomerStatus: (id: number, status: string) => api.patch(`/admin/customers/${id}/status`, { status }).then(res => res.data),
         deleteCustomer: (id: number) => api.delete(`/admin/customers/${id}`).then(res => res.data),
         getCustomerStatusLogs: (id: number) => api.get(`/admin/customers/${id}/status-logs`).then(res => res.data),
-        getOrders: () => api.get('/admin/orders').then(res => res.data),
+        getOrders: (params?: any) => api.get('/admin/orders', { params }).then(res => res.data),
         getProducts: (search?: string) => api.get('/admin/products', { params: { search } }).then(res => res.data),
         globalSearch: (q: string) => api.get('/admin/search', { params: { q } }).then(res => res.data),
         exportCustomers: () => api.get('/admin/export/customers', { responseType: 'blob' }).then(res => res.data),
@@ -177,8 +177,10 @@ export const endpoints = {
     wallets: {
         getMyWallet: () => api.get('/wallets/my-wallet').then(res => res.data),
         redeem: (code: string) => api.post('/gift-cards/redeem', { code }).then(res => res.data),
-        topUp: (amount: number, referenceId: string) => api.post('/wallets/top-up', { amount, referenceId }).then(res => res.data),
-        confirmTopUp: (transactionId: number) => api.post('/wallets/confirm-top-up', { transactionId }).then(res => res.data),
+        createTopUpSession: (amount: number, gateway: string = 'stripe') =>
+            api.post('/wallets/topup-session', { amount, gateway }).then(res => res.data),
+        confirmTopUp: (amount: number, referenceId: string) =>
+            api.post('/wallets/confirm-topup', { amount, referenceId }).then(res => res.data),
     },
 
     points: {
@@ -207,6 +209,7 @@ export const endpoints = {
         purchase: (amount: number, recipientName?: string, paymentMethod?: string) => api.post('/gift-cards/purchase', { amount, recipientName, paymentMethod }).then(res => res.data),
         confirm: (giftCardId: number) => api.post('/gift-cards/confirm', { giftCardId }).then(res => res.data),
         getMyCards: () => api.get('/gift-cards/my-cards').then(res => res.data),
+        validate: (code: string) => api.get(`/gift-cards/validate/${code}`).then(res => res.data),
     },
     vendors: {
         getDashboard: () => api.get('/vendors/dashboard').then(res => res.data),

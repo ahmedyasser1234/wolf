@@ -2,10 +2,14 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { DatabaseService } from '../database/database.service';
 import { vendorWallets, walletTransactions, vendors, customerWallets } from '../database/schema';
 import { eq, and, desc } from 'drizzle-orm';
+import { PaymentsService } from '../payments/payments.service';
 
 @Injectable()
 export class WalletsService {
-    constructor(private readonly databaseService: DatabaseService) { }
+    constructor(
+        private readonly databaseService: DatabaseService,
+        private readonly paymentsService: PaymentsService
+    ) { }
 
     // --- Vendor Wallets ---
     async getOrCreateWallet(vendorId: number) {
@@ -159,5 +163,9 @@ export class WalletsService {
             .orderBy(desc(walletTransactions.createdAt));
 
         return { wallet, transactions };
+    }
+
+    async createTopUpSession(userId: number, userEmail: string, amount: number, gateway: string) {
+        return this.paymentsService.createWalletTopUpSession(gateway, userId, amount, userEmail);
     }
 }

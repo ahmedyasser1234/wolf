@@ -23,19 +23,28 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
     const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
     const [kycModalOrder, setKycModalOrder] = useState<any | null>(null);
     const [rejectReason, setRejectReason] = useState('');
+    const [page, setPage] = useState(1);
+    const [filterStatus, setFilterStatus] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
 
-    const { data: ordersData, isLoading } = useQuery({
-        queryKey: ['vendor', 'orders', vendorId, searchQuery, dateFrom, dateTo],
-        queryFn: () => endpoints.orders.list({
-            vendorId, // if vendorId is strictly required by list
-            search: searchQuery,
-            dateFrom,
-            dateTo
-        }),
-        enabled: !!vendorId,
+    const { data: ordersData, isLoading, isFetching } = useQuery({
+        queryKey: ['admin', 'orders', page, searchQuery, dateFrom, dateTo, filterStatus],
+        queryFn: async () => {
+            const response = await api.get('/admin/orders', {
+                params: {
+                    page,
+                    limit: 10,
+                    search: searchQuery,
+                    dateFrom,
+                    dateTo,
+                    status: filterStatus === 'all' ? undefined : filterStatus,
+                    isInstallmentOnly: false
+                }
+            });
+            return response.data;
+        }
     });
 
     const updateStatusMutation = useMutation({
@@ -66,7 +75,9 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
         onError: () => toast.error(language === 'ar' ? 'فشلت العملية' : 'Operation failed'),
     });
 
-    const orders = ordersData?.data || [];
+    const orders = ordersData?.orders || [];
+    const totalPages = ordersData?.totalPages || 0;
+    const total = ordersData?.total || 0;
 
     const STATUS_LABELS: Record<string, { label: string, color: string }> = {
         pending_kyc_review: { label: language === 'ar' ? "مراجعة أوراق" : "KYC Review", color: "bg-amber-900/30 text-amber-500 shadow-none border border-amber-800/30" },
@@ -119,7 +130,7 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
 
             {/* Filters Section */}
             <div className="bg-gray-900 border border-gray-800 rounded-[2rem] p-6 mb-8 flex flex-col md:flex-row gap-4 items-end">
-                <div className="w-full md:w-1/3">
+                <div className="w-full md:w-1/4">
                     <label className="text-xs font-black tracking-widest text-gray-400 uppercase mb-2 block">
                         {language === 'ar' ? 'بحث (رقم الطلب، اسم العميل)' : 'Search (Order ID, Customer Name)'}
                     </label>
@@ -129,7 +140,7 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
                             type="text"
                             placeholder={language === 'ar' ? "ابحث هنا..." : "Search here..."}
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
                             className={`w-full bg-gray-950 border border-gray-800 rounded-xl py-3 ${language === 'ar' ? 'pr-12 pl-4' : 'pl-12 pr-4'} text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors`}
                         />
                     </div>
@@ -137,24 +148,40 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
 
                 <div className="w-full md:w-1/4">
                     <label className="text-xs font-black tracking-widest text-gray-400 uppercase mb-2 block">
+                        {language === 'ar' ? 'الحالة' : 'Status'}
+                    </label>
+                    <select
+                        value={filterStatus}
+                        onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
+                        className="w-full bg-gray-950 border border-gray-800 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-purple-500 transition-colors"
+                    >
+                        <option value="all">{language === 'ar' ? 'الكل' : 'All'}</option>
+                        {Object.entries(STATUS_LABELS).map(([key, config]) => (
+                            <option key={key} value={key}>{config.label}</option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="w-full md:w-1/5">
+                    <label className="text-xs font-black tracking-widest text-gray-400 uppercase mb-2 block">
                         {language === 'ar' ? 'من تاريخ' : 'From Date'}
                     </label>
                     <input
                         type="date"
                         value={dateFrom}
-                        onChange={(e) => setDateFrom(e.target.value)}
+                        onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
                         className="w-full bg-gray-950 border border-gray-800 rounded-xl py-3 px-4 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors [color-scheme:dark]"
                     />
                 </div>
 
-                <div className="w-full md:w-1/4">
+                <div className="w-full md:w-1/5">
                     <label className="text-xs font-black tracking-widest text-gray-400 uppercase mb-2 block">
                         {language === 'ar' ? 'إلى تاريخ' : 'To Date'}
                     </label>
                     <input
                         type="date"
                         value={dateTo}
-                        onChange={(e) => setDateTo(e.target.value)}
+                        onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
                         className="w-full bg-gray-950 border border-gray-800 rounded-xl py-3 px-4 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors [color-scheme:dark]"
                     />
                 </div>
@@ -162,11 +189,11 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
                 <div className="w-full md:w-auto flex-shrink-0">
                     <Button
                         variant="ghost"
-                        onClick={() => { setSearchQuery(''); setDateFrom(''); setDateTo(''); }}
+                        onClick={() => { setSearchQuery(''); setDateFrom(''); setDateTo(''); setFilterStatus('all'); setPage(1); }}
                         className="w-full h-12 text-gray-400 hover:text-white"
                     >
                         <Filter className="w-4 h-4 mr-2" />
-                        {language === 'ar' ? 'مسح الفلاتر' : 'Clear Filters'}
+                        {language === 'ar' ? 'مسح' : 'Clear'}
                     </Button>
                 </div>
             </div>
@@ -270,7 +297,7 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
                                                         };
                                                         const currentLevel = stepMap[current] || 0;
                                                         const targetLevel = stepMap[target] || 0;
-                                                        if (target === 'cancelled') return current === 'delivered';
+                                                        if (target === 'cancelled') return current === 'delivered' || !!order?.installmentPlanId;
                                                         return targetLevel <= currentLevel;
                                                     };
 
@@ -385,167 +412,201 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
                     ))}
                 </div>
             )}
-            {selectedOrderId && (
-                <OrderDetailsView orderId={selectedOrderId} onClose={() => setSelectedOrderId(null)} />
-            )}
 
-            {/* KYC Review Modal */}
-            {kycModalOrder && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4" style={{ background: 'rgba(0,0,0,0.85)' }}>
-                    <div className="bg-gray-950 border border-gray-800 rounded-[1.5rem] md:rounded-[2rem] p-5 sm:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-2xl font-black text-white">{language === 'ar' ? 'مراجعة طلب التقسيط' : 'Installment Review'}</h2>
-                            <span className="text-sm font-bold text-amber-400 bg-amber-900/30 px-4 py-1.5 rounded-full">#{kycModalOrder.orderNumber}</span>
-                        </div>
-
-                        {/* Customer Info */}
-                        <div className="bg-gray-900 p-5 rounded-2xl mb-6">
-                            <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">{language === 'ar' ? 'بيانات العميل' : 'Customer Info'}</p>
-                            <p className="text-white font-bold">{kycModalOrder.customer?.name || kycModalOrder.shippingAddress?.name}</p>
-                            <p className="text-gray-400 text-sm">{kycModalOrder.customer?.email}</p>
-                            <p className="text-gray-400 text-sm">{kycModalOrder.customer?.phone || kycModalOrder.shippingAddress?.phone}</p>
-                        </div>
-
-                        {/* Deposit Info */}
-                        {kycModalOrder.depositAmount && (
-                            <div className="bg-emerald-900/20 p-5 rounded-2xl mb-6 border border-emerald-500/20">
-                                <div className="flex justify-between items-center">
-                                    <div className="text-xs font-black text-gray-400 uppercase tracking-widest">
-                                        {language === 'ar' ? 'المقدم المدفوع' : 'Downpayment Paid'}
-                                    </div>
-                                    <div className="text-xl font-black text-emerald-400">
-                                        {Number(kycModalOrder.depositAmount).toFixed(2)} {t('currency')}
-                                    </div>
-                                </div>
-                                <div className="text-xs text-emerald-500/70 font-bold mt-1">
-                                    {language === 'ar' ? 'طريقة الدفع:' : 'Payment Method:'} {({
-                                        'card': language === 'ar' ? 'بطاقة بنكية' : 'Bank Card',
-                                        'wallet': language === 'ar' ? 'المحفظة' : 'Wallet',
-                                        'gift_card': language === 'ar' ? 'كارت هدية' : 'Gift Card',
-                                    } as any)[kycModalOrder.depositPaymentMethod] || kycModalOrder.depositPaymentMethod}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* KYC Documents */}
-                        {kycModalOrder.kycData && (
-                            <div className="space-y-4 mb-6">
-                                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">{language === 'ar' ? 'المستندات المرفوعة' : 'Uploaded Documents'}</p>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                    {(kycModalOrder.kycData.faceId || kycModalOrder.kycData.faceImage) && (
-                                        <div className="bg-gray-900 p-4 rounded-2xl border border-gray-800">
-                                            <div className="flex items-center gap-2 mb-3">
-                                                <ScanFace className="w-4 h-4 text-blue-400" />
-                                                <span className="text-[10px] font-black text-white">{language === 'ar' ? 'صورة الوجه' : 'Face Image'}</span>
-                                            </div>
-                                            <img
-                                                src={kycModalOrder.kycData.faceId || kycModalOrder.kycData.faceImage}
-                                                alt="Face"
-                                                className="w-full h-32 rounded-xl object-cover border-2 border-gray-700 cursor-zoom-in"
-                                                onClick={() => window.open(kycModalOrder.kycData.faceId || kycModalOrder.kycData.faceImage, '_blank')}
-                                            />
-                                        </div>
-                                    )}
-
-                                    {(kycModalOrder.kycData.residencyDoc || kycModalOrder.kycData.idImage) && (
-                                        <div className="bg-gray-900 p-4 rounded-2xl border border-gray-800">
-                                            <div className="flex items-center gap-2 mb-3">
-                                                <CreditCard className="w-4 h-4 text-green-400" />
-                                                <span className="text-[10px] font-black text-white">{language === 'ar' ? 'الهوية / الإقامة' : 'ID / Residency'}</span>
-                                            </div>
-                                            <img
-                                                src={kycModalOrder.kycData.residencyDoc || kycModalOrder.kycData.idImage}
-                                                alt="ID"
-                                                className="w-full h-32 rounded-xl object-cover border-2 border-gray-700 cursor-zoom-in"
-                                                onClick={() => window.open(kycModalOrder.kycData.residencyDoc || kycModalOrder.kycData.idImage, '_blank')}
-                                            />
-                                        </div>
-                                    )}
-
-                                    {(kycModalOrder.kycData.passportDoc || kycModalOrder.kycData.passportImage) && (
-                                        <div className="bg-gray-900 p-4 rounded-2xl border border-gray-800">
-                                            <div className="flex items-center gap-2 mb-3">
-                                                <FileText className="w-4 h-4 text-purple-400" />
-                                                <span className="text-[10px] font-black text-white">{language === 'ar' ? 'الجواز' : 'Passport'}</span>
-                                            </div>
-                                            <img
-                                                src={kycModalOrder.kycData.passportDoc || kycModalOrder.kycData.passportImage}
-                                                alt="Passport"
-                                                className="w-full h-32 rounded-xl object-cover border-2 border-gray-700 cursor-zoom-in"
-                                                onClick={() => window.open(kycModalOrder.kycData.passportDoc || kycModalOrder.kycData.passportImage, '_blank')}
-                                            />
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Manual KYC Data */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-                                    {kycModalOrder.kycData.idNumber && (
-                                        <div className="bg-gray-900/50 p-4 rounded-2xl border border-gray-800/50">
-                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'رقم الهوية' : 'ID Number'}</p>
-                                            <p className="text-white font-black">{kycModalOrder.kycData.idNumber}</p>
-                                        </div>
-                                    )}
-                                    {kycModalOrder.kycData.passportNumber && (
-                                        <div className="bg-gray-900/50 p-4 rounded-2xl border border-gray-800/50">
-                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'رقم الجواز' : 'Passport Number'}</p>
-                                            <p className="text-white font-black">{kycModalOrder.kycData.passportNumber}</p>
-                                        </div>
-                                    )}
-                                    {kycModalOrder.kycData.dob && (
-                                        <div className="bg-gray-900/50 p-4 rounded-2xl border border-gray-800/50">
-                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'تاريخ الميلاد' : 'Date of Birth'}</p>
-                                            <p className="text-white font-black">{kycModalOrder.kycData.dob}</p>
-                                        </div>
-                                    )}
-                                    {kycModalOrder.kycData.residentialAddress && (
-                                        <div className="bg-gray-900/50 p-4 rounded-2xl border border-gray-800/50 sm:col-span-2">
-                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'عنوان السكن' : 'Residential Address'}</p>
-                                            <p className="text-white font-black">{kycModalOrder.kycData.residentialAddress}</p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Reject Reason */}
-                        <div className="mb-6">
-                            <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">{language === 'ar' ? 'سبب الرفض (اختياري)' : 'Reject Reason (optional)'}</label>
-                            <Textarea
-                                value={rejectReason}
-                                onChange={e => setRejectReason(e.target.value)}
-                                placeholder={language === 'ar' ? 'اكتب سبب الرفض إن وجد...' : 'Write rejection reason if any...'}
-                                className="bg-gray-900 border-gray-800 text-white rounded-2xl min-h-[80px]"
-                            />
-                        </div>
-
-                        {/* Actions */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <Button
-                                onClick={() => kycReviewMutation.mutate({ orderId: kycModalOrder.id, action: 'reject', reason: rejectReason })}
-                                disabled={kycReviewMutation.isPending}
-                                className="h-14 rounded-2xl bg-red-600 hover:bg-red-500 font-black text-white flex gap-2"
-                            >
-                                {kycReviewMutation.isPending ? <Loader2 className="animate-spin" /> : <XCircle className="w-5 h-5" />}
-                                {language === 'ar' ? 'رفض الطلب' : 'Reject'}
-                            </Button>
-                            <Button
-                                onClick={() => kycReviewMutation.mutate({ orderId: kycModalOrder.id, action: 'approve' })}
-                                disabled={kycReviewMutation.isPending}
-                                className="h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-500 font-black text-white flex gap-2"
-                            >
-                                {kycReviewMutation.isPending ? <Loader2 className="animate-spin" /> : <CheckCircle className="w-5 h-5" />}
-                                {language === 'ar' ? 'الموافقة على الطلب' : 'Approve'}
-                            </Button>
-                        </div>
-
-                        <Button variant="ghost" onClick={() => { setKycModalOrder(null); setRejectReason(''); }} className="w-full mt-4 text-gray-400 hover:text-white">
-                            {language === 'ar' ? 'إغلاق' : 'Close'}
-                        </Button>
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-4 mt-8 pb-10">
+                    <Button
+                        variant="outline"
+                        onClick={() => { setPage(p => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                        disabled={page === 1 || isFetching}
+                        className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700 disabled:opacity-50 rounded-xl px-6"
+                    >
+                        {language === 'ar' ? 'السابق' : 'Previous'}
+                    </Button>
+                    <div className="flex flex-col items-center">
+                        <span className="text-gray-400 font-bold">
+                            {language === 'ar' ? `صفحة ${page} من ${totalPages}` : `Page ${page} of ${totalPages}`}
+                        </span>
+                        <span className="text-[10px] text-gray-600 font-bold uppercase tracking-widest mt-1">
+                            {total} {language === 'ar' ? 'طلب إجمالي' : 'Total Orders'}
+                        </span>
                     </div>
+                    <Button
+                        variant="outline"
+                        onClick={() => { setPage(p => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                        disabled={page === totalPages || isFetching}
+                        className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700 disabled:opacity-50 rounded-xl px-6"
+                    >
+                        {language === 'ar' ? 'التالي' : 'Next'}
+                    </Button>
                 </div>
             )}
-        </div>
+            {
+                selectedOrderId && (
+                    <OrderDetailsView orderId={selectedOrderId} onClose={() => setSelectedOrderId(null)} />
+                )
+            }
+
+            {/* KYC Review Modal */}
+            {
+                kycModalOrder && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4" style={{ background: 'rgba(0,0,0,0.85)' }}>
+                        <div className="bg-gray-950 border border-gray-800 rounded-[1.5rem] md:rounded-[2rem] p-5 sm:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-2xl font-black text-white">{language === 'ar' ? 'مراجعة طلب التقسيط' : 'Installment Review'}</h2>
+                                <span className="text-sm font-bold text-amber-400 bg-amber-900/30 px-4 py-1.5 rounded-full">#{kycModalOrder.orderNumber}</span>
+                            </div>
+
+                            {/* Customer Info */}
+                            <div className="bg-gray-900 p-5 rounded-2xl mb-6">
+                                <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">{language === 'ar' ? 'بيانات العميل' : 'Customer Info'}</p>
+                                <p className="text-white font-bold">{kycModalOrder.customer?.name || kycModalOrder.shippingAddress?.name}</p>
+                                <p className="text-gray-400 text-sm">{kycModalOrder.customer?.email}</p>
+                                <p className="text-gray-400 text-sm">{kycModalOrder.customer?.phone || kycModalOrder.shippingAddress?.phone}</p>
+                            </div>
+
+                            {/* Deposit Info */}
+                            {kycModalOrder.depositAmount && (
+                                <div className="bg-emerald-900/20 p-5 rounded-2xl mb-6 border border-emerald-500/20">
+                                    <div className="flex justify-between items-center">
+                                        <div className="text-xs font-black text-gray-400 uppercase tracking-widest">
+                                            {language === 'ar' ? 'المقدم المدفوع' : 'Downpayment Paid'}
+                                        </div>
+                                        <div className="text-xl font-black text-emerald-400">
+                                            {Number(kycModalOrder.depositAmount).toFixed(2)} {t('currency')}
+                                        </div>
+                                    </div>
+                                    <div className="text-xs text-emerald-500/70 font-bold mt-1">
+                                        {language === 'ar' ? 'طريقة الدفع:' : 'Payment Method:'} {({
+                                            'card': language === 'ar' ? 'بطاقة بنكية' : 'Bank Card',
+                                            'wallet': language === 'ar' ? 'المحفظة' : 'Wallet',
+                                            'gift_card': language === 'ar' ? 'كارت هدية' : 'Gift Card',
+                                        } as any)[kycModalOrder.depositPaymentMethod] || kycModalOrder.depositPaymentMethod}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* KYC Documents */}
+                            {kycModalOrder.kycData && (
+                                <div className="space-y-4 mb-6">
+                                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest">{language === 'ar' ? 'المستندات المرفوعة' : 'Uploaded Documents'}</p>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        {(kycModalOrder.kycData.faceId || kycModalOrder.kycData.faceImage) && (
+                                            <div className="bg-gray-900 p-4 rounded-2xl border border-gray-800">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <ScanFace className="w-4 h-4 text-blue-400" />
+                                                    <span className="text-[10px] font-black text-white">{language === 'ar' ? 'صورة الوجه' : 'Face Image'}</span>
+                                                </div>
+                                                <img
+                                                    src={kycModalOrder.kycData.faceId || kycModalOrder.kycData.faceImage}
+                                                    alt="Face"
+                                                    className="w-full h-32 rounded-xl object-cover border-2 border-gray-700 cursor-zoom-in"
+                                                    onClick={() => window.open(kycModalOrder.kycData.faceId || kycModalOrder.kycData.faceImage, '_blank')}
+                                                />
+                                            </div>
+                                        )}
+
+                                        {(kycModalOrder.kycData.residencyDoc || kycModalOrder.kycData.idImage) && (
+                                            <div className="bg-gray-900 p-4 rounded-2xl border border-gray-800">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <CreditCard className="w-4 h-4 text-green-400" />
+                                                    <span className="text-[10px] font-black text-white">{language === 'ar' ? 'الهوية / الإقامة' : 'ID / Residency'}</span>
+                                                </div>
+                                                <img
+                                                    src={kycModalOrder.kycData.residencyDoc || kycModalOrder.kycData.idImage}
+                                                    alt="ID"
+                                                    className="w-full h-32 rounded-xl object-cover border-2 border-gray-700 cursor-zoom-in"
+                                                    onClick={() => window.open(kycModalOrder.kycData.residencyDoc || kycModalOrder.kycData.idImage, '_blank')}
+                                                />
+                                            </div>
+                                        )}
+
+                                        {(kycModalOrder.kycData.passportDoc || kycModalOrder.kycData.passportImage) && (
+                                            <div className="bg-gray-900 p-4 rounded-2xl border border-gray-800">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <FileText className="w-4 h-4 text-purple-400" />
+                                                    <span className="text-[10px] font-black text-white">{language === 'ar' ? 'الجواز' : 'Passport'}</span>
+                                                </div>
+                                                <img
+                                                    src={kycModalOrder.kycData.passportDoc || kycModalOrder.kycData.passportImage}
+                                                    alt="Passport"
+                                                    className="w-full h-32 rounded-xl object-cover border-2 border-gray-700 cursor-zoom-in"
+                                                    onClick={() => window.open(kycModalOrder.kycData.passportDoc || kycModalOrder.kycData.passportImage, '_blank')}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Manual KYC Data */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                                        {kycModalOrder.kycData.idNumber && (
+                                            <div className="bg-gray-900/50 p-4 rounded-2xl border border-gray-800/50">
+                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'رقم الهوية' : 'ID Number'}</p>
+                                                <p className="text-white font-black">{kycModalOrder.kycData.idNumber}</p>
+                                            </div>
+                                        )}
+                                        {kycModalOrder.kycData.passportNumber && (
+                                            <div className="bg-gray-900/50 p-4 rounded-2xl border border-gray-800/50">
+                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'رقم الجواز' : 'Passport Number'}</p>
+                                                <p className="text-white font-black">{kycModalOrder.kycData.passportNumber}</p>
+                                            </div>
+                                        )}
+                                        {kycModalOrder.kycData.dob && (
+                                            <div className="bg-gray-900/50 p-4 rounded-2xl border border-gray-800/50">
+                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'تاريخ الميلاد' : 'Date of Birth'}</p>
+                                                <p className="text-white font-black">{kycModalOrder.kycData.dob}</p>
+                                            </div>
+                                        )}
+                                        {kycModalOrder.kycData.residentialAddress && (
+                                            <div className="bg-gray-900/50 p-4 rounded-2xl border border-gray-800/50 sm:col-span-2">
+                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'عنوان السكن' : 'Residential Address'}</p>
+                                                <p className="text-white font-black">{kycModalOrder.kycData.residentialAddress}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Reject Reason */}
+                            <div className="mb-6">
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest block mb-2">{language === 'ar' ? 'سبب الرفض (اختياري)' : 'Reject Reason (optional)'}</label>
+                                <Textarea
+                                    value={rejectReason}
+                                    onChange={e => setRejectReason(e.target.value)}
+                                    placeholder={language === 'ar' ? 'اكتب سبب الرفض إن وجد...' : 'Write rejection reason if any...'}
+                                    className="bg-gray-900 border-gray-800 text-white rounded-2xl min-h-[80px]"
+                                />
+                            </div>
+
+                            {/* Actions */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <Button
+                                    onClick={() => kycReviewMutation.mutate({ orderId: kycModalOrder.id, action: 'reject', reason: rejectReason })}
+                                    disabled={kycReviewMutation.isPending}
+                                    className="h-14 rounded-2xl bg-red-600 hover:bg-red-500 font-black text-white flex gap-2"
+                                >
+                                    {kycReviewMutation.isPending ? <Loader2 className="animate-spin" /> : <XCircle className="w-5 h-5" />}
+                                    {language === 'ar' ? 'رفض الطلب' : 'Reject'}
+                                </Button>
+                                <Button
+                                    onClick={() => kycReviewMutation.mutate({ orderId: kycModalOrder.id, action: 'approve' })}
+                                    disabled={kycReviewMutation.isPending}
+                                    className="h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-500 font-black text-white flex gap-2"
+                                >
+                                    {kycReviewMutation.isPending ? <Loader2 className="animate-spin" /> : <CheckCircle className="w-5 h-5" />}
+                                    {language === 'ar' ? 'الموافقة على الطلب' : 'Approve'}
+                                </Button>
+                            </div>
+
+                            <Button variant="ghost" onClick={() => { setKycModalOrder(null); setRejectReason(''); }} className="w-full mt-4 text-gray-400 hover:text-white">
+                                {language === 'ar' ? 'إغلاق' : 'Close'}
+                            </Button>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 }

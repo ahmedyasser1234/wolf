@@ -15,6 +15,7 @@ export default function InstallmentOrdersTab() {
     const [kycModalOrder, setKycModalOrder] = useState<any | null>(null);
     const [rejectReason, setRejectReason] = useState('');
     const [filterStatus, setFilterStatus] = useState<'pending_review' | 'paid' | 'cancelled' | 'all'>('pending_review');
+    const [page, setPage] = useState(1);
 
     const confirmPaymentMutation = useMutation({
         mutationFn: async (orderId: number) => {
@@ -28,9 +29,16 @@ export default function InstallmentOrdersTab() {
         onError: () => toast.error(language === 'ar' ? 'فشلت عملية التأكيد' : 'Confirmation failed'),
     });
 
-    const { data: allOrders, isLoading, isFetching } = useQuery({
-        queryKey: ['admin', 'installment-orders'],
-        queryFn: async () => (await api.get('/admin/orders', { params: { limit: 200, isInstallmentOnly: true } })).data,
+    const { data: ordersResult, isLoading, isFetching } = useQuery({
+        queryKey: ['admin', 'installment-orders', filterStatus, page],
+        queryFn: async () => (await api.get('/admin/orders', {
+            params: {
+                limit: 10,
+                isInstallmentOnly: true,
+                status: filterStatus,
+                page
+            }
+        })).data,
     });
 
     const kycReviewMutation = useMutation({
@@ -49,27 +57,9 @@ export default function InstallmentOrdersTab() {
         onError: () => toast.error(language === 'ar' ? 'فشلت العملية' : 'Operation failed'),
     });
 
-    // Only show installment orders that have been paid (deposit confirmed)
-    const installmentOrders = (allOrders?.orders || []).filter((o: any) =>
-        o.installmentPlanId &&
-        !['pending_payment'].includes(o.paymentStatus)
-    );
-
-    const filteredOrders = filterStatus === 'all'
-        ? installmentOrders
-        : installmentOrders.filter((o: any) => {
-            if (filterStatus === 'pending_review') {
-                return ['pending_kyc_review', 'awaiting_deposit_payment'].includes(o.paymentStatus);
-            }
-            if (filterStatus === 'cancelled') {
-                return ['failed', 'rejected'].includes(o.paymentStatus) || o.status === 'cancelled';
-            }
-            return o.paymentStatus === filterStatus;
-        });
-
-    const reviewCount = installmentOrders.filter((o: any) =>
-        o.paymentStatus === 'pending_kyc_review'
-    ).length;
+    const installmentOrders = ordersResult?.orders || [];
+    const totalPages = ordersResult?.totalPages || 1;
+    const totalCount = ordersResult?.total || 0;
 
     const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
         pending_kyc_review: { label: language === 'ar' ? 'قيد المراجعة' : 'Under Review', color: 'bg-amber-500/20 text-amber-400 border border-amber-500/30' },
@@ -100,7 +90,7 @@ export default function InstallmentOrdersTab() {
                 <div>
                     <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white mb-1">{language === 'ar' ? 'طلبات التقسيط' : 'Installment Requests'}</h2>
                     <p className="text-gray-400 font-bold text-xs sm:text-sm flex items-center gap-2">
-                        {language === 'ar' ? `${reviewCount} طلب بانتظار المراجعة` : `${reviewCount} request(s) awaiting review`}
+                        {language === 'ar' ? `${totalCount} طلب متاح` : `${totalCount} request(s) found`}
                         {isFetching && !isLoading && <Loader2 className="w-3 h-3 animate-spin text-primary" />}
                     </p>
                 </div>
@@ -115,22 +105,22 @@ export default function InstallmentOrdersTab() {
                     ] as const).map(f => (
                         <button
                             key={f.key}
-                            onClick={() => setFilterStatus(f.key)}
+                            onClick={() => {
+                                setFilterStatus(f.key);
+                                setPage(1);
+                            }}
                             className={`px-4 py-2 rounded-xl text-sm font-black transition-all ${filterStatus === f.key
                                 ? 'bg-primary text-white shadow-lg'
                                 : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}
                         >
                             {f.label}
-                            {f.key === 'pending_review' && reviewCount > 0 && (
-                                <span className="ms-2 bg-amber-500 text-black text-xs rounded-full px-1.5 py-0.5">{reviewCount}</span>
-                            )}
                         </button>
                     ))}
                 </div>
             </div>
 
             {/* Orders List */}
-            {filteredOrders.length === 0 ? (
+            {installmentOrders.length === 0 ? (
                 <Card className="bg-background border border-gray-800 rounded-[2.5rem]">
                     <CardContent className="p-20 text-center">
                         <div className="w-20 h-20 bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -146,7 +136,7 @@ export default function InstallmentOrdersTab() {
                 </Card>
             ) : (
                 <div className="space-y-5">
-                    {filteredOrders.map((order: any) => (
+                    {installmentOrders.map((order: any) => (
                         <Card key={order.id} className="bg-background border border-gray-800 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden hover:border-gray-600 transition-all group">
                             <CardContent className="p-0">
                                 <div className="p-4 sm:p-6 flex flex-wrap items-center justify-between gap-5">
@@ -195,6 +185,31 @@ export default function InstallmentOrdersTab() {
                             </CardContent>
                         </Card>
                     ))}
+
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-center gap-4 mt-8 pb-10">
+                            <Button
+                                variant="outline"
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1 || isFetching}
+                                className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700 disabled:opacity-50 rounded-xl px-6"
+                            >
+                                {language === 'ar' ? 'السابق' : 'Previous'}
+                            </Button>
+                            <span className="text-gray-400 font-bold">
+                                {language === 'ar' ? `صفحة ${page} من ${totalPages}` : `Page ${page} of ${totalPages}`}
+                            </span>
+                            <Button
+                                variant="outline"
+                                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                disabled={page === totalPages || isFetching}
+                                className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700 disabled:opacity-50 rounded-xl px-6"
+                            >
+                                {language === 'ar' ? 'التالي' : 'Next'}
+                            </Button>
+                        </div>
+                    )}
                 </div>
             )}
 

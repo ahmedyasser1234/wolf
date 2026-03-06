@@ -409,7 +409,9 @@ export const coupons = pgTable(
         id: serial("id").primaryKey(),
         vendorId: integer("vendorId"),
         code: text("code").notNull().unique(),
-        discountPercent: integer("discountPercent").notNull(),
+        type: text("type").default("percentage").notNull(), // 'percentage' | 'fixed'
+        discountPercent: integer("discountPercent"),
+        discountAmount: doublePrecision("discountAmount"),
         maxUses: integer("maxUses"),
         usedCount: integer("usedCount").default(0),
         expiresAt: timestamp("expiresAt"),

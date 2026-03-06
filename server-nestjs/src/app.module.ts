@@ -31,6 +31,7 @@ import { WalletsModule } from './wallets/wallets.module';
 import { PointsModule } from './points/points.module';
 import { GiftCardsModule } from './gift-cards/gift-cards.module';
 import { InstallmentsModule } from './installments/installments.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { InstallmentsModule } from './installments/installments.module';
     PointsModule,
     GiftCardsModule,
     InstallmentsModule,
+    MailModule,
 
     ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([{

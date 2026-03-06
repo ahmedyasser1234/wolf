@@ -328,17 +328,27 @@ export class AuthService {
         return { token, user: user[0] };
     }
     async updateProfile(userId: number, data: any) {
-        // If email is provided, check for uniqueness
+        // If email is provided, check for uniqueness ensuring it's not the current user's email
         if (data.email) {
             const email = data.email.toLowerCase();
-            const existingUser = await this.databaseService.db
+
+            // Get current user to compare emails
+            const [currentUser] = await this.databaseService.db
                 .select()
                 .from(users)
-                .where(sql`lower(${users.email}) = ${email} AND ${users.id} != ${userId}`)
+                .where(eq(users.id, userId))
                 .limit(1);
 
-            if (existingUser.length > 0) {
-                throw new UnauthorizedException('Email already in use');
+            if (currentUser && currentUser.email?.toLowerCase() !== email) {
+                const existingUser = await this.databaseService.db
+                    .select()
+                    .from(users)
+                    .where(sql`lower(${users.email}) = ${email} AND ${users.id} != ${userId}`)
+                    .limit(1);
+
+                if (existingUser.length > 0) {
+                    throw new UnauthorizedException('Email already in use');
+                }
             }
             data.email = email;
         }
