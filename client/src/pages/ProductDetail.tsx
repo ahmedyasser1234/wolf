@@ -126,8 +126,8 @@ function OffersDisplay({ productId, language }: { productId: number, language: s
               </div>
             </div>
             <div className="text-center bg-white/50 p-2 rounded-lg">
-              <span className="block text-xs text-gray-500 font-bold">{language === 'ar' ? "ينتهي في" : "Ends on"}</span>
-              <span className="font-mono -primary font-bold">{new Date(offer.endDate).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-GB')}</span>
+              <span className="block text-xs text-slate-900 font-bold">{language === 'ar' ? "ينتهي في" : "Ends on"}</span>
+              <span className="font-mono text-slate-900 font-bold">{new Date(offer.endDate).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-GB')}</span>
             </div>
           </div>
         ))}
@@ -422,14 +422,14 @@ export default function ProductDetail() {
               </div>
 
               {/* Enhanced Thumbnails */}
-              <div className="flex gap-3 md:gap-6 justify-start scroll-smooth overflow-x-auto py-2 md:py-6 w-full no-scrollbar pb-6 md:pb-8 touch-pan-x px-1">
+              <div className="flex flex-wrap md:flex-nowrap gap-2 sm:gap-3 md:gap-6 justify-start md:overflow-x-auto py-2 md:py-6 w-full no-scrollbar pb-6 md:pb-8 touch-pan-x px-1">
                 {galleryImages.map((img: string, idx: number) => (
                   <button
                     key={`thumb-${idx}`}
                     onClick={() => {
                       setSelectedImage(idx);
                     }}
-                    className={`relative w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 rounded-xl sm:rounded-2xl md:rounded-3xl overflow-hidden border-2 md:border-4 transition-all duration-500 shrink-0 ${selectedImage === idx ? "border-primary scale-105 md:scale-110 shadow-lg md:shadow-2xl bg-white/10 ring-2 ring-primary/20" : "border-transparent opacity-60 hover:opacity-100 scale-100 hover:scale-105"
+                    className={`relative w-[calc(25%-8px)] sm:w-[calc(25%-12px)] md:w-28 md:h-28 aspect-square rounded-xl sm:rounded-2xl md:rounded-3xl overflow-hidden border-2 md:border-4 transition-all duration-500 shrink-0 md:shrink-0 ${selectedImage === idx ? "border-primary scale-105 md:scale-110 shadow-lg md:shadow-2xl bg-white/10 ring-2 ring-primary/20" : "border-transparent opacity-60 hover:opacity-100 scale-100 hover:scale-105"
                       }`}
                   >
                     <img src={img} alt="" className="w-full h-full object-cover"
@@ -448,7 +448,7 @@ export default function ProductDetail() {
                       setSelectedColor(color);
                       setSelectedImage(0);
                     }}
-                    className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 rounded-xl sm:rounded-2xl md:rounded-3xl overflow-hidden border-2 md:border-4 border-transparent opacity-60 hover:opacity-100 scale-100 hover:scale-105 transition-all duration-500 shrink-0"
+                    className="relative w-[calc(25%-8px)] sm:w-[calc(25%-12px)] md:w-28 md:h-28 aspect-square rounded-xl sm:rounded-2xl md:rounded-3xl overflow-hidden border-2 md:border-4 border-transparent opacity-60 hover:opacity-100 scale-100 hover:scale-105 transition-all duration-500 shrink-0 md:shrink-0"
                   >
                     <img src={color.images?.[0] || product.images?.[0]} alt={color.colorName} className="w-full h-full object-cover"
                       onError={(e: any) => {

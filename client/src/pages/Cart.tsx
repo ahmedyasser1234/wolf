@@ -134,7 +134,7 @@ export default function Cart() {
 
     if (selectedMethod === 'cash') {
       localStorage.removeItem('wolf_payment_intent');
-      setLocation(`/checkout${appliedCoupon ? `?coupon=${appliedCoupon.code}` : ''}`);
+      setLocation(`/checkout`);
     } else {
       const plan = (installmentPlans as any[])?.find(p => p.id === selectedPlanId);
       if (plan) {
@@ -153,8 +153,7 @@ export default function Cart() {
           total: totalWithInterest,
           financedAmount: totalWithInterest - downPayment,
           minQuantity: plan.minQuantity,
-          maxQuantity: plan.maxQuantity,
-          coupon: appliedCoupon?.code
+          maxQuantity: plan.maxQuantity
         }));
         setLocation('/checkout');
       }
@@ -162,20 +161,6 @@ export default function Cart() {
     setIsSelectionModalOpen(false);
   };
 
-  const [couponCode, setCouponCode] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
-
-  const validateCoupon = useMutation({
-    mutationFn: (code: string) => endpoints.coupons.validate(code),
-    onSuccess: (data) => {
-      setAppliedCoupon(data);
-      toast.success(language === 'ar' ? "تم تطبيق كود الخصم بنجاح" : "Coupon applied successfully");
-    },
-    onError: (err: any) => {
-      setAppliedCoupon(null);
-      toast.error(err.response?.data?.message || (language === 'ar' ? "كود الخصم غير صالح" : "Invalid coupon code"));
-    }
-  });
 
   const clearCartMutation = useMutation({
     mutationFn: () => endpoints.cart.clear(),
@@ -275,21 +260,7 @@ export default function Cart() {
   }
 
 
-  // Calculate discount from Coupon
-  let couponDiscount = 0;
-  if (appliedCoupon) {
-    const vendorItems = items.filter((item: any) => item.product?.vendorId === appliedCoupon.vendorId);
-    const vendorSubtotal = vendorItems.reduce((total: number, item: any) => {
-      return total + (Number(item.quantity) * Number(item.product?.price || 0));
-    }, 0);
-    if (appliedCoupon.type === 'fixed') {
-      couponDiscount = Math.min(vendorSubtotal, Number(appliedCoupon.discountAmount || 0));
-    } else {
-      couponDiscount = (vendorSubtotal * (Number(appliedCoupon.discountPercent) || 0)) / 100;
-    }
-  }
-
-  const totalDiscount = automaticDiscount + couponDiscount;
+  const totalDiscount = automaticDiscount;
 
   // Calculate Shipping
   const { data: vendorsData } = useQuery({
@@ -465,51 +436,6 @@ export default function Cart() {
                     <span className="text-lg text-gray-500 font-bold">{language === 'ar' ? 'تكلفة الشحن' : 'Shipping Cost'}</span>
                   </div>
 
-                  {/* Promo Code Input */}
-                  <div className="pt-4">
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => validateCoupon.mutate(couponCode)}
-                        disabled={!couponCode || validateCoupon.isPending || !!appliedCoupon}
-                        className="shrink-0 bg-gray-900 text-white rounded-xl hover:bg-gray-800"
-                      >
-                        {validateCoupon.isPending ? (language === 'ar' ? "جاري التحقق..." : "Verifying...") : (appliedCoupon ? (language === 'ar' ? "تم التطبيق" : "Applied") : (language === 'ar' ? "تطبيق" : "Apply"))}
-                      </Button>
-                      <input
-                        type="text"
-                        placeholder={language === 'ar' ? "كود الخصم" : "Promo Code"}
-                        value={appliedCoupon ? appliedCoupon.code : couponCode}
-                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                        disabled={!!appliedCoupon}
-                        className={`w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 ${language === 'ar' ? 'text-right' : 'text-left'} focus:outline-none focus:ring-primary/40 text-black`}
-                      />
-                    </div>
-                    {/* Discounts Display */}
-                    {(appliedCoupon || automaticDiscount > 0) && (
-                      <div className="space-y-1 mt-2">
-                        {appliedCoupon && (
-                          <div className="flex justify-between items-center text-green-600">
-                            <span className="font-bold">-{formatPrice(couponDiscount)}</span>
-                            <span className="text-sm">
-                              {language === 'ar'
-                                ? `خصم الكوبون (${appliedCoupon.type === 'fixed' ? formatPrice(appliedCoupon.discountAmount) : `${appliedCoupon.discountPercent}%`})`
-                                : `Coupon Discount (${appliedCoupon.type === 'fixed' ? formatPrice(appliedCoupon.discountAmount) : `${appliedCoupon.discountPercent}%`})`}
-                            </span>
-                          </div>
-                        )}
-                        {automaticDiscount > 0 && (
-                          <div className="flex justify-between items-center text-blue-600">
-                            <span className="font-bold">-{formatPrice(automaticDiscount)}</span>
-                            <span className="text-sm">{language === 'ar' ? 'خصم العروض التلقائي' : 'Automatic Offer Discount'}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {appliedCoupon && (
-                      <button onClick={() => { setAppliedCoupon(null); setCouponCode(""); }} className="text-xs text-red-500 hover:underline mt-1">{language === 'ar' ? 'إزالة الكوبون' : 'Remove Coupon'}</button>
-                    )}
-                  </div>
                 </div>
 
                 <div className="flex justify-between items-center mb-12">

@@ -637,19 +637,31 @@ export default function Checkout() {
                 const intentRaw = localStorage.getItem('wolf_payment_intent');
                 if (!intentRaw) return null;
                 const intent = JSON.parse(intentRaw);
+
+                // Recalculate based on current finalTotal (which accounts for applied coupon)
+                const interestAmount = finalTotal * (intent.interestRate || 0) / 100;
+                const totalWithInterest = finalTotal + interestAmount;
+                const dpPct = intent.downPaymentPct || (intent.downPayment / intent.total * 100) || 0;
+                const downPayment = totalWithInterest * dpPct / 100;
+                const financedAmount = totalWithInterest - downPayment;
+
                 return (
                   <div className="mt-6 space-y-3 bg-purple-50 p-6 rounded-[2rem] border-2 border-purple-100">
                     <div className="flex justify-between items-center text-sm font-bold text-purple-700">
-                      <span>{formatPrice(intent.total)}</span>
+                      <span>{formatPrice(totalWithInterest)}</span>
                       <span>الإجمالي بالفوائد</span>
                     </div>
                     <div className="flex justify-between items-center text-sm font-black text-purple-900 pt-3 border-t border-purple-200">
-                      <span>{formatPrice(intent.downPayment)}</span>
+                      <span>{formatPrice(downPayment)}</span>
                       <span>الدفعة الأولى (تُدفع الآن)</span>
                     </div>
                     <div className="flex justify-between items-center text-xs font-bold text-purple-500">
-                      <span>{formatPrice(intent.financedAmount)}</span>
+                      <span>{formatPrice(financedAmount)}</span>
                       <span>المبلغ المتبقي للأقساط</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[10px] text-purple-400 font-bold italic">
+                      <span>{formatPrice(financedAmount / intent.months)} / شهر</span>
+                      <span>القسط الشهري</span>
                     </div>
                   </div>
                 );

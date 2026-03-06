@@ -87,7 +87,133 @@ export default function OrderDetails() {
 
                 {/* Main Content */}
                 <div className="lg:col-span-2 space-y-6">
-                    {/* ... tracker and items ... */}
+                    {/* Order Tracker */}
+                    <Card className="border-0 shadow-sm overflow-hidden">
+                        <CardHeader className="bg-white border-b border-gray-50 py-6">
+                            <CardTitle className="text-xl font-black flex items-center gap-3">
+                                <Clock className="w-6 h-6 text-primary" />
+                                {language === 'ar' ? 'تتبع مسار الطلب' : 'Order Tracking'}
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-8 sm:p-12">
+                            {isCancelled ? (
+                                <div className="flex flex-col items-center justify-center py-10 text-center">
+                                    <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center text-red-500 mb-4">
+                                        <XCircle className="w-10 h-10" />
+                                    </div>
+                                    <h3 className="text-2xl font-black text-red-600 mb-2">{language === 'ar' ? 'تم إلغاء الطلب' : 'Order Cancelled'}</h3>
+                                    <p className="text-gray-500 font-bold">{language === 'ar' ? 'عذراً، هذا الطلب ملغى ولا يمكن تتبعه.' : 'Sorry, this order is cancelled and cannot be tracked.'}</p>
+                                </div>
+                            ) : (
+                                <div className="relative">
+                                    {/* Progress Line */}
+                                    <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-100 -translate-y-1/2 hidden md:block">
+                                        <div
+                                            className="h-full bg-primary transition-all duration-1000 ease-in-out"
+                                            style={{ width: `${Math.max(0, (currentStatus.step - 1) / 3 * 100)}%` }}
+                                        />
+                                    </div>
+
+                                    {/* Vertical line for mobile */}
+                                    <div className="absolute top-0 right-6 w-1 h-full bg-gray-100 md:hidden">
+                                        <div
+                                            className="w-full bg-primary transition-all duration-1000 ease-in-out"
+                                            style={{ height: `${Math.max(0, (currentStatus.step - 1) / 3 * 100)}%` }}
+                                        />
+                                    </div>
+
+                                    <div className="relative flex flex-col md:flex-row justify-between items-end md:items-center gap-12 md:gap-4">
+                                        {Object.entries(ORDER_STATUSES)
+                                            .filter(([key]) => key !== 'cancelled')
+                                            .sort((a, b) => a[1].step - b[1].step)
+                                            .map(([key, status], index) => {
+                                                const isActive = currentStatus.step >= status.step;
+                                                const isCurrent = currentStatus.step === status.step;
+                                                const Icon = status.icon;
+
+                                                return (
+                                                    <div key={key} className="flex md:flex-col items-center gap-6 md:gap-4 group relative w-full md:w-auto">
+                                                        <div className={`
+                                                            w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center transition-all duration-500 z-10
+                                                            ${isActive ? 'bg-primary text-white shadow-xl shadow-primary/20 scale-110' : 'bg-white text-gray-300 border-2 border-gray-100'}
+                                                            ${isCurrent ? 'ring-4 ring-primary/20 animate-pulse' : ''}
+                                                        `}>
+                                                            <Icon className="w-6 h-6 sm:w-8 sm:h-8" />
+                                                        </div>
+                                                        <div className={`flex flex-col md:items-center ${language === 'ar' ? 'text-right md:text-center' : 'text-left md:text-center'} flex-1 md:flex-none`}>
+                                                            <span className={`text-sm sm:text-base font-black transition-colors duration-500 ${isActive ? 'text-gray-900' : 'text-gray-400'}`}>
+                                                                {language === 'ar' ? status.labelAr : status.labelEn}
+                                                            </span>
+                                                            {isCurrent && (
+                                                                <span className="text-[10px] sm:text-xs text-primary font-bold animate-bounce mt-1">
+                                                                    {language === 'ar' ? 'الحالة الحالية' : 'Current Status'}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                    </div>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Order Items */}
+                    <Card className="border-0 shadow-sm overflow-hidden">
+                        <CardHeader className="bg-white border-b border-gray-50 py-6">
+                            <CardTitle className="text-xl font-black flex items-center gap-3">
+                                <ShoppingBag className="w-6 h-6 text-primary" />
+                                {language === 'ar' ? 'المنتجات المطلوبة' : 'Order Items'}
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            <div className="divide-y divide-gray-50">
+                                {order.items?.map((item: any) => (
+                                    <div key={item.id} className="p-6 sm:p-8 flex items-center gap-6 hover:bg-gray-50 transition-colors group">
+                                        <div className="relative shrink-0">
+                                            <img
+                                                src={(item.product?.images && item.product.images[0]) || (item.product?.image) || "https://images.unsplash.com/photo-1594465919760-441fe5908ab0?w=200&h=200&fit=crop"}
+                                                alt={language === 'ar' ? item.product?.nameAr : item.product?.nameEn}
+                                                className="w-20 h-20 sm:w-28 sm:h-28 rounded-2xl object-cover shadow-lg group-hover:scale-105 transition-transform duration-500"
+                                            />
+                                            <div className="absolute -top-3 -right-3 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-xs font-black ring-4 ring-white shadow-lg">
+                                                {item.quantity}
+                                            </div>
+                                        </div>
+                                        <div className="grow min-w-0">
+                                            <h4 className="text-lg sm:text-xl font-black text-gray-900 mb-1 truncate">
+                                                {language === 'ar' ? item.product?.nameAr : item.product?.nameEn}
+                                            </h4>
+                                            <p className="text-sm text-gray-400 font-bold mb-3">
+                                                {language === 'ar' ? item.vendor?.storeNameAr : item.vendor?.storeNameEn}
+                                            </p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {item.size && (
+                                                    <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-lg text-[10px] sm:text-xs font-bold border border-gray-200 uppercase">
+                                                        {language === 'ar' ? 'المقاس:' : 'Size:'} {item.size}
+                                                    </span>
+                                                )}
+                                                {item.color && (
+                                                    <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-lg text-[10px] sm:text-xs font-bold border border-gray-200">
+                                                        {language === 'ar' ? 'اللون:' : 'Color:'} {item.color}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="shrink-0 text-right">
+                                            <div className="text-lg sm:text-2xl font-black text-primary">
+                                                {formatPrice(item.price * item.quantity)}
+                                            </div>
+                                            <div className="text-[10px] sm:text-xs text-gray-400 font-bold">
+                                                {formatPrice(item.price)} × {item.quantity}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
 
                 {/* Sidebar Info */}
@@ -95,8 +221,58 @@ export default function OrderDetails() {
 
                     {/* Invoice Summary */}
                     <Card className="border-0 shadow-sm" ref={invoiceRef}>
-                        <CardHeader className="py-4">
+                        <CardHeader className="py-4 flex flex-row items-center justify-between space-y-0">
                             <CardTitle className="text-base sm:text-lg">{language === 'ar' ? 'ملخص الفاتورة' : 'Invoice Summary'}</CardTitle>
+                            {user?.role === 'admin' && order.kycData && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                        const kyc = order.kycData;
+                                        const content = `
+KYC DATA EXPORT - ORDER #${order.orderNumber}
+-------------------------------------------
+CUSTOMER INFORMATION:
+Name: ${order.customer?.name || 'N/A'}
+Email: ${order.customer?.email || 'N/A'}
+Phone: ${order.customer?.phone || 'N/A'}
+
+ORDER INFORMATION:
+Order ID: ${order.id}
+Order Number: ${order.orderNumber}
+Date: ${new Date(order.createdAt).toLocaleString()}
+
+VERIFICATION DATA (KYC):
+ID Number: ${kyc.idNumber || 'N/A'}
+Passport Number: ${kyc.passportNumber || 'N/A'}
+Date of Birth: ${kyc.dob || 'N/A'}
+Residential Address: ${kyc.residentialAddress || 'N/A'}
+
+DOCUMENTS (CLICK TO VIEW):
+Face ID Image: ${kyc.faceIdImage || 'N/A'}
+ID Card Image: ${kyc.residencyImage || 'N/A'}
+Passport Image: ${kyc.passportImage || 'N/A'}
+
+-------------------------------------------
+Generated at: ${new Date().toLocaleString()}
+                                        `.trim();
+
+                                        const blob = new Blob([content], { type: 'text/plain' });
+                                        const url = window.URL.createObjectURL(blob);
+                                        const link = document.createElement('a');
+                                        link.href = url;
+                                        link.setAttribute('download', `KYC_Order_${order.orderNumber}.txt`);
+                                        document.body.appendChild(link);
+                                        link.click();
+                                        link.remove();
+                                        toast.success(language === 'ar' ? "تم تحميل بيانات التحقق بنجاح" : "KYC data downloaded successfully");
+                                    }}
+                                    className="h-8 px-2 text-primary hover:text-primary hover:bg-primary/10 font-bold gap-2"
+                                >
+                                    <Download className="w-4 h-4" />
+                                    <span className="text-xs">{language === 'ar' ? 'تحميل بيانات التحقق' : 'Download KYC'}</span>
+                                </Button>
+                            )}
                         </CardHeader>
                         <CardContent className="space-y-3 sm:space-y-4">
                             <div className="flex justify-between text-gray-600 text-sm sm:text-base">

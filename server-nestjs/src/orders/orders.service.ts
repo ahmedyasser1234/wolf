@@ -22,14 +22,46 @@ export class OrdersService {
         private mailService: MailService
     ) { }
 
-    async findAll(customerId: number, limit = 20, offset = 0) {
-        return await this.databaseService.db
+    async findAll(customerId: number, page = 1, limit = 10, status?: string) {
+        const offset = (page - 1) * limit;
+
+        // Base conditions: must belong to customer
+        let conditions = [eq(orders.customerId, customerId)];
+
+        // Exclude specific installment placeholder statuses (moved from client-side logic)
+        conditions.push(sql`NOT (${orders.paymentStatus} IN ('awaiting_deposit_payment', 'pending_payment') AND ${orders.installmentPlanId} IS NOT NULL)`);
+
+        // Filter by status if provided and not "all"
+        if (status && status !== 'all') {
+            conditions.push(eq(orders.status, status));
+        }
+
+        const whereClause = and(...conditions);
+
+        const [totalCount] = await this.databaseService.db
+            .select({ count: sql<number>`count(*)` })
+            .from(orders)
+            .where(whereClause);
+
+        const data = await this.databaseService.db
             .select()
             .from(orders)
-            .where(eq(orders.customerId, customerId))
+            .where(whereClause)
             .limit(limit)
             .offset(offset)
             .orderBy(desc(orders.createdAt));
+
+        const total = Number(totalCount?.count) || 0;
+
+        return {
+            data,
+            meta: {
+                total,
+                page,
+                limit,
+                lastPage: Math.ceil(total / limit)
+            }
+        };
     }
 
     async findOne(id: number) {

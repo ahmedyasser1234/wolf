@@ -50,12 +50,17 @@ export default function Orders() {
   const { language, t, formatPrice } = useLanguage();
   const { user } = useAuth();
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [page, setPage] = useState(1);
+  const limit = 10;
 
-  const { data: orders, isLoading } = useQuery({
-    queryKey: ['orders'],
-    queryFn: async () => await endpoints.orders.list(),
+  const { data: ordersData, isLoading } = useQuery({
+    queryKey: ['orders', page, selectedStatus],
+    queryFn: async () => await endpoints.orders.list({ page, limit, status: selectedStatus }),
     enabled: !!user
   });
+
+  const orders = ordersData?.data || [];
+  const meta = ordersData?.meta;
 
   const payDownPaymentMutation = useMutation({
     mutationFn: async (orderId: number) => {
@@ -74,13 +79,7 @@ export default function Orders() {
     }
   });
 
-  const filteredOrders = orders?.filter((order: any) => {
-    // Hide placeholder installment orders (Awaiting Deposit)
-    if (order.installmentPlanId && ['awaiting_deposit_payment', 'pending_payment'].includes(order.paymentStatus)) return false;
-
-    if (selectedStatus === "all") return true;
-    return order.status === selectedStatus;
-  });
+  const filteredOrders = orders;
 
   const PolicySection = () => (
     <div className="mb-12">
@@ -229,7 +228,10 @@ export default function Orders() {
                 return (
                   <button
                     key={status.id}
-                    onClick={() => setSelectedStatus(status.id)}
+                    onClick={() => {
+                      setSelectedStatus(status.id);
+                      setPage(1);
+                    }}
                     className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300 ${isActive
                       ? 'bg-primary text-background shadow-lg scale-105'
                       : 'text-gray-500 hover:text-gray-900 hover:bg-white'}`}
@@ -343,6 +345,44 @@ export default function Orders() {
                   </Card>
                 ))}
               </div>
+
+              {/* Pagination Controls */}
+            {meta && meta.lastPage > 1 && (
+              <div className="flex justify-center items-center gap-4 mt-12 pb-10">
+                <Button
+                  variant="outline"
+                  disabled={page <= 1}
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  className="rounded-xl border-gray-200 font-bold"
+                >
+                  {language === 'ar' ? 'السابق' : 'Previous'}
+                </Button>
+
+                <div className="flex items-center gap-2">
+                  {[...Array(meta.lastPage)].map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setPage(i + 1)}
+                      className={`w-10 h-10 rounded-xl font-bold transition-all ${page === i + 1
+                          ? 'bg-primary text-white shadow-lg'
+                          : 'text-gray-400 hover:bg-gray-100'
+                        }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+
+                <Button
+                  variant="outline"
+                  disabled={page >= meta.lastPage}
+                  onClick={() => setPage(p => Math.min(meta.lastPage, p + 1))}
+                  className="rounded-xl border-gray-200 font-bold"
+                >
+                  {language === 'ar' ? 'التالي' : 'Next'}
+                </Button>
+              </div>
+            )}
             )}
           </div>
         )}

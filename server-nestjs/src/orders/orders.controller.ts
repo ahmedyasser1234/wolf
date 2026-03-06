@@ -42,9 +42,14 @@ export class OrdersController {
     }
 
     @Get()
-    async findAll(@Req() req: Request) {
+    async findAll(
+        @Req() req: Request,
+        @Query('page', new ParseIntPipe({ optional: true })) page: number = 1,
+        @Query('limit', new ParseIntPipe({ optional: true })) limit: number = 10,
+        @Query('status') status?: string,
+    ) {
         const userId = await this.getUserId(req);
-        return this.ordersService.findAll(userId);
+        return this.ordersService.findAll(userId, page, limit, status);
     }
 
     @Get(':id')
