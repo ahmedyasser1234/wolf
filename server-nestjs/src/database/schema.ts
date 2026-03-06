@@ -735,3 +735,19 @@ export const installmentPayments = pgTable("installmentPayments", {
 
 export type InstallmentPayment = typeof installmentPayments.$inferSelect;
 export type InsertInstallmentPayment = typeof installmentPayments.$inferInsert;
+
+export const otpVerifications = pgTable("otpVerifications", {
+    id: serial("id").primaryKey(),
+    email: text("email").notNull(),
+    code: text("code").notNull(),
+    type: text("type").notNull(), // 'registration', 'password_reset'
+    expiresAt: timestamp("expiresAt").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => ({
+    emailIdx: index("otp_verifications_email_idx").on(table.email),
+    codeIdx: index("otp_verifications_code_idx").on(table.code),
+    typeIdx: index("otp_verifications_type_idx").on(table.type),
+}));
+
+export type OtpVerification = typeof otpVerifications.$inferSelect;
+export type InsertOtpVerification = typeof otpVerifications.$inferInsert;
