@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLanguage } from "@/lib/i18n";
 import { endpoints } from "@/lib/api";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -30,91 +31,189 @@ export default function OrderDetailsView({ orderId, onClose }: OrderDetailsViewP
         window.print();
     };
 
-    const handleDownloadFullOrderData = () => {
-        if (!order) return;
+    const handleDownloadFullOrderData = (order: any) => {
         const customerName = order.customer?.name || order.shippingAddress?.name || 'Guest';
         const customerPhone = order.customer?.phone || order.shippingAddress?.phone || 'N/A';
         const customerEmail = order.customer?.email || 'N/A';
+        const isAr = language === 'ar';
 
-        let content = `========================================\n`;
-        content += `${language === 'ar' ? 'بيانات الطلب رقم' : 'Order Details #'}: ${order.orderNumber}\n`;
-        content += `========================================\n\n`;
+        const htmlContent = `
+<!DOCTYPE html>
+<html lang="${isAr ? 'ar' : 'en'}" dir="${isAr ? 'rtl' : 'ltr'}">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Report #${order.orderNumber}</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; color: #333; margin: 0; padding: 40px; }
+        .container { max-width: 800px; margin: auto; background: #fff; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 30px; }
+        .header h1 { margin: 0; color: #e91e63; font-size: 28px; }
+        .header .order-no { font-weight: bold; color: #888; }
+        .section { margin-bottom: 30px; }
+        .section-title { font-size: 18px; font-weight: bold; color: #e91e63; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 15px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .field { margin-bottom: 10px; }
+        .label { font-size: 12px; color: #888; font-weight: bold; text-transform: uppercase; display: block; }
+        .value { font-size: 16px; font-weight: bold; }
+        .kyc-images { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px; }
+        .kyc-item { border: 1px solid #eee; padding: 10px; border-radius: 10px; text-align: center; }
+        .kyc-item img { max-width: 100%; height: auto; border-radius: 5px; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { background: #f8f9fa; text-align: ${isAr ? 'right' : 'left'}; padding: 12px; font-size: 13px; color: #888; border-bottom: 2px solid #eee; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
+        .product-img { width: 50px; height: 60px; object-fit: cover; border-radius: 5px; display: block; }
+        .total-row { background: #fdf2f5; font-weight: bold; font-size: 18px; color: #e91e63; }
+        .footer { text-align: center; margin-top: 50px; font-size: 12px; color: #aaa; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>${isAr ? 'تقرير الطلب' : 'Order Report'}</h1>
+            <div class="order-no">#${order.orderNumber}</div>
+        </div>
 
-        content += `${language === 'ar' ? 'بيانات العميل' : 'Customer Info'}:\n`;
-        content += `-----------------\n`;
-        content += `${language === 'ar' ? 'الاسم' : 'Name'}: ${customerName}\n`;
-        content += `${language === 'ar' ? 'الهاتف' : 'Phone'}: ${customerPhone}\n`;
-        content += `${language === 'ar' ? 'البريد' : 'Email'}: ${customerEmail}\n\n`;
+        <div class="section">
+            <div class="section-title">${isAr ? 'بيانات العميل' : 'Customer Details'}</div>
+            <div class="grid">
+                <div class="field">
+                    <span class="label">${isAr ? 'الاسم' : 'Name'}</span>
+                    <span class="value">${customerName}</span>
+                </div>
+                <div class="field">
+                    <span class="label">${isAr ? 'الهاتف' : 'Phone'}</span>
+                    <span class="value">${customerPhone}</span>
+                </div>
+                <div class="field">
+                    <span class="label">${isAr ? 'البريد' : 'Email'}</span>
+                    <span class="value">${customerEmail}</span>
+                </div>
+                <div class="field">
+                    <span class="label">${isAr ? 'تاريخ الطلب' : 'Order Date'}</span>
+                    <span class="value">${new Date(order.createdAt).toLocaleString(isAr ? 'ar-EG' : 'en-US')}</span>
+                </div>
+            </div>
+        </div>
 
-        const downloadFile = (dataUrl: string, filename: string) => {
-            if (!dataUrl) return;
-            const link = document.createElement('a');
-            link.href = dataUrl;
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        };
+        ${order.kycData ? `
+        <div class="section">
+            <div class="section-title">${isAr ? 'بيانات التحقق (KYC)' : 'Verification (KYC)'}</div>
+            <div class="grid">
+                <div class="field">
+                    <span class="label">${isAr ? 'رقم الهوية' : 'ID Number'}</span>
+                    <span class="value">${order.kycData.idNumber || 'N/A'}</span>
+                </div>
+                <div class="field">
+                    <span class="label">${isAr ? 'رقم الباسبور' : 'Passport Number'}</span>
+                    <span class="value">${order.kycData.passportNumber || 'N/A'}</span>
+                </div>
+                <div class="field">
+                    <span class="label">${isAr ? 'تاريخ الميلاد' : 'DOB'}</span>
+                    <span class="value">${order.kycData.dob || 'N/A'}</span>
+                </div>
+                <div class="field">
+                    <span class="label">${isAr ? 'عنوان السكن' : 'Residential Address'}</span>
+                    <span class="value">${order.kycData.residentialAddress || 'N/A'}</span>
+                </div>
+            </div>
+            
+            <div class="kyc-images">
+                ${(order.kycData.faceId || order.kycData.faceImage) ? `
+                <div class="kyc-item">
+                    <span class="label">${isAr ? 'صورة الوجه' : 'Face ID'}</span>
+                    <img src="${order.kycData.faceId || order.kycData.faceImage}" alt="Face ID">
+                </div>` : ''}
+                
+                ${(order.kycData.residencyDoc || order.kycData.idImage) ? `
+                <div class="kyc-item">
+                    <span class="label">${isAr ? 'الهوية / الإقامة' : 'ID / Residency'}</span>
+                    <img src="${order.kycData.residencyDoc || order.kycData.idImage}" alt="ID Document">
+                </div>` : ''}
+                
+                ${(order.kycData.passportDoc || order.kycData.passportImage) ? `
+                <div class="kyc-item" style="grid-column: span 2;">
+                    <span class="label">${isAr ? 'الجواز / الملف الإضافي' : 'Passport / Extra'}</span>
+                    <img src="${order.kycData.passportDoc || order.kycData.passportImage}" alt="Passport">
+                </div>` : ''}
+            </div>
+        </div>
+        ` : ''}
 
-        if (order.kycData) {
-            content += `${language === 'ar' ? 'بيانات التحقق (KYC)' : 'Verification (KYC)'}:\n`;
-            content += `-----------------\n`;
-            content += `${language === 'ar' ? 'رقم الهوية' : 'ID Number'}: ${order.kycData.idNumber || 'N/A'}\n`;
-            content += `${language === 'ar' ? 'رقم الباسبور' : 'Passport Number'}: ${order.kycData.passportNumber || 'N/A'}\n`;
-            content += `${language === 'ar' ? 'تاريخ الميلاد' : 'DOB'}: ${order.kycData.dob || 'N/A'}\n`;
-            content += `${language === 'ar' ? 'عنوان السكن' : 'Address'}: ${order.kycData.residentialAddress || 'N/A'}\n\n`;
+        <div class="section">
+            <div class="section-title">${isAr ? 'المنتجات المطلوبة' : 'Ordered Products'}</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>${isAr ? 'الصورة' : 'Img'}</th>
+                        <th>${isAr ? 'المنتج' : 'Product'}</th>
+                        <th>${isAr ? 'الكمية' : 'Qty'}</th>
+                        <th>${isAr ? 'الإجمالي' : 'Total'}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${order.items?.map((item: any) => `
+                    <tr>
+                        <td>
+                            <img class="product-img" src="${item.product?.images?.[0] || item.productImage?.[0] || ''}" alt="P">
+                        </td>
+                        <td>
+                            <div style="font-weight:bold">${isAr ? item.product?.nameAr : item.product?.nameEn}</div>
+                            <div style="font-size:11px; color:#888">${Number(item.price).toFixed(2)} ${t('currency')}</div>
+                        </td>
+                        <td>${item.quantity}</td>
+                        <td style="font-weight:bold">${Number(item.total).toFixed(2)} ${t('currency')}</td>
+                    </tr>
+                    `).join('')}
+                    <tr class="total-row">
+                        <td colspan="3" style="text-align:${isAr ? 'left' : 'right'}">${isAr ? 'الإجمالي' : 'Grand Total'}</td>
+                        <td>${Number(order.total).toFixed(2)} ${t('currency')}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
-            content += `${language === 'ar' ? 'المستندات (تم تحميلها بشكل منفصل)' : 'Documents (Downloaded Separately)'}:\n`;
-            if (order.kycData.faceId || order.kycData.faceImage) {
-                content += `- ${language === 'ar' ? 'صورة الوجه' : 'Face Image'}: [File: order_${order.orderNumber}_face.jpg]\n`;
-                downloadFile(order.kycData.faceId || order.kycData.faceImage, `order_${order.orderNumber}_face.jpg`);
-            }
-            if (order.kycData.residencyDoc || order.kycData.idImage) {
-                content += `- ${language === 'ar' ? 'صورة الهوية' : 'ID Image'}: [File: order_${order.orderNumber}_id.jpg]\n`;
-                downloadFile(order.kycData.residencyDoc || order.kycData.idImage, `order_${order.orderNumber}_id.jpg`);
-            }
-            if (order.kycData.passportDoc || order.kycData.passportImage) {
-                content += `- ${language === 'ar' ? 'صورة الباسبور' : 'Passport Image'}: [File: order_${order.orderNumber}_passport.jpg]\n`;
-                downloadFile(order.kycData.passportDoc || order.kycData.passportImage, `order_${order.orderNumber}_passport.jpg`);
-            }
-            content += `\n`;
-        }
+        ${order.installmentPlan ? `
+        <div class="section">
+            <div class="section-title">${isAr ? 'خطة التقسيط' : 'Installment Plan'}</div>
+            <div class="grid">
+                <div class="field">
+                    <span class="label">${isAr ? 'الخطة' : 'Plan'}</span>
+                    <span class="value">${order.installmentPlan.name}</span>
+                </div>
+                <div class="field">
+                    <span class="label">${isAr ? 'المدة' : 'Duration'}</span>
+                    <span class="value">${order.installmentPlan.months} ${isAr ? 'شهر' : 'Months'}</span>
+                </div>
+                <div class="field">
+                    <span class="label">${isAr ? 'المقدم المدفوع' : 'Amount Paid'}</span>
+                    <span class="value">${Number(order.depositAmount).toFixed(2)} ${t('currency')}</span>
+                </div>
+                <div class="field">
+                    <span class="label">${isAr ? 'طريقة الدفع' : 'Payment Method'}</span>
+                    <span class="value">${order.depositPaymentMethod || 'N/A'}</span>
+                </div>
+            </div>
+        </div>
+        ` : ''}
 
-        if (order.installmentPlan) {
-            content += `${language === 'ar' ? 'خطة التقسيط' : 'Installment Plan'}:\n`;
-            content += `-----------------\n`;
-            content += `${language === 'ar' ? 'الخطة' : 'Plan'}: ${order.installmentPlan.name}\n`;
-            content += `${language === 'ar' ? 'المدة' : 'Duration'}: ${order.installmentPlan.months} ${language === 'ar' ? 'شهر' : 'Months'}\n`;
-            content += `${language === 'ar' ? 'نسبة المقدم' : 'Downpayment %'}: ${order.installmentPlan.downPaymentPercentage}%\n`;
-            if (order.depositAmount) {
-                content += `${language === 'ar' ? 'المبلغ المدفوع' : 'Amount Paid'}: ${Number(order.depositAmount).toFixed(2)} ${t('currency')}\n`;
-            }
-            content += `\n`;
-        }
+        <div class="footer">
+            Wolf Techno / Fustan - ${new Date().getFullYear()} &copy;
+        </div>
+    </div>
+</body>
+</html>
+        `;
 
-        content += `${language === 'ar' ? 'المنتجات المطلوبة' : 'Products Ordered'}:\n`;
-        content += `-----------------\n`;
-        order.items?.forEach((item: any, idx: number) => {
-            content += `${idx + 1}. ${language === 'ar' ? item.product?.nameAr : item.product?.nameEn}\n`;
-            content += `   ${language === 'ar' ? 'الكمية' : 'Qty'}: ${item.quantity}\n`;
-            content += `   ${language === 'ar' ? 'السعر' : 'Price'}: ${Number(item.price).toFixed(2)} ${t('currency')}\n`;
-            const img = item.product?.images?.[0] || item.productImage?.[0];
-            if (img) content += `   ${language === 'ar' ? 'رابط الصورة' : 'Image Link'}: ${img}\n`;
-            content += `\n`;
-        });
-
-        content += `-----------------\n`;
-        content += `${language === 'ar' ? 'الإجمالي' : 'Total'}: ${Number(order.total).toFixed(2)} ${t('currency')}\n`;
-
-        const blob = new Blob([content], { type: 'text/plain' });
+        const blob = new Blob([htmlContent], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `order_${order.orderNumber}_data.txt`;
+        link.download = `order_${order.orderNumber}_report.html`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
+        toast.success(isAr ? "تم تنزيل تقرير الطلب" : "Order report downloaded");
     };
 
     if (isLoading) {

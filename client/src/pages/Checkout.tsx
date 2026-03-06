@@ -148,7 +148,14 @@ export default function Checkout() {
     },
     onError: (err: any) => {
       setAppliedCoupon(null);
-      toast.error(err.response?.data?.message || (language === 'ar' ? 'كود الخصم غير صالح' : 'Invalid coupon code'));
+      let message = err.response?.data?.message;
+      if (language === 'en' && message) {
+        if (message.includes('الكود مستخدم من قبل')) message = 'This code has been used before';
+        if (message.includes('الكود غير صالح')) message = 'Invalid coupon code';
+        if (message.includes('تم تجاوز حد استخدام الكود')) message = 'Coupon usage limit exceeded';
+        if (message.includes('الكوبون غير موجود')) message = 'Coupon not found';
+      }
+      toast.error(message || (language === 'ar' ? 'كود الخصم غير صالح' : 'Invalid coupon code'));
     }
   });
 
@@ -468,7 +475,7 @@ export default function Checkout() {
                     {formData.paymentMethod === 'installments' && (
                       <div className="mb-8 p-6 bg-purple-50 rounded-2xl border border-purple-100 flex justify-between items-center">
                         <span className="text-2xl font-black text-purple-900">{formatPrice(currentIntent?.downPayment || 0)}</span>
-                        <span className="font-bold text-purple-700 text-lg">مبلغ المقدم المطلوب</span>
+                        <span className="font-bold text-purple-700 text-lg">{language === 'ar' ? 'مبلغ المقدم المطلوب' : 'Required Down Payment'}</span>
                       </div>
                     )}
 
@@ -512,7 +519,7 @@ export default function Checkout() {
                           {giftCardInfo && (
                             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-4 bg-green-50 rounded-xl border border-green-100 flex justify-between items-center">
                               <span className="font-black text-green-700 text-lg">{formatPrice(giftCardInfo.amount)}</span>
-                              <span className="font-bold text-green-600">رصيد الكارت المتاح</span>
+                              <span className="font-bold text-green-600">{language === 'ar' ? 'رصيد الكارت المتاح' : 'Available Card Balance'}</span>
                             </motion.div>
                           )}
 
@@ -530,7 +537,7 @@ export default function Checkout() {
                       {depositMethod === 'wallet' && (
                         <div className="mt-4 p-4 bg-blue-50 rounded-xl flex justify-between items-center">
                           <span className="font-bold text-blue-700">{formatPrice(walletData?.wallet?.balance || 0)}</span>
-                          <span className="text-blue-600 font-bold">رصيدك الحالي</span>
+                          <span className="text-blue-600 font-bold">{language === 'ar' ? 'رصيدك الحالي' : 'Your Current Balance'}</span>
                         </div>
                       )}
                     </div>
@@ -630,7 +637,7 @@ export default function Checkout() {
 
               <div className="flex justify-between items-center bg-gray-50 p-6 rounded-[2rem] mt-4">
                 <span className="font-black text-primary text-3xl tracking-tighter">{formatPrice(finalTotal)}</span>
-                <span className="text-gray-900 font-black text-xl">المجموع</span>
+                <span className="text-gray-900 font-black text-xl">{language === 'ar' ? 'المجموع' : 'Total'}</span>
               </div>
 
               {formData.paymentMethod === 'installments' && (() => {
@@ -649,19 +656,19 @@ export default function Checkout() {
                   <div className="mt-6 space-y-3 bg-purple-50 p-6 rounded-[2rem] border-2 border-purple-100">
                     <div className="flex justify-between items-center text-sm font-bold text-purple-700">
                       <span>{formatPrice(totalWithInterest)}</span>
-                      <span>الإجمالي بالفوائد</span>
+                      <span>{language === 'ar' ? 'الإجمالي بالفوائد' : 'Total with Interest'}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm font-black text-purple-900 pt-3 border-t border-purple-200">
                       <span>{formatPrice(downPayment)}</span>
-                      <span>الدفعة الأولى (تُدفع الآن)</span>
+                      <span>{language === 'ar' ? 'الدفعة الأولى (تُدفع الآن)' : 'Down Payment (Pay Now)'}</span>
                     </div>
                     <div className="flex justify-between items-center text-xs font-bold text-purple-500">
                       <span>{formatPrice(financedAmount)}</span>
-                      <span>المبلغ المتبقي للأقساط</span>
+                      <span>{language === 'ar' ? 'المبلغ المتبقي للأقساط' : 'Remaining Amount for Installments'}</span>
                     </div>
                     <div className="flex justify-between items-center text-[10px] text-purple-400 font-bold italic">
-                      <span>{formatPrice(financedAmount / intent.months)} / شهر</span>
-                      <span>القسط الشهري</span>
+                      <span>{formatPrice(financedAmount / intent.months)} {language === 'ar' ? '/ شهر' : '/ mo'}</span>
+                      <span>{language === 'ar' ? 'القسط الشهري' : 'Monthly Installment'}</span>
                     </div>
                   </div>
                 );

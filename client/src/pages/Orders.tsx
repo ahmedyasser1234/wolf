@@ -295,7 +295,10 @@ export default function Orders() {
                                   ></div>
                                 </div>
                                 <p className="text-sm font-black text-white">
-                                  {ORDER_STATUSES.find(s => s.id === order.status)?.labelAr || order.status}
+                                  {language === 'ar'
+                                    ? (ORDER_STATUSES.find(s => s.id === order.status)?.labelAr || order.status)
+                                    : (ORDER_STATUSES.find(s => s.id === order.status)?.labelEn || order.status)
+                                  }
                                 </p>
                               </div>
                               <div className="text-end">

@@ -525,7 +525,7 @@ export default function ProductDetail() {
                     onClick={handleShare}
                     variant="outline"
                     size="icon"
-                    className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl border-gray-100 hover:bg-primary/20 hover:text-primary transition-all shadow-sm"
+                    className="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl border-gray-100 text-black hover:bg-primary/20 hover:text-primary transition-all shadow-sm"
                   >
                     <Share2 size={20} className="md:w-6 md:h-6" />
                   </Button>
@@ -534,7 +534,7 @@ export default function ProductDetail() {
                       onClick={handleToggleFavorite}
                       variant="outline"
                       size="icon"
-                      className={`w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl border-gray-100 hover:bg-primary/20 hover:text-red-500 transition-all shadow-sm ${isFavorite ? 'bg-red-50 text-red-500 border-red-100' : ''}`}
+                      className={`w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl border-gray-100 text-black hover:bg-primary/20 hover:text-red-500 transition-all shadow-sm ${isFavorite ? 'bg-red-50 text-red-500 border-red-100' : ''}`}
                     >
                       <Heart size={20} className={`md:w-6 md:h-6 ${isFavorite ? "fill-current" : ""}`} />
                     </Button>

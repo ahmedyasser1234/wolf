@@ -90,7 +90,7 @@ export default function OrderDetails() {
                     {/* Order Tracker */}
                     <Card className="border-0 shadow-sm overflow-hidden">
                         <CardHeader className="bg-white border-b border-gray-50 py-6">
-                            <CardTitle className="text-xl font-black flex items-center gap-3">
+                            <CardTitle className="text-xl font-black flex items-center gap-3 text-black">
                                 <Clock className="w-6 h-6 text-primary" />
                                 {language === 'ar' ? 'تتبع مسار الطلب' : 'Order Tracking'}
                             </CardTitle>
@@ -118,17 +118,17 @@ export default function OrderDetails() {
                                                 <div key={key} className="flex md:flex-col items-center gap-6 md:gap-4 group relative w-full md:w-auto">
                                                     <div className={`
                                                                     w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center transition-all duration-500 z-10
-                                                                    ${isActive ? 'bg-primary text-black shadow-xl shadow-primary/20 scale-110' : 'bg-white text-gray-300 border-2 border-gray-100'}
+                                                                    ${isActive ? 'bg-primary text-black shadow-xl shadow-primary/20 scale-110' : 'bg-white text-gray-500 border-2 border-gray-200'}
                                                                     ${isCurrent ? 'ring-4 ring-primary/20 animate-pulse' : ''}
                                                                 `}>
                                                         <Icon className="w-6 h-6 sm:w-8 sm:h-8" />
                                                     </div>
                                                     <div className={`flex flex-col md:items-center ${language === 'ar' ? 'text-right md:text-center' : 'text-left md:text-center'} flex-1 md:flex-none`}>
-                                                        <span className={`text-sm sm:text-base font-black transition-colors duration-500 text-black`}>
+                                                        <span className={`text-sm sm:text-base font-black transition-colors duration-500 text-white`}>
                                                             {language === 'ar' ? status.labelAr : status.labelEn}
                                                         </span>
                                                         {isCurrent && (
-                                                            <span className="text-[10px] sm:text-xs text-black font-bold animate-bounce mt-1">
+                                                            <span className="text-[10px] sm:text-xs text-white font-bold animate-bounce mt-1">
                                                                 {language === 'ar' ? 'الحالة الحالية' : 'Current Status'}
                                                             </span>
                                                         )}
@@ -144,7 +144,7 @@ export default function OrderDetails() {
                     {/* Order Items */}
                     <Card className="border-0 shadow-sm overflow-hidden">
                         <CardHeader className="bg-white border-b border-gray-50 py-6">
-                            <CardTitle className="text-xl font-black flex items-center gap-3">
+                            <CardTitle className="text-xl font-black flex items-center gap-3 text-black">
                                 <ShoppingBag className="w-6 h-6 text-primary" />
                                 {language === 'ar' ? 'المنتجات المطلوبة' : 'Order Items'}
                             </CardTitle>
