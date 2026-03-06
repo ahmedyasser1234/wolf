@@ -171,7 +171,23 @@ export class AdminService {
         }
         if (isInstallmentOnly) {
             conditions.push(sql`${orders.installmentPlanId} IS NOT NULL`);
+            // For installment-only view (review tab), we usually want those awaiting review or confirmed
+            // But we can leave it broad and let the frontend filter if needed, 
+            // though it's better to be specific.
+        } else {
+            // In general orders tab, hide "temporary" installment orders that haven't paid deposit yet
+            // to match the previous frontend logic and ensure correct pagination counts.
+            conditions.push(sql`NOT (${orders.installmentPlanId} IS NOT NULL AND ${orders.paymentStatus} IN ('awaiting_deposit_payment', 'pending_payment', 'pending'))`);
         }
+
+        // 1. Get total count for pagination
+        const [totalResult] = await this.databaseService.db
+            .select({ count: sql`count(*)` })
+            .from(orders)
+            .leftJoin(users, eq(orders.customerId, users.id))
+            .where(and(...conditions));
+
+        const total = Number(totalResult?.count || 0);
 
         console.time(`⏱️ [AdminService] getAllOrders MainQuery - limit: ${limit}`);
         const query = this.databaseService.db
@@ -195,7 +211,7 @@ export class AdminService {
             .offset(offset);
         console.timeEnd(`⏱️ [AdminService] getAllOrders MainQuery - limit: ${limit}`);
 
-        if (rows.length === 0) return [];
+        if (rows.length === 0) return { orders: [], total, page, limit, totalPages: Math.ceil(total / limit) };
 
         const orderIds = rows.map(r => r.order.id);
 
@@ -226,12 +242,20 @@ export class AdminService {
             });
         }
 
-        return rows.map(r => ({
+        const formattedOrders = rows.map(r => ({
             ...r.order,
             customer: r.customer,
             installmentPlan: r.installmentPlan,
             items: itemsMap.get(r.order.id) || [],
         }));
+
+        return {
+            orders: formattedOrders,
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit)
+        };
     }
 
     async getDashboardStats() {

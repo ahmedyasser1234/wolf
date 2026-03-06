@@ -374,10 +374,22 @@ export default function AdminDashboard() {
     queryFn: async () => (await api.get('/admin/stats')).data,
   });
 
-  const { data: adminOrders } = useQuery({
-    queryKey: ['admin-orders-limited'],
-    queryFn: async () => (await api.get('/admin/orders?limit=500')).data,
+  const [orderPage, setOrderPage] = useState(1);
+  const { data: ordersResult, isLoading: ordersLoading } = useQuery({
+    queryKey: ['admin', 'orders', orderPage, orderSearch, orderDateFrom, orderDateTo],
+    queryFn: async () => (await api.get('/admin/orders', {
+      params: {
+        page: orderPage,
+        limit: 10,
+        search: orderSearch,
+        dateFrom: orderDateFrom,
+        dateTo: orderDateTo
+      }
+    })).data,
   });
+
+  const adminOrders = ordersResult?.orders || [];
+  const totalOrderPages = ordersResult?.totalPages || 0;
 
   const pendingInstallmentReviews = dashboardStats?.pendingKycReviews || 0;
 
@@ -437,6 +449,11 @@ export default function AdminDashboard() {
   const [orderSearch, setOrderSearch] = useState("");
   const [orderDateFrom, setOrderDateFrom] = useState("");
   const [orderDateTo, setOrderDateTo] = useState("");
+
+  // Reset page when filters change
+  useEffect(() => {
+    setOrderPage(1);
+  }, [orderSearch, orderDateFrom, orderDateTo]);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isAdminOrderModalOpen, setIsAdminOrderModalOpen] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
@@ -900,7 +917,7 @@ export default function AdminDashboard() {
                     <input type="date" value={orderDateTo} onChange={e => setOrderDateTo(e.target.value)}
                       className="w-full bg-gray-950 border border-gray-800 rounded-xl py-2.5 px-3 text-white text-sm focus:outline-none focus:border-purple-500 [color-scheme:dark]" />
                   </div>
-                  <button onClick={() => { setOrderSearch(''); setOrderDateFrom(''); setOrderDateTo(''); }}
+                  <button onClick={() => { setOrderSearch(''); setOrderDateFrom(''); setOrderDateTo(''); setOrderPage(1); }}
                     className="shrink-0 px-4 py-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 border border-gray-800 text-sm font-bold transition-colors">
                     {language === 'ar' ? 'مسح' : 'Clear'}
                   </button>
@@ -910,19 +927,7 @@ export default function AdminDashboard() {
                   <CardContent className="p-0">
                     {/* Mobile Order Cards */}
                     <div className="md:hidden space-y-4 p-4">
-                      {adminOrders?.filter((order: any) => {
-                        // Hide placeholder installment orders (Awaiting Deposit)
-                        if (order.installmentPlanId && ['awaiting_deposit_payment', 'pending_payment'].includes(order.paymentStatus)) return false;
-
-                        const name = (order.customer?.name || order.shippingAddress?.name || '').toLowerCase();
-                        const num = (order.orderNumber || '').toLowerCase();
-                        const q = orderSearch.toLowerCase();
-                        const matchQ = !q || name.includes(q) || num.includes(q);
-                        const d = order.createdAt ? order.createdAt.slice(0, 10) : '';
-                        const matchFrom = !orderDateFrom || d >= orderDateFrom;
-                        const matchTo = !orderDateTo || d <= orderDateTo;
-                        return matchQ && matchFrom && matchTo;
-                      }).map((order: any) => (
+                      {adminOrders.map((order: any) => (
                         <Card key={order.id} className="border border-gray-100 shadow-sm rounded-2xl overflow-hidden bg-white">
                           <CardContent className="p-4 space-y-3">
                             <div className="flex justify-between items-start">
@@ -978,19 +983,7 @@ export default function AdminDashboard() {
                           </tr>
                         </thead>
                         <tbody>
-                          {adminOrders?.filter((order: any) => {
-                            // Hide placeholder installment orders (Awaiting Deposit)
-                            if (order.installmentPlanId && ['awaiting_deposit_payment', 'pending_payment'].includes(order.paymentStatus)) return false;
-
-                            const name = (order.customer?.name || order.shippingAddress?.name || '').toLowerCase();
-                            const num = (order.orderNumber || '').toLowerCase();
-                            const q = orderSearch.toLowerCase();
-                            const matchQ = !q || name.includes(q) || num.includes(q);
-                            const d = order.createdAt ? order.createdAt.slice(0, 10) : '';
-                            const matchFrom = !orderDateFrom || d >= orderDateFrom;
-                            const matchTo = !orderDateTo || d <= orderDateTo;
-                            return matchQ && matchFrom && matchTo;
-                          }).map((order: any) => (
+                          {adminOrders.map((order: any) => (
                             <tr key={order.id} className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
                               <td className="py-4 px-6 font-bold text-white text-start">{order.orderNumber}</td>
                               <td className="py-4 px-6 text-white font-medium text-start">{order.customer?.name || order.shippingAddress?.name || `${t('customer')} #${order.customerId}`}</td>
@@ -1067,6 +1060,46 @@ export default function AdminDashboard() {
                           ))}
                         </tbody>
                       </table>
+
+                      {/* Pagination Controls */}
+                      {totalOrderPages > 1 && (
+                        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-800 bg-gray-900/50 sticky bottom-0 z-10">
+                          <div className="flex items-center gap-2 text-start">
+                            <span className="text-xs font-black text-gray-500 uppercase tracking-widest">
+                              {language === 'ar' ? 'صفحة' : 'Page'} {orderPage} {language === 'ar' ? 'من' : 'of'} {totalOrderPages}
+                            </span>
+                            <span className="text-[10px] font-bold text-gray-600">
+                              ({ordersResult?.total} {language === 'ar' ? 'طلب إجمالي' : 'Total Orders'})
+                            </span>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={orderPage === 1 || ordersLoading}
+                              onClick={() => {
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                setOrderPage(p => Math.max(1, p - 1));
+                              }}
+                              className="rounded-xl border-gray-800 bg-gray-950 text-white hover:bg-gray-800 h-9 px-4 font-black"
+                            >
+                              {language === 'ar' ? 'السابق' : 'Previous'}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={orderPage === totalOrderPages || ordersLoading}
+                              onClick={() => {
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                setOrderPage(p => Math.min(totalOrderPages, p + 1));
+                              }}
+                              className="rounded-xl border-gray-800 bg-gray-950 text-white hover:bg-gray-800 h-9 px-4 font-black"
+                            >
+                              {language === 'ar' ? 'التالي' : 'Next'}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

@@ -30,7 +30,7 @@ export default function InstallmentOrdersTab() {
 
     const { data: allOrders, isLoading, isFetching } = useQuery({
         queryKey: ['admin', 'installment-orders'],
-        queryFn: async () => (await api.get('/admin/orders?limit=200&isInstallmentOnly=true')).data,
+        queryFn: async () => (await api.get('/admin/orders', { params: { limit: 200, isInstallmentOnly: true } })).data,
     });
 
     const kycReviewMutation = useMutation({
@@ -50,7 +50,7 @@ export default function InstallmentOrdersTab() {
     });
 
     // Only show installment orders that have been paid (deposit confirmed)
-    const installmentOrders = (allOrders || []).filter((o: any) =>
+    const installmentOrders = (allOrders?.orders || []).filter((o: any) =>
         o.installmentPlanId &&
         !['pending_payment'].includes(o.paymentStatus)
     );

@@ -295,7 +295,7 @@ export function ChatWidget({ recipientId: explicitRecipientId, name, logo, isMin
                     <div className="relative">
                         <Avatar className="w-8 h-8 border border-gray-100">
                             <AvatarImage src={logo} />
-                            <AvatarFallback className="-primary bg-white font-bold">{name[0]}</AvatarFallback>
+                            <AvatarFallback className="bg-primary text-white font-bold">{name[0]}</AvatarFallback>
                         </Avatar>
                         {isRecipientOnline && (
                             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
@@ -315,7 +315,7 @@ export function ChatWidget({ recipientId: explicitRecipientId, name, logo, isMin
     return (
         <div className="w-[95vw] sm:w-80 h-[70vh] sm:h-[500px] bg-white rounded-t-2xl shadow-2xl flex flex-col border border-gray-100 ring-1 ring-black/5 animate-in slide-in-from-bottom-10 duration-200 relative mb-4 sm:mb-0">
             {/* Header */}
-            <div className="p-3 border-b flex items-center justify-between bg-gradient-to-r -primary -primary text-white rounded-t-2xl shadow-sm cursor-pointer"
+            <div className="p-3 border-b flex items-center justify-between bg-primary text-white rounded-t-2xl shadow-sm cursor-pointer"
                 onClick={onMinimize}>
                 <div className="flex items-center gap-3">
                     <div className="flex items-center gap-3">
@@ -369,11 +369,11 @@ export function ChatWidget({ recipientId: explicitRecipientId, name, logo, isMin
                         return (
                             <div key={idx} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                                 <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm shadow-sm relative group ${isMe
-                                    ? "-primary text-white rounded-br-none"
-                                    : "bg-white text-gray-800 border border-gray-100 rounded-bl-none"
+                                    ? "bg-primary text-slate-950 rounded-br-none"
+                                    : "bg-white text-slate-950 border border-gray-100 rounded-bl-none"
                                     }`}>
-                                    <p className="leading-relaxed">{msg.content}</p>
-                                    <div className={`text-[10px] mt-1 flex items-center justify-between gap-2 ${isMe ? "text-white/80" : "text-gray-400"}`}>
+                                    <p className="leading-relaxed font-bold">{msg.content}</p>
+                                    <div className={`text-[10px] mt-1 flex items-center justify-between gap-2 ${isMe ? "text-slate-900/80" : "text-gray-500"}`}>
                                         <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                         {isMe && (
                                             <div className="flex items-center">
@@ -419,7 +419,7 @@ export function ChatWidget({ recipientId: explicitRecipientId, name, logo, isMin
                     />
                     <Button
                         size="icon"
-                        className={`h-9 w-9 rounded-full transition-all duration-300 ${inputValue.trim() ? '-primary hover:-primary scale-100' : 'bg-gray-200 text-gray-400 scale-90'}`}
+                        className={`h-9 w-9 rounded-full transition-all duration-300 ${inputValue.trim() ? 'bg-primary hover:bg-primary/90 scale-100' : 'bg-gray-200 text-gray-400 scale-90'}`}
                         onClick={handleSend}
                         disabled={!inputValue.trim()}
                     >
