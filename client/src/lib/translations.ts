@@ -178,6 +178,8 @@ export const translations = {
         orderNumberLabel: "رقم الطلب الخاص بك هو",
         orderSummary: "ملخص الطلب",
         orderTotal: "الإجمالي",
+        monthlyInstallment: "القسط الشهري",
+        perMonth: "/ شهر",
 
         // Success
         orderSuccess: "تم تقديم الطلب بنجاح!",
@@ -725,6 +727,8 @@ export const translations = {
         orderNumberLabel: "Your order number is",
         orderSummary: "Order Summary",
         orderTotal: "Total",
+        monthlyInstallment: "Monthly Installment",
+        perMonth: "/ mo",
 
         // Success
         orderSuccess: "Order Placed Successfully!",

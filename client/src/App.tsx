@@ -494,6 +494,7 @@ function Footer() {
               <li><Link href="/contact-us" className="hover:text-white transition-colors">{isAr ? 'اتصل بنا' : 'Contact Us'}</Link></li>
               <li><Link href="/terms" className="hover:text-white transition-colors">{isAr ? 'الشروط والأحكام' : 'Terms & Conditions'}</Link></li>
               <li><Link href="/privacy" className="hover:text-white transition-colors">{isAr ? 'سياسة الخصوصية' : 'Privacy Policy'}</Link></li>
+              <li><Link href="/returns" className="hover:text-white transition-colors">{isAr ? 'سياسة الاسترجاع' : 'Return Policy'}</Link></li>
             </ul>
 
             {/* Payment Grid */}

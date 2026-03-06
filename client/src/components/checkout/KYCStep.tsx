@@ -6,22 +6,28 @@ import { useLanguage } from "@/lib/i18n";
 import { motion } from "framer-motion";
 
 interface KYCStepProps {
-    onComplete: (data: { faceIdImage: string; residencyImage: string; passportImage: string; idNumber: string; passportNumber: string; dob: string; residentialAddress: string }) => void;
+    onComplete: (data: { faceIdImage: string; idFrontImage: string; idBackImage: string; passportImage: string; idNumber: string; passportNumber: string; dob: string; residentialAddress: string }) => void;
     onBack: () => void;
 }
 
-type DocKey = "faceId" | "residency" | "passport";
+type DocKey = "faceId" | "idFront" | "idBack" | "passport";
 
 const DOC_CONFIG: Record<DocKey, { labelAr: string; labelEn: string; hintAr: string; hintEn: string; facingMode: "user" | "environment" }> = {
     faceId: { labelAr: "1. بصمة الوجه (Face ID)", labelEn: "1. Face ID", hintAr: "ضع وجهك داخل الإطار ثم اضغط التقاط", hintEn: "Center your face then press capture", facingMode: "user" },
-    residency: { labelAr: "2. صورة الإقامة / الهوية", labelEn: "2. Residency / ID", hintAr: "ضع بطاقة الإقامة أمام الكاميرا", hintEn: "Hold your residency card in front of camera", facingMode: "environment" },
-    passport: { labelAr: "3. صورة جواز السفر", labelEn: "3. Passport", hintAr: "ضع جواز السفر أمام الكاميرا", hintEn: "Hold your passport in front of camera", facingMode: "environment" },
+    idFront: { labelAr: "2. وجه الهوية / الإقامة", labelEn: "2. ID / Residency Front", hintAr: "ضع وجه الهوية أمام الكاميرا", hintEn: "Hold your ID front in front of camera", facingMode: "environment" },
+    idBack: { labelAr: "3. ظهر الهوية / الإقامة", labelEn: "3. ID / Residency Back", hintAr: "ضع ظهر الهوية أمام الكاميرا", hintEn: "Hold your ID back in front of camera", facingMode: "environment" },
+    passport: { labelAr: "4. صورة جواز السفر", labelEn: "4. Passport", hintAr: "ضع جواز السفر أمام الكاميرا", hintEn: "Hold your passport in front of camera", facingMode: "environment" },
 };
 
 export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
-    const { language } = useLanguage();
+    const { language, t } = useLanguage();
 
-    const [images, setImages] = useState<Record<DocKey, string | null>>({ faceId: null, residency: null, passport: null });
+    const [images, setImages] = useState<Record<DocKey, string | null>>({
+        faceId: null,
+        idFront: null,
+        idBack: null,
+        passport: null
+    });
     const [manualData, setManualData] = useState({
         idNumber: "",
         passportNumber: "",
@@ -113,7 +119,7 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
         reader.readAsDataURL(file);
     };
 
-    const isStepComplete = images.faceId && images.residency && images.passport &&
+    const isStepComplete = images.faceId && images.idFront && images.idBack && images.passport &&
         manualData.idNumber && manualData.passportNumber && manualData.dob && manualData.residentialAddress;
 
     /* ─── Per-doc card ─────────────────────────────────────────── */
@@ -126,7 +132,7 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
             return (
                 <div className="space-y-3">
                     <p className="text-lg font-black text-gray-800">{isAr ? cfg.labelAr : cfg.labelEn}</p>
-                    <div className="relative aspect-[4/3] rounded-[2rem] overflow-hidden border-2 border-green-400">
+                    <div className="relative aspect-[4/3] rounded-[2rem] overflow-hidden border-2 border-green-400 shadow-lg">
                         <img src={image} alt={docKey} className="w-full h-full object-cover" />
                         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-green-500 text-white px-4 py-1.5 rounded-full flex items-center gap-2 font-bold text-sm">
                             <CheckCircle2 size={14} /> {isAr ? "تم ✓" : "Done ✓"}
@@ -143,7 +149,7 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
             return (
                 <div className="space-y-3 camera-container">
                     <p className="text-lg font-black text-gray-800">{isAr ? cfg.labelAr : cfg.labelEn}</p>
-                    <div className="relative aspect-[4/3] rounded-[2rem] overflow-hidden border-2 border-primary bg-black">
+                    <div className="relative aspect-[4/3] rounded-[2rem] overflow-hidden border-2 border-primary bg-black shadow-2xl">
                         <video
                             ref={videoRef}
                             autoPlay
@@ -184,7 +190,7 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
                     <button
                         type="button"
                         onClick={() => startCamera(docKey)}
-                        className="w-full aspect-[4/3] rounded-[2rem] border-2 border-dashed border-primary/30 bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center justify-center hover:border-primary transition-all group camera-container camera-box"
+                        className="w-full aspect-[4/3] rounded-[2rem] border-2 border-dashed border-primary/30 bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center justify-center hover:border-primary transition-all group camera-container camera-box shadow-md"
                     >
                         <div className="w-16 h-16 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center group-hover:bg-primary/20 transition camera-icon">
                             <Camera size={30} className="text-primary w-full h-full p-2" />
@@ -199,7 +205,7 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
                         <button
                             type="button"
                             onClick={() => startCamera(docKey)}
-                            className="w-full h-full rounded-[2rem] border-2 border-dashed border-primary/30 bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center justify-center hover:border-primary transition-all group camera-box"
+                            className="w-full h-full rounded-[2rem] border-2 border-dashed border-primary/30 bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center justify-center hover:border-primary transition-all group camera-box shadow-md"
                         >
                             <div className="w-12 h-12 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center group-hover:bg-primary/20 transition camera-icon">
                                 <Camera size={24} className="text-primary w-full h-full p-1" />
@@ -209,7 +215,7 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
                             </div>
                         </button>
 
-                        <label className="w-full h-full cursor-pointer rounded-[2rem] border-2 border-dashed border-primary/30 bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center justify-center hover:border-primary transition-all group camera-box">
+                        <label className="w-full h-full cursor-pointer rounded-[2rem] border-2 border-dashed border-primary/30 bg-gradient-to-br from-gray-900 to-gray-800 flex flex-col items-center justify-center hover:border-primary transition-all group camera-box shadow-md">
                             <input
                                 type="file"
                                 accept="image/*"
@@ -232,19 +238,20 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
     return (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="space-y-4 md:space-y-8 w-full max-w-4xl mx-auto">
             <div className="bg-white p-4 sm:p-8 md:p-10 rounded-[1.5rem] md:rounded-[3rem] shadow-xl border border-gray-50 text-right w-full">
-                <h2 className="checkout-title font-black text-gray-900 mb-2 flex items-center justify-center gap-3 font-arabic flex-wrap">
-                    التحقق من الهوية (KYC) <UserCheck className="text-primary" />
+                <h2 className={`checkout-title font-black text-gray-900 mb-2 flex items-center justify-center gap-3 font-arabic flex-wrap ${!isAr ? 'flex-row-reverse' : ''}`}>
+                    {isAr ? 'التحقق من الهوية (KYC)' : 'Identity Verification (KYC)'} <UserCheck className="text-primary" />
                 </h2>
                 <div className="kyc-description text-gray-500 font-bold mb-6 md:mb-8 font-arabic">
-                    لإكمال عملية التقسيط، التقط صورة لوجهك ثم صوّر وثائق الإقامة وجواز السفر.
+                    {isAr ? 'لإكمال عملية التقسيط، التقط صورة لوجهك ثم صوّر وثائق الإقامة وجواز السفر.' : 'To complete the installment process, take a face photo then photograph your ID and passport.'}
                 </div>
 
                 <canvas ref={canvasRef} className="hidden" />
 
                 <div className="space-y-6">
                     <DocCard docKey="faceId" />
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-                        <DocCard docKey="residency" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                        <DocCard docKey="idFront" />
+                        <DocCard docKey="idBack" />
                         <DocCard docKey="passport" />
                     </div>
 
@@ -295,7 +302,7 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
 
                 {/* Progress */}
                 <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mt-8">
-                    {(["faceId", "residency", "passport"] as DocKey[]).map(k => (
+                    {(["faceId", "idFront", "idBack", "passport"] as DocKey[]).map(k => (
                         <div key={k} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-black transition-all ${images[k] ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
                             {images[k] ? <CheckCircle2 size={12} /> : <div className="w-3 h-3 rounded-full border-2 border-current" />}
                             {isAr ? DOC_CONFIG[k].labelAr.split(".")[1].trim().split(" ")[0] : DOC_CONFIG[k].labelEn.split(".")[1].trim().split(" ")[0]}
@@ -304,14 +311,15 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 md:gap-4 mt-6 md:mt-8 font-arabic">
-                    <Button onClick={onBack} variant="outline" className="h-12 md:h-16 rounded-full border-2 border-gray-300 text-gray-900 hover:bg-gray-100 text-sm md:text-xl font-bold">العودة</Button>
+                    <Button onClick={onBack} variant="outline" className="h-12 md:h-16 rounded-full border-2 border-gray-300 text-gray-900 hover:bg-gray-100 text-sm md:text-xl font-bold">{isAr ? 'العودة' : 'Back'}</Button>
                     <Button
                         disabled={!isStepComplete}
                         onClick={() => {
                             if (isStepComplete) {
                                 onComplete({
                                     faceIdImage: images.faceId!,
-                                    residencyImage: images.residency!,
+                                    idFrontImage: images.idFront!,
+                                    idBackImage: images.idBack!,
                                     passportImage: images.passport!,
                                     ...manualData
                                 });
@@ -319,7 +327,7 @@ export default function KYCStep({ onComplete, onBack }: KYCStepProps) {
                         }}
                         className="h-12 md:h-16 rounded-full bg-primary hover:bg-primary/90 text-sm md:text-xl font-bold shadow-xl shadow-primary/20 text-gray-950 disabled:opacity-50 disabled:text-gray-700"
                     >
-                        {isStepComplete ? '✓ تأكيد والمتابعة' : `${[!images.faceId, !images.residency, !images.passport].filter(Boolean).length} ${isAr ? 'متبقية' : 'remaining'}`}
+                        {isStepComplete ? (isAr ? '✓ تأكيد والمتابعة' : '✓ Confirm & Proceed') : `${[images.faceId, images.idFront, images.idBack, images.passport].filter(x => !x).length} ${isAr ? 'متبقية' : 'remaining'}`}
                     </Button>
                 </div>
             </div>

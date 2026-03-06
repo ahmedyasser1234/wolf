@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { formatPrice } from "@/lib/utils";
 import KYCStep from "@/components/checkout/KYCStep";
 import { useAuth } from "@/_core/hooks/useAuth";
 
@@ -21,7 +20,7 @@ type CheckoutStep = "shipping" | "kyc" | "deposit" | "success";
 export default function Checkout() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
-  const { t, language } = useLanguage();
+  const { t, language, formatPrice } = useLanguage();
 
   // Direct initialization from localStorage to avoid race conditions
   const getInitialIntent = () => {
@@ -637,7 +636,7 @@ export default function Checkout() {
 
               <div className="flex justify-between items-center bg-gray-50 p-6 rounded-[2rem] mt-4">
                 <span className="font-black text-primary text-3xl tracking-tighter">{formatPrice(finalTotal)}</span>
-                <span className="text-gray-900 font-black text-xl">{language === 'ar' ? 'المجموع' : 'Total'}</span>
+                <span className="text-gray-900 font-black text-xl">{t('total')}</span>
               </div>
 
               {formData.paymentMethod === 'installments' && (() => {
@@ -656,19 +655,19 @@ export default function Checkout() {
                   <div className="mt-6 space-y-3 bg-purple-50 p-6 rounded-[2rem] border-2 border-purple-100">
                     <div className="flex justify-between items-center text-sm font-bold text-purple-700">
                       <span>{formatPrice(totalWithInterest)}</span>
-                      <span>{language === 'ar' ? 'الإجمالي بالفوائد' : 'Total with Interest'}</span>
+                      <span>{t('totalWithInterest')}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm font-black text-purple-900 pt-3 border-t border-purple-200">
                       <span>{formatPrice(downPayment)}</span>
-                      <span>{language === 'ar' ? 'الدفعة الأولى (تُدفع الآن)' : 'Down Payment (Pay Now)'}</span>
+                      <span>{t('downPaymentNow')}</span>
                     </div>
                     <div className="flex justify-between items-center text-xs font-bold text-purple-500">
                       <span>{formatPrice(financedAmount)}</span>
-                      <span>{language === 'ar' ? 'المبلغ المتبقي للأقساط' : 'Remaining Amount for Installments'}</span>
+                      <span>{t('remainingInstallments')}</span>
                     </div>
                     <div className="flex justify-between items-center text-[10px] text-purple-400 font-bold italic">
-                      <span>{formatPrice(financedAmount / intent.months)} {language === 'ar' ? '/ شهر' : '/ mo'}</span>
-                      <span>{language === 'ar' ? 'القسط الشهري' : 'Monthly Installment'}</span>
+                      <span>{formatPrice(financedAmount / intent.months)} {t('perMonth')}</span>
+                      <span>{t('monthlyInstallment')}</span>
                     </div>
                   </div>
                 );

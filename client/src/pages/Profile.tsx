@@ -35,11 +35,13 @@ export default function Profile() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
 
-    const { data: orders } = useQuery({
+    const { data: ordersData } = useQuery({
         queryKey: ["orders"],
         queryFn: () => endpoints.orders.list(),
         enabled: !!user,
     });
+
+    const orders = ordersData?.data || [];
 
     const { data: wishlist } = useQuery({
         queryKey: ["wishlist"],
@@ -138,8 +140,8 @@ export default function Profile() {
     };
 
     const stats = user.role === 'admin' ? [
-        { label: language === 'ar' ? "المتاجر" : "Vendors", value: adminVendors?.length || 0, icon: Store, color: "text-primary", bg: "bg-primary/10" },
-        { label: language === 'ar' ? "المنتجات" : "Products", value: adminProducts?.length || 0, icon: Package, color: "text-primary", bg: "bg-white/5" },
+        { label: language === 'ar' ? "المتاجر" : "Vendors", value: adminVendors?.data?.length || adminVendors?.length || 0, icon: Store, color: "text-primary", bg: "bg-primary/10" },
+        { label: language === 'ar' ? "المنتجات" : "Products", value: adminProducts?.data?.length || adminProducts?.length || 0, icon: Package, color: "text-primary", bg: "bg-white/5" },
         { label: language === 'ar' ? "التنبيهات" : "Notifications", value: unreadNotifications?.count || 0, icon: Bell, color: "text-primary", bg: "bg-primary/10" },
     ] : [
         { label: language === 'ar' ? "الطلبات" : "Orders", value: orders?.length || 0, icon: ShoppingBag, color: "text-primary", bg: "bg-primary/10" },

@@ -19,8 +19,8 @@ export default function ReturnPolicy() {
         {
             id: 1,
             icon: Clock,
-            titleEn: "RETURNS PERIOD",
-            titleAr: "فترة الاسترجاع",
+            titleEn: "RETURNS",
+            titleAr: "شروط الاسترجاع",
             contentEn: (
                 <div className="space-y-4">
                     <p>Our policy lasts 14 days after you receive your order. If 14 days have gone by since you received your order, unfortunately we can’t offer you a refund or exchange.</p>
@@ -28,14 +28,14 @@ export default function ReturnPolicy() {
             ),
             contentAr: (
                 <div className="space-y-4">
-                    <p>تستمر سياستنا لمدة 14 يوماً بعد استلامك لطلبك. إذا مر 14 يوماً منذ استلامك للطلب، فللأسف لا يمكننا أن نقدم لك مبالغ مستردة أو استبدال.</p>
+                    <p>تستمر سياستنا لمدة 14 يوماً من تاريخ استلامك لطلبك. إذا مر 14 يوماً على استلامك للطلب، فللأسف لا يمكننا أن نقدم لك استرداداً للأموال أو استبدالاً.</p>
                 </div>
             )
         },
         {
             id: 2,
             icon: ListChecks,
-            titleEn: "ELIGIBILITY FOR RETURN",
+            titleEn: "ELIGIBILITY",
             titleAr: "أهلية الاسترجاع",
             contentEn: (
                 <div className="space-y-4">
@@ -45,35 +45,35 @@ export default function ReturnPolicy() {
             ),
             contentAr: (
                 <div className="space-y-4">
-                    <p>لكي تكون مؤهلاً للاسترجاع، يجب أن يكون المنتج غير مستخدم وبنفس الحالة التي استلمته بها. كما يجب أن يكون في العبوة الأصلية.</p>
-                    <p>لإكمال عملية الاسترجاع، نطلب إيصالاً أو إثباتاً للشراء. يرجى عدم إرسال مشترياتك مرة أخرى إلى الشركة المصنعة.</p>
+                    <p>لكي تكون مؤهلاً للاسترجاع، يجب أن يكون المنتج غير مستخدم وبنفس الحالة التي استلمته بها. كما يجب أن يكون في عبوته الأصلية.</p>
+                    <p>لإكمال عملية الاسترجاع، نطلب إيصالاً أو إثباتاً للشراء. يرجى عدم إرسال مشترياتك إلى الشركة المصنعة.</p>
                 </div>
             )
         },
         {
             id: 3,
             icon: Ban,
-            titleEn: "EXEMPT GOODS (NON-RETURNABLE)",
-            titleAr: "السلع المعفاة (غير قابلة للاسترجاع)",
+            titleEn: "EXEMPT GOODS",
+            titleAr: "السلع المعفاة",
             contentEn: (
                 <div className="space-y-4">
-                    <p>Several types of goods are exempt from being returned:</p>
+                    <p>Several types of goods are exempt from being returned. Perishable goods such as food, flowers, newspapers or magazines cannot be returned. We also do not accept products that are intimate or sanitary goods, hazardous materials, or flammable liquids or gases.</p>
+                    <p>Additional non-returnable items:</p>
                     <ul className="list-disc list-inside space-y-2">
-                        <li>Perishable goods (food, flowers, newspapers, magazines).</li>
-                        <li>Intimate or sanitary goods, hazardous materials, flammable liquids or gases.</li>
-                        <li>Gift cards and downloadable software products.</li>
-                        <li>Some health and personal care items.</li>
+                        <li>Gift cards</li>
+                        <li>Downloadable software products</li>
+                        <li>Some health and personal care items</li>
                     </ul>
                 </div>
             ),
             contentAr: (
                 <div className="space-y-4">
-                    <p>هناك عدة أنواع من السلع المعفاة من الاسترجاع:</p>
+                    <p>هناك عدة أنواع من السلع المعفاة من الاسترجاع. لا يمكن إرجاع السلع القابلة للتلف مثل الأطعمة أو الزهور أو الصحف أو المجلات. كما لا نقبل المنتجات التي تندرج تحت فئة السلع الشخصية أو الصحية، أو المواد الخطرة، أو السوائل والغازات القابلة للاشتعال.</p>
+                    <p>سلع إضافية غير قابلة للإرجاع:</p>
                     <ul className="list-disc list-inside space-y-2">
-                        <li>السلع القابلة للتلف (الطعام، الزهور، الصحف، المجلات).</li>
-                        <li>السلع الشخصية أو الصحية، المواد الخطرة، السوائل أو الغازات القابلة للاشتعال.</li>
-                        <li>بطاقات الهدايا ومنتجات البرمجيات القابلة للتحميل.</li>
-                        <li>بعض أدوات العناية الصحية والشخصية.</li>
+                        <li>بطاقات الهدايا</li>
+                        <li>منتجات البرمجيات القابلة للتحميل</li>
+                        <li>بعض سلع العناية الصحية والشخصية</li>
                     </ul>
                 </div>
             )
@@ -82,24 +82,26 @@ export default function ReturnPolicy() {
             id: 4,
             icon: AlertCircle,
             titleEn: "PARTIAL REFUNDS",
-            titleAr: "المبالغ المستردة الجزئية",
+            titleAr: "استرداد جزئي (إن وجد)",
             contentEn: (
                 <div className="space-y-4">
                     <p>There are certain situations where only partial refunds are granted (if applicable):</p>
                     <ul className="list-disc list-inside space-y-2">
-                        <li>Books with obvious signs of use; opened media (CD, DVD, etc.).</li>
+                        <li>Book with obvious signs of use</li>
+                        <li>CD, DVD, VHS tape, software, video game, cassette tape, or vinyl record that has been opened.</li>
                         <li>Any item not in its original condition, is damaged or missing parts for reasons not due to our error.</li>
-                        <li>Any item that is returned more than 14 days after delivery.</li>
+                        <li>Any item that is returned more than 14 days after delivery</li>
                     </ul>
                 </div>
             ),
             contentAr: (
                 <div className="space-y-4">
-                    <p>هناك حالات معينة يتم فيها منح مبالغ مستردة جزئية فقط (إن وجد):</p>
+                    <p>هناك حالات معينة يتم فيها منح استرداد جزئي للأموال فقط: (إن وجد)</p>
                     <ul className="list-disc list-inside space-y-2">
-                        <li>الكتب التي بها علامات استخدام واضحة؛ الوسائط المفتوحة (CD، DVD، إلخ).</li>
-                        <li>أي منتج ليس في حالته الأصلية، أو تالف، أو تنقصه أجزاء لأسباب لا تعود لخطأ من جانبنا.</li>
-                        <li>أي منتج يتم إرجاعه بعد أكثر من 14 يوماً من التسليم.</li>
+                        <li>كتب بها علامات استخدام واضحة</li>
+                        <li>الوسائط المفتوحة (CD، DVD، VHS، برمجيات، ألعاب فيديو، كاسيت، أو فينيل)</li>
+                        <li>أي منتج ليس في حالته الأصلية، أو تالف، أو تنقصه أجزاء لأسباب لا تعود لخطأ من جانبنا</li>
+                        <li>أي منتج يتم إرجاعه بعد أكثر من 14 يوماً من التسليم</li>
                     </ul>
                 </div>
             )
@@ -111,14 +113,14 @@ export default function ReturnPolicy() {
             titleAr: "عملية استرداد الأموال",
             contentEn: (
                 <div className="space-y-4">
-                    <p>Once your return is received and inspected, we will notify you of the approval or rejection of your refund via email.</p>
-                    <p>If approved, your refund will be processed and a credit will automatically be applied to your original method of payment (usually within 10 business days).</p>
+                    <p>Once your return is received and inspected, we will send you an email to notify you that we have received your returned item. We will also notify you of the approval or rejection of your refund.</p>
+                    <p>If approved, then your refund will be processed, and a credit will automatically be applied to your credit card or original method of payment, within a certain amount of days (usually 10 business days).</p>
                 </div>
             ),
             contentAr: (
                 <div className="space-y-4">
-                    <p>بمجرد استلام المرتجع وفحصه، سنخطرك بالموافقة على استرداد أموالك أو رفضه عبر البريد الإلكتروني.</p>
-                    <p>في حالة الموافقة، ستتم معالجة المبلغ المسترد، وسيتم إضافة رصيد تلقائياً إلى بطاقة الائتمان الخاصة بك أو طريقة الدفع الأصلية (عادةً في غضون 10 أيام عمل).</p>
+                    <p>بمجرد استلام المرتجع وفحصه، سنرسل إليك بريداً إلكترونياً لإخطارك باستلام المنتج المرتجع. سنخطرك أيضاً بالموافقة على استرداد الأموال أو رفضه.</p>
+                    <p>وفي حالة الموافقة، ستتم معالجة المبلغ المسترد، وسيتم إضافة رصيد تلقائياً إلى بطاقة الائتمان الخاصة بك أو طريقة الدفع الأصلية، في غضون عدد معين من الأيام (عادةً 10 أيام عمل).</p>
                 </div>
             )
         },
@@ -129,64 +131,18 @@ export default function ReturnPolicy() {
             titleAr: "المبالغ المستردة المتأخرة أو المفقودة",
             contentEn: (
                 <div className="space-y-4">
-                    <p>If you haven’t received a refund yet, first check your bank account, then contact your credit card company and bank. Processing time can vary.</p>
-                    <p>If you’ve done all of this and still have not received your refund, please contact us at returns@wolftechno.com.</p>
+                    <p>If you haven’t received a refund yet, first check your bank account again.</p>
+                    <p>Then contact your credit card company, it may take some time before your refund is officially posted.</p>
+                    <p>Next contact your bank. There is often some processing time before a refund is posted.</p>
+                    <p>If you’ve done all of this and you still have not received your refund yet, please contact us at returns@wolftechno.com.</p>
                 </div>
             ),
             contentAr: (
                 <div className="space-y-4">
-                    <p>إذا لم تستلم مبلغاً مسترداً بعد، فتحقق أولاً من حسابك المصرفي مرة أخرى، ثم اتصل بشركة بطاقة الائتمان والبنك الخاص بك. قد تختلف مدة المعالجة.</p>
-                    <p>إذا فعلت كل هذا ولا تزال لم تستلم مبلغك المسترد، فيرجى الاتصال بنا على returns@wolftechno.com.</p>
-                </div>
-            )
-        },
-        {
-            id: 7,
-            icon: ShoppingBag,
-            titleEn: "SALE ITEMS",
-            titleAr: "منتجات التخفيضات",
-            contentEn: (
-                <div className="space-y-4">
-                    <p>Only regular priced items may be refunded; unfortunately, sale items cannot be refunded.</p>
-                </div>
-            ),
-            contentAr: (
-                <div className="space-y-4">
-                    <p>يمكن استرداد الأموال للمنتجات ذات السعر العادي فقط؛ وللأسف لا يمكن استرداد أموال منتجات التخفيضات.</p>
-                </div>
-            )
-        },
-        {
-            id: 8,
-            icon: Box,
-            titleEn: "EXCHANGES",
-            titleAr: "الاستبدال",
-            contentEn: (
-                <div className="space-y-4">
-                    <p>We only replace items if they are defective or damaged. If you need an exchange for the same item, email us at returns@wolftechno.com.</p>
-                </div>
-            ),
-            contentAr: (
-                <div className="space-y-4">
-                    <p>نقوم باستبدال المنتجات فقط إذا كانت معيبة أو تالفة. إذا كنت بحاجة إلى استبدالها بنفس المنتج، راسلنا على returns@wolftechno.com.</p>
-                </div>
-            )
-        },
-        {
-            id: 9,
-            icon: Truck,
-            titleEn: "SHIPPING",
-            titleAr: "الشحن",
-            contentEn: (
-                <div className="space-y-4">
-                    <p>You will be responsible for paying for your own shipping costs for returning your item. Shipping costs are non-refundable.</p>
-                    <p>If you receive a refund, the cost of return shipping will be deducted from your refund.</p>
-                </div>
-            ),
-            contentAr: (
-                <div className="space-y-4">
-                    <p>ستكون مسؤولاً عن دفع تكاليف الشحن الخاصة بك لإعادة المنتج. تكاليف الشحن غير قابلة للاسترداد.</p>
-                    <p>إذا استلمت مبلغاً مسترداً، فسيتم خصم تكلفة شحن المرتجع من المبلغ المسترد.</p>
+                    <p>إذا لم تستلم مبلغاً مسترداً بعد، فتحقق أولاً من حسابك المصرفي مرة أخرى.</p>
+                    <p>ثم اتصل بشركة بطاقة الائتمان الخاصة بك، فقد يستغرق الأمر بعض الوقت قبل أن يتم تسجيل المبلغ المسترد رسمياً.</p>
+                    <p>بعد ذلك، اتصل بالبنك الذي تتعامل معه، فغالباً ما يكون هناك بعض وقت المعالجة قبل تسجيل المبلغ.</p>
+                    <p>إذا فعلت كل هذا ولا تزال لم تستلم المبلغ المسترد، فيرجى الاتصال بنا على returns@wolftechno.com.</p>
                 </div>
             )
         }

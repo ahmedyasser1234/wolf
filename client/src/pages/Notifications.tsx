@@ -44,6 +44,46 @@ export default function Notifications() {
     enabled: !!user,
   });
 
+  const translateNotification = (title: string, message: string) => {
+    if (language === 'ar') return { title, message };
+
+    const mappings: Record<string, { title: string; message: string | ((msg: string) => string) }> = {
+      'تحديث حالة الطلب': {
+        title: 'Order Status Update',
+        message: (msg: string) => {
+          return msg
+            .replace('تم تغيير حالة طلبك رقم', 'Your order status #')
+            .replace('إلى', 'has changed to')
+            .replace('pending', 'Pending')
+            .replace('preparing_shipment', 'Preparing Shipment')
+            .replace('shipped', 'Shipped')
+            .replace('delivered', 'Delivered')
+            .replace('cancelled', 'Cancelled');
+        }
+      },
+      '🛒 طلب جديد': { title: '🛒 New Order', message: (msg: string) => msg.replace('طلب جديد رقم', 'New order #').replace('بقيمة', 'with value') },
+      '📦 طلب جديد (كاش)': { title: '📦 New Order (Cash)', message: (msg: string) => msg.replace('طلب جديد رقم', 'New order #').replace('(الدفع عند الاستلام) بقيمة', '(COD) with value') },
+      '✅ طلب جديد (مدفوع)': { title: '✅ New Order (Paid)', message: (msg: string) => msg.replace('طلب رقم', 'Order #').replace('تم دفعه بالكامل بقيمة', 'has been fully paid with value') },
+      '📋 طلب تقسيط جديد (مدفوع المقدم)': { title: '📋 New Installment Order (Down Payment Paid)', message: (msg: string) => msg.replace('طلب تقسيط جديد', 'New installment order').replace('بمقدم', 'with down payment').replace('(تم الدفع داخلياً)', '(Paid internally)') },
+      '⏳ طلب تقسيط جديد (في انتظار الدفع)': { title: '⏳ New Installment Order (Awaiting Payment)', message: (msg: string) => msg.replace('طلب تقسيط جديد', 'New installment order').replace('بمقدم', 'with down payment').replace('(في انتظار الدفع)', '(Awaiting payment)') },
+      'تمت الموافقة على حسابك ✅': { title: 'Account Approved ✅', message: 'Congratulations! Your vendor account has been activated. You can now access the dashboard.' },
+      'تم رفض طلبك ❌': { title: 'Request Rejected ❌', message: 'Sorry, your request to join as a vendor was not accepted. Please contact administration for details.' },
+      'تم رفض طلب التقسيط': { title: 'Installment Request Rejected', message: (msg: string) => msg.replace('نعتذر، تم رفض طلب التقسيط للطلب رقم', 'Sorry, the installment request for order #').replace('تم استرجاع مبلغ المقدم إلى محفظتك', 'Down payment has been refunded to your wallet') },
+      'تم استلام مقدم الدفع': { title: 'Down Payment Received', message: (msg: string) => msg.replace('طلبك الآن قيد مراجعة الأوراق', 'Your request is now under document review').replace('تم استلام مبلغ المقدم للطلب رقم', 'Down payment received for order #') },
+      'استرجاع الرصيد': { title: 'Balance Refund', message: (msg: string) => msg.replace('تم استرجاع مبلغ', 'An amount of').replace('إلى محفظتك بسبب إلغاء الطلب', 'has been refunded to your wallet due to order cancellation') },
+    };
+
+    const mapping = mappings[title];
+    if (mapping) {
+      return {
+        title: mapping.title,
+        message: typeof mapping.message === 'function' ? mapping.message(message) : mapping.message
+      };
+    }
+
+    return { title, message };
+  };
+
   const markAsReadMutation = useMutation({
     mutationFn: (id: number) => endpoints.notifications.markAsRead(id),
     onSuccess: () => {
@@ -66,10 +106,10 @@ export default function Notifications() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            يجب تسجيل الدخول لعرض الإشعارات
+            {language === 'ar' ? "يجب تسجيل الدخول لعرض الإشعارات" : "Please login to view notifications"}
           </h1>
           <Link href="/">
-            <Button>العودة للرئيسية</Button>
+            <Button>{language === 'ar' ? "العودة للرئيسية" : "Back to Home"}</Button>
           </Link>
         </div>
       </div>
@@ -88,9 +128,7 @@ export default function Notifications() {
   };
 
   const handleDelete = (id: number) => {
-    // Implement delete endpoint if available, currently just UI removal?
-    // endpoints.notifications.delete(id);
-    toast.info("Delete feature not implemented yet in backend");
+    toast.info(language === 'ar' ? "ميزة الحذف غير متوفرة حالياً" : "Delete feature not implemented yet in backend");
   };
 
   const handleMarkAllAsRead = () => {
@@ -132,7 +170,7 @@ export default function Notifications() {
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between" dir="rtl">
+          <div className="flex items-center justify-between" dir={language === 'ar' ? 'rtl' : 'ltr'}>
             <div className="flex items-center gap-4">
               <Link href="/">
                 <Button variant="ghost" size="icon" className="rounded-full hover:bg-gray-100 h-10 w-10">
@@ -140,18 +178,22 @@ export default function Notifications() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">الإشعارات</h1>
+                <h1 className="text-3xl font-bold text-gray-900">{language === 'ar' ? "الإشعارات" : "Notifications"}</h1>
                 {unreadCount > 0 && (
                   <p className="text-gray-600 mt-1">
-                    لديك {unreadCount} إشعار{unreadCount > 1 ? "ات" : ""} جديد{unreadCount > 1 ? "ة" : ""}
+                    {language === 'ar' ? (
+                      <>لديك {unreadCount} إشعار{unreadCount > 1 ? "ات" : ""} جديد{unreadCount > 1 ? "ة" : ""}</>
+                    ) : (
+                      <>You have {unreadCount} new notification{unreadCount !== 1 ? "s" : ""}</>
+                    )}
                   </p>
                 )}
               </div>
             </div>
             {unreadCount > 0 && (
-              <Button onClick={handleMarkAllAsRead} variant="outline">
-                <Check className="w-4 h-4 ml-2" />
-                تحديث الكل كمقروء
+              <Button onClick={handleMarkAllAsRead} variant="outline" className="gap-2">
+                <Check className="w-4 h-4" />
+                {language === 'ar' ? "تحديث الكل كمقروء" : "Mark all as read"}
               </Button>
             )}
           </div>
@@ -160,20 +202,20 @@ export default function Notifications() {
 
       <div className="container mx-auto px-4 py-8">
         {/* Filter Tabs */}
-        <div className="flex gap-4 mb-8">
+        <div className={`flex gap-4 mb-8 ${language === 'ar' ? 'flex-row-reverse' : 'flex-row'}`}>
           <Button
             variant={filter === "all" ? "default" : "outline"}
             onClick={() => setFilter("all")}
             className={filter === "all" ? "bg-blue-600" : ""}
           >
-            الكل ({notifications.length})
+            {language === 'ar' ? `الكل (${notifications.length})` : `All (${notifications.length})`}
           </Button>
           <Button
             variant={filter === "unread" ? "default" : "outline"}
             onClick={() => setFilter("unread")}
             className={filter === "unread" ? "bg-blue-600" : ""}
           >
-            غير مقروء ({unreadCount})
+            {language === 'ar' ? `غير مقروء (${unreadCount})` : `Unread (${unreadCount})`}
           </Button>
         </div>
 
@@ -199,71 +241,74 @@ export default function Notifications() {
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredNotifications.map((notification: any) => (
-              <Card
-                key={notification.id}
-                className={`border-0 shadow-sm ${getNotificationColor(notification.type)} ${!notification.isRead ? "ring-2 ring-blue-200" : ""
-                  }`}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-4">
-                    {/* Icon */}
-                    <div className="flex-shrink-0 mt-1">
-                      {getNotificationIcon(notification.type)}
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-semibold text-gray-900">
-                          {notification.title}
-                        </h3>
-                        <span className="text-xs text-gray-500">
-                          {new Date(notification.createdAt).toLocaleString("ar-SA", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
+            {filteredNotifications.map((notification: any) => {
+              const { title, message } = translateNotification(notification.title, notification.message);
+              return (
+                <Card
+                  key={notification.id}
+                  className={`border-0 shadow-sm ${getNotificationColor(notification.type)} ${!notification.isRead ? "ring-2 ring-blue-200" : ""
+                    }`}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-4" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                      {/* Icon */}
+                      <div className="flex-shrink-0 mt-1">
+                        {getNotificationIcon(notification.type)}
                       </div>
-                      <p className="text-gray-700 mb-3">{notification.message}</p>
 
-                      {/* Actions */}
-                      <div className="flex items-center gap-2">
-                        {notification.actionUrl && (
-                          <Link href={notification.actionUrl}>
-                            <Button size="sm" variant="outline" className="text-black border-gray-300 hover:bg-gray-100">
-                              عرض التفاصيل
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <h3 className="font-semibold text-gray-900">
+                            {title}
+                          </h3>
+                          <span className="text-xs text-gray-500">
+                            {new Date(notification.createdAt).toLocaleString(language === 'ar' ? "ar-SA" : "en-US", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </div>
+                        <p className="text-gray-700 mb-3">{message}</p>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-2">
+                          {notification.actionUrl && (
+                            <Link href={notification.actionUrl}>
+                              <Button size="sm" variant="outline" className="text-black border-gray-300 hover:bg-gray-100">
+                                {language === 'ar' ? "عرض التفاصيل" : "View Details"}
+                              </Button>
+                            </Link>
+                          )}
+                          {!notification.isRead && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleMarkAsRead(notification.id)}
+                              className="text-black hover:bg-gray-100 gap-1"
+                            >
+                              <Check className="w-4 h-4" />
+                              {language === 'ar' ? "تحديث كمقروء" : "Mark as read"}
                             </Button>
-                          </Link>
-                        )}
-                        {!notification.isRead && (
+                          )}
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleMarkAsRead(notification.id)}
-                            className="text-black hover:bg-gray-100"
+                            onClick={() => handleDelete(notification.id)}
+                            className="text-red-600 hover:bg-red-50"
                           >
-                            <Check className="w-4 h-4 ml-1" />
-                            تحديث كمقروء
+                            <Trash2 className="w-4 h-4" />
                           </Button>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDelete(notification.id)}
-                          className="text-red-600 hover:bg-red-50"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>
