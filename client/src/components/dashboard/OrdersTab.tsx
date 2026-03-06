@@ -459,11 +459,58 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
                             </div>
 
                             {/* Customer Info */}
-                            <div className="bg-gray-900 p-5 rounded-2xl mb-6">
-                                <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3">{language === 'ar' ? 'بيانات العميل' : 'Customer Info'}</p>
-                                <p className="text-white font-bold">{kycModalOrder.customer?.name || kycModalOrder.shippingAddress?.name}</p>
-                                <p className="text-gray-400 text-sm">{kycModalOrder.customer?.email}</p>
-                                <p className="text-gray-400 text-sm">{kycModalOrder.customer?.phone || kycModalOrder.shippingAddress?.phone}</p>
+                            <div className="bg-gray-900 p-5 rounded-2xl mb-6 border border-gray-800">
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">{language === 'ar' ? 'بيانات العميل' : 'Customer Info'}</p>
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-full bg-purple-900/40 flex items-center justify-center text-purple-400 font-black">
+                                        {(kycModalOrder.customer?.name?.[0] || 'G').toUpperCase()}
+                                    </div>
+                                    <div>
+                                        <p className="text-white font-bold">{kycModalOrder.customer?.name || kycModalOrder.shippingAddress?.name || 'Guest'}</p>
+                                        <p className="text-gray-400 text-xs">{kycModalOrder.customer?.email}</p>
+                                        <p className="text-gray-400 text-xs">{kycModalOrder.customer?.phone || kycModalOrder.shippingAddress?.phone}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Ordered Products & Plan Info */}
+                            <div className="grid md:grid-cols-2 gap-4 mb-6">
+                                <div className="bg-gray-900 p-5 rounded-2xl border border-gray-800">
+                                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">{language === 'ar' ? 'المنتجات المطلوبة' : 'Ordered Products'}</p>
+                                    <div className="space-y-3 max-h-[160px] overflow-y-auto pr-2 custom-scrollbar">
+                                        {kycModalOrder.items?.map((item: any, idx: number) => (
+                                            <div key={idx} className="flex items-center gap-3 p-2 bg-gray-800/40 rounded-xl">
+                                                <img
+                                                    src={item.product?.images?.[0] || item.productImage?.[0] || ''}
+                                                    alt="Product"
+                                                    className="w-10 h-10 rounded-lg object-cover border border-gray-700 flex-shrink-0"
+                                                />
+                                                <div className="min-w-0">
+                                                    <p className="text-white font-bold text-[11px] truncate">
+                                                        {language === 'ar' ? item.product?.nameAr : item.product?.nameEn}
+                                                    </p>
+                                                    <p className="text-gray-500 text-[9px] font-black uppercase tracking-tight">
+                                                        {item.quantity} × {Number(item.price).toFixed(2)} {t('currency')}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {kycModalOrder.installmentPlan && (
+                                    <div className="bg-gray-900 p-5 rounded-2xl border border-gray-800">
+                                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">{language === 'ar' ? 'خطة التقسيط' : 'Installment Plan'}</p>
+                                        <div className="space-y-1">
+                                            <p className="text-white font-black text-sm">{kycModalOrder.installmentPlan.name}</p>
+                                            <div className="flex items-center gap-2 text-[10px] font-bold">
+                                                <span className="text-amber-400">{kycModalOrder.installmentPlan.months} {language === 'ar' ? 'شهر' : 'Months'}</span>
+                                                <span className="text-gray-600">|</span>
+                                                <span className="text-emerald-400">{kycModalOrder.installmentPlan.downPaymentPercentage}% {language === 'ar' ? 'مقدم' : 'Down'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Deposit Info */}

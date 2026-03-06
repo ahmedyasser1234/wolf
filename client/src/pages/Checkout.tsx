@@ -566,7 +566,7 @@ export default function Checkout() {
                   <Button onClick={() => {
                     localStorage.removeItem('wolf_payment_intent');
                     setLocation("/orders");
-                  }} className="rounded-full px-8 md:px-12 h-14 md:h-16 bg-gray-950 text-lg md:text-xl font-bold hover:bg-black transition-all shadow-2xl shadow-gray-900/40 hover:shadow-gray-900/60 hover:-translate-y-1">
+                  }} className="rounded-full px-8 md:px-12 h-14 md:h-16 bg-gray-950 text-white text-lg md:text-xl font-bold hover:bg-black transition-all shadow-2xl shadow-gray-900/40 hover:shadow-gray-900/60 hover:-translate-y-1">
                     {language === 'ar' ? 'متابعة طلباتي' : 'View My Orders'}
                   </Button>
                 </motion.div>

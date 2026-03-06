@@ -1582,6 +1582,53 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
+              {/* Order Items */}
+              <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
+                <div className="bg-gray-800 px-4 py-2 font-black text-sm text-white flex items-center gap-2 uppercase tracking-tight">
+                  <ShoppingBag size={14} className="text-purple-400" />
+                  {language === 'ar' ? "محتويات الطلب" : "Order Items"}
+                </div>
+                <div className="divide-y divide-gray-800">
+                  {selectedOrder.items?.map((item: any, idx: number) => (
+                    <div key={idx} className="p-3 flex items-center gap-3 sm:gap-4 hover:bg-gray-800/30 transition-colors">
+                      <div className="w-12 h-15 rounded-lg bg-gray-950 flex-shrink-0 overflow-hidden border border-gray-800">
+                        {item.product?.images?.[0] ? (
+                          <img src={item.product.images[0]} className="w-full h-full object-cover" alt="" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Package size={16} className="text-gray-700" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] sm:text-xs font-black text-white truncate uppercase tracking-tight">
+                          {language === 'ar' ? item.product?.nameAr : item.product?.nameEn}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          {item.size && (
+                            <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-gray-800 text-gray-400 border border-gray-700">{item.size}</span>
+                          )}
+                          <span className="text-[10px] font-bold text-gray-500">x{item.quantity}</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[11px] sm:text-xs font-black text-[#e91e63]">
+                          {(item.price * item.quantity).toFixed(2)} {t('currency')}
+                        </p>
+                        <p className="text-[9px] font-bold text-gray-600">
+                          {Number(item.price).toFixed(2)} {t('currency')}/{language === 'ar' ? 'قطعة' : 'pc'}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  {(!selectedOrder.items || selectedOrder.items.length === 0) && (
+                    <div className="p-6 text-center">
+                      <p className="text-xs text-gray-500 font-bold italic">{language === 'ar' ? 'لا توجد بيانات لهذا الطلب' : 'No items data for this order'}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="border border-gray-800 rounded-2xl overflow-hidden text-start">
                 <div className="bg-gray-800 px-4 py-2 font-black text-sm text-white">{t('invoiceSummary')}</div>
                 <div className="p-4 space-y-3">

@@ -116,10 +116,10 @@ function OffersDisplay({ productId, language }: { productId: number, language: s
                 <Tag size={20} />
               </div>
               <div>
-                <h3 className="font-bold -primary text-lg">
+                <h3 className="font-bold text-gray-900 text-lg">
                   {language === 'ar' ? offer.nameAr : offer.nameEn}
                 </h3>
-                <p className="-primary text-sm font-medium">
+                <p className="text-gray-900 text-sm font-medium">
                   {language === 'ar' ? "خصم " : "OFF "} <span className="font-black text-xl">{offer.discountPercent}%</span>
                   {offer.minQuantity > 1 ? (language === 'ar' ? ` عند شراء ${offer.minQuantity} قطع فأكثر` : ` for ${offer.minQuantity} items or more`) : ''}
                 </p>
@@ -366,7 +366,7 @@ export default function ProductDetail() {
               className="lg:sticky lg:top-20 h-fit w-full"
             >
               <div
-                className="aspect-[4/5] md:aspect-[3/4] rounded-[2rem] md:rounded-[4rem] overflow-hidden bg-white shadow-xl md:shadow-2xl mb-6 md:mb-10 relative group cursor-zoom-in w-full max-w-lg md:max-w-2xl mx-auto border border-gray-100/50"
+                className="aspect-[4/5] md:aspect-[3/4] rounded-[2rem] md:rounded-[4rem] overflow-hidden bg-white shadow-xl md:shadow-2xl mb-6 md:mb-10 relative group cursor-zoom-in w-full max-w-full lg:max-w-2xl mx-auto border border-gray-100/50"
                 onMouseEnter={() => setIsZoomed(true)}
                 onMouseLeave={() => setIsZoomed(false)}
                 onMouseMove={handleMouseMove}
@@ -422,14 +422,14 @@ export default function ProductDetail() {
               </div>
 
               {/* Enhanced Thumbnails */}
-              <div className="flex gap-2 md:gap-6 justify-start md:justify-center overflow-x-auto py-2 md:py-6 w-full no-scrollbar pb-4 md:pb-6">
+              <div className="flex gap-3 md:gap-6 justify-start scroll-smooth overflow-x-auto py-2 md:py-6 w-full no-scrollbar pb-6 md:pb-8 touch-pan-x px-1">
                 {galleryImages.map((img: string, idx: number) => (
                   <button
                     key={`thumb-${idx}`}
                     onClick={() => {
                       setSelectedImage(idx);
                     }}
-                    className={`relative w-20 h-20 md:w-28 md:h-28 rounded-2xl md:rounded-3xl overflow-hidden border-2 md:border-4 transition-all duration-500 shrink-0 ${selectedImage === idx ? "border-primary scale-105 md:scale-110 shadow-lg md:shadow-2xl bg-white/10" : "border-transparent opacity-50 hover:opacity-100 scale-100 hover:scale-105"
+                    className={`relative w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 rounded-xl sm:rounded-2xl md:rounded-3xl overflow-hidden border-2 md:border-4 transition-all duration-500 shrink-0 ${selectedImage === idx ? "border-primary scale-105 md:scale-110 shadow-lg md:shadow-2xl bg-white/10 ring-2 ring-primary/20" : "border-transparent opacity-60 hover:opacity-100 scale-100 hover:scale-105"
                       }`}
                   >
                     <img src={img} alt="" className="w-full h-full object-cover"
@@ -448,7 +448,7 @@ export default function ProductDetail() {
                       setSelectedColor(color);
                       setSelectedImage(0);
                     }}
-                    className="relative w-20 h-20 md:w-28 md:h-28 rounded-2xl md:rounded-3xl overflow-hidden border-2 md:border-4 border-transparent opacity-50 hover:opacity-100 scale-100 hover:scale-105 transition-all duration-500 shrink-0"
+                    className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 rounded-xl sm:rounded-2xl md:rounded-3xl overflow-hidden border-2 md:border-4 border-transparent opacity-60 hover:opacity-100 scale-100 hover:scale-105 transition-all duration-500 shrink-0"
                   >
                     <img src={color.images?.[0] || product.images?.[0]} alt={color.colorName} className="w-full h-full object-cover"
                       onError={(e: any) => {

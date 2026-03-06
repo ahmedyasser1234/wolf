@@ -249,31 +249,41 @@ export default function InstallmentOrdersTab() {
                             </div>
                         </div>
 
-                        {/* Chosen Product & Plan Info */}
+                        {/* Order Items & Plan Info */}
                         <div className="grid md:grid-cols-2 gap-4 mb-6">
-                            {/* Product Info */}
-                            {kycModalOrder.items && kycModalOrder.items[0] && (
-                                <div className="bg-gray-900 p-5 rounded-2xl border border-gray-800">
-                                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">{language === 'ar' ? 'المنتج المختار' : 'Chosen Product'}</p>
-                                    <div className="flex items-center gap-4">
-                                        <img
-                                            src={kycModalOrder.items[0].product?.images?.[0] || kycModalOrder.items[0].productImage?.[0] || ''}
-                                            alt="Product"
-                                            className="w-16 h-16 rounded-xl object-cover border border-gray-700"
-                                        />
-                                        <div>
-                                            <p className="text-white font-bold text-sm line-clamp-1">
-                                                {language === 'ar'
-                                                    ? (kycModalOrder.items[0].product?.nameAr || kycModalOrder.items[0].productNameAr)
-                                                    : (kycModalOrder.items[0].product?.nameEn || kycModalOrder.items[0].productNameEn)}
-                                            </p>
-                                            <p className="text-gray-400 text-xs mt-1">
-                                                {kycModalOrder.items[0].quantity} × {Number(kycModalOrder.items[0].price).toFixed(2)} {t('currency')}
-                                            </p>
+                            {/* Products Info */}
+                            <div className="bg-gray-900 p-5 rounded-2xl border border-gray-800 flex flex-col">
+                                <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">{language === 'ar' ? 'المنتجات المطلوبة' : 'Ordered Products'}</p>
+                                <div className="space-y-3 flex-1 overflow-y-auto max-h-[200px] pr-2 custom-scrollbar">
+                                    {kycModalOrder.items?.map((item: any, idx: number) => (
+                                        <div key={idx} className="flex items-center gap-3 p-2 bg-gray-800/50 rounded-xl border border-gray-700/50">
+                                            <img
+                                                src={item.product?.images?.[0] || item.productImage?.[0] || ''}
+                                                alt="Product"
+                                                className="w-12 h-12 rounded-lg object-cover border border-gray-700 flex-shrink-0"
+                                            />
+                                            <div className="min-w-0">
+                                                <p className="text-white font-bold text-xs truncate">
+                                                    {language === 'ar'
+                                                        ? (item.product?.nameAr || item.productNameAr)
+                                                        : (item.product?.nameEn || item.productNameEn)}
+                                                </p>
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                    {item.size && (
+                                                        <span className="text-[9px] font-bold px-1 py-0.5 rounded bg-gray-700 text-gray-400">{item.size}</span>
+                                                    )}
+                                                    <p className="text-gray-500 text-[10px] font-bold">
+                                                        {item.quantity} × {Number(item.price).toFixed(2)} {t('currency')}
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
+                                    ))}
+                                    {(!kycModalOrder.items || kycModalOrder.items.length === 0) && (
+                                        <p className="text-gray-500 text-xs italic font-bold text-center py-4">{language === 'ar' ? 'لا توجد منتجات' : 'No items found'}</p>
+                                    )}
                                 </div>
-                            )}
+                            </div>
 
                             {/* Plan Info */}
                             {kycModalOrder.installmentPlan && (
