@@ -110,15 +110,17 @@ export class InstallmentsService {
     async getPaymentsForAdmin(date: string, status?: string, page = 1, limit = 10) {
         const offset = (page - 1) * limit;
 
-        const startOfDay = new Date(date);
-        startOfDay.setHours(0, 0, 0, 0);
-        const endOfDay = new Date(date);
-        endOfDay.setHours(23, 59, 59, 999);
+        const whereClause = [];
 
-        const whereClause = [
-            gte(installmentPayments.dueDate, startOfDay),
-            lte(installmentPayments.dueDate, endOfDay)
-        ];
+        if (date && !isNaN(new Date(date).getTime())) {
+            const startOfDay = new Date(date);
+            startOfDay.setHours(0, 0, 0, 0);
+            const endOfDay = new Date(date);
+            endOfDay.setHours(23, 59, 59, 999);
+
+            whereClause.push(gte(installmentPayments.dueDate, startOfDay));
+            whereClause.push(lte(installmentPayments.dueDate, endOfDay));
+        }
 
         if (status) {
             whereClause.push(eq(installmentPayments.status, status));
