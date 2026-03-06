@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Package, FileText, ScanFace, CreditCard, CheckCircle, XCircle, Clock, Eye } from "lucide-react";
+import { Loader2, Package, FileText, ScanFace, CreditCard, CheckCircle, XCircle, Clock, Eye, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -56,6 +56,80 @@ export default function InstallmentOrdersTab() {
         },
         onError: () => toast.error(language === 'ar' ? 'فشلت العملية' : 'Operation failed'),
     });
+
+    const handleDownloadFullOrderData = (order: any) => {
+        const customerName = order.customer?.name || order.shippingAddress?.name || 'Guest';
+        const customerPhone = order.customer?.phone || order.shippingAddress?.phone || 'N/A';
+        const customerEmail = order.customer?.email || 'N/A';
+
+        let content = `========================================\n`;
+        content += `${language === 'ar' ? 'بيانات الطلب رقم' : 'Order Details #'}: ${order.orderNumber}\n`;
+        content += `========================================\n\n`;
+
+        content += `${language === 'ar' ? 'بيانات العميل' : 'Customer Info'}:\n`;
+        content += `-----------------\n`;
+        content += `${language === 'ar' ? 'الاسم' : 'Name'}: ${customerName}\n`;
+        content += `${language === 'ar' ? 'الهاتف' : 'Phone'}: ${customerPhone}\n`;
+        content += `${language === 'ar' ? 'البريد' : 'Email'}: ${customerEmail}\n\n`;
+
+        if (order.kycData) {
+            content += `${language === 'ar' ? 'بيانات التحقق (KYC)' : 'Verification (KYC)'}:\n`;
+            content += `-----------------\n`;
+            content += `${language === 'ar' ? 'رقم الهوية' : 'ID Number'}: ${order.kycData.idNumber || 'N/A'}\n`;
+            content += `${language === 'ar' ? 'رقم الباسبور' : 'Passport Number'}: ${order.kycData.passportNumber || 'N/A'}\n`;
+            content += `${language === 'ar' ? 'تاريخ الميلاد' : 'DOB'}: ${order.kycData.dob || 'N/A'}\n`;
+            content += `${language === 'ar' ? 'عنوان السكن' : 'Address'}: ${order.kycData.residentialAddress || 'N/A'}\n\n`;
+
+            content += `${language === 'ar' ? 'روابط المستندات' : 'Document Links'}:\n`;
+            if (order.kycData.faceId || order.kycData.faceImage) {
+                content += `- ${language === 'ar' ? 'صورة الوجه' : 'Face Image'}: ${order.kycData.faceId || order.kycData.faceImage}\n`;
+            }
+            if (order.kycData.residencyDoc || order.kycData.idImage) {
+                content += `- ${language === 'ar' ? 'صورة الهوية' : 'ID Image'}: ${order.kycData.residencyDoc || order.kycData.idImage}\n`;
+            }
+            if (order.kycData.passportDoc || order.kycData.passportImage) {
+                content += `- ${language === 'ar' ? 'صورة الباسبور' : 'Passport Image'}: ${order.kycData.passportDoc || order.kycData.passportImage}\n`;
+            }
+            content += `\n`;
+        }
+
+        if (order.installmentPlan) {
+            content += `${language === 'ar' ? 'خطة التقسيط' : 'Installment Plan'}:\n`;
+            content += `-----------------\n`;
+            content += `${language === 'ar' ? 'الخطة' : 'Plan'}: ${order.installmentPlan.name}\n`;
+            content += `${language === 'ar' ? 'المدة' : 'Duration'}: ${order.installmentPlan.months} ${language === 'ar' ? 'شهر' : 'Months'}\n`;
+            content += `${language === 'ar' ? 'نسبة المقدم' : 'Downpayment %'}: ${order.installmentPlan.downPaymentPercentage}%\n`;
+            if (order.depositAmount) {
+                content += `${language === 'ar' ? 'المبلغ المدفوع' : 'Amount Paid'}: ${Number(order.depositAmount).toFixed(2)} ${t('currency')}\n`;
+            }
+            content += `\n`;
+        }
+
+        content += `${language === 'ar' ? 'المنتجات المطلوبة' : 'Products Ordered'}:\n`;
+        content += `-----------------\n`;
+        order.items?.forEach((item: any, idx: number) => {
+            content += `${idx + 1}. ${language === 'ar' ? (item.product?.nameAr || item.productNameAr) : (item.product?.nameEn || item.productNameEn)}\n`;
+            content += `   ${language === 'ar' ? 'الكمية' : 'Qty'}: ${item.quantity}\n`;
+            content += `   ${language === 'ar' ? 'السعر' : 'Price'}: ${Number(item.price).toFixed(2)} ${t('currency')}\n`;
+            const img = item.product?.images?.[0] || item.productImage?.[0];
+            if (img) content += `   ${language === 'ar' ? 'رابط الصورة' : 'Image Link'}: ${img}\n`;
+            content += `\n`;
+        });
+
+        content += `-----------------\n`;
+        content += `${language === 'ar' ? 'الإجمالي' : 'Total'}: ${Number(order.total).toFixed(2)} ${t('currency')}\n`;
+
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `order_${order.orderNumber}_data.txt`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        toast.success(language === 'ar' ? "تم تنزيل بيانات الطلب" : "Order data downloaded");
+    };
 
     const installmentOrders = ordersResult?.orders || [];
     const totalPages = ordersResult?.totalPages || 1;
@@ -173,13 +247,24 @@ export default function InstallmentOrdersTab() {
                                     {/* Right: Actions */}
                                     <div className="flex gap-3 flex-shrink-0">
                                         {['pending_kyc_review', 'awaiting_deposit_payment'].includes(order.paymentStatus) && (
-                                            <Button
-                                                onClick={() => setKycModalOrder(order)}
-                                                className="bg-amber-500 hover:bg-amber-400 text-black font-black rounded-2xl px-6 h-12 gap-2"
-                                            >
-                                                <Eye className="w-4 h-4" />
-                                                {language === 'ar' ? 'مراجعة الطلب' : 'Review Request'}
-                                            </Button>
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    onClick={() => setKycModalOrder(order)}
+                                                    className="bg-amber-500 hover:bg-amber-400 text-black font-black rounded-2xl px-6 h-12 gap-2"
+                                                >
+                                                    <Eye className="w-4 h-4" />
+                                                    {language === 'ar' ? 'مراجعة الطلب' : 'Review Request'}
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="icon"
+                                                    onClick={() => handleDownloadFullOrderData(order)}
+                                                    className="w-12 h-12 rounded-2xl border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+                                                    title={language === 'ar' ? 'تنزيل كافة البيانات' : 'Download All Data'}
+                                                >
+                                                    <Download className="w-5 h-5" />
+                                                </Button>
+                                            </div>
                                         )}
                                     </div>
                                 </div>
@@ -221,9 +306,20 @@ export default function InstallmentOrdersTab() {
 
                         {/* Modal Header */}
                         <div className="flex items-center justify-between mb-8">
-                            <div>
-                                <h2 className="text-2xl font-black text-white mb-1">{language === 'ar' ? 'مراجعة طلب التقسيط' : 'Installment KYC Review'}</h2>
-                                <span className="text-sm font-bold text-amber-400">#{kycModalOrder.orderNumber}</span>
+                            <div className="flex items-center gap-4">
+                                <div>
+                                    <h2 className="text-2xl font-black text-white mb-1">{language === 'ar' ? 'مراجعة طلب التقسيط' : 'Installment KYC Review'}</h2>
+                                    <span className="text-sm font-bold text-amber-400">#{kycModalOrder.orderNumber}</span>
+                                </div>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleDownloadFullOrderData(kycModalOrder)}
+                                    className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+                                    title={language === 'ar' ? 'تنزيل كافة البيانات' : 'Download All Data'}
+                                >
+                                    <Download className="w-5 h-5" />
+                                </Button>
                             </div>
                             <div className="text-right">
                                 <p className="text-xs text-gray-500 font-bold">{language === 'ar' ? 'حالة الطلب' : 'Order Status'}</p>
