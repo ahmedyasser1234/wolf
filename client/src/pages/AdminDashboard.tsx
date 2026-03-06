@@ -689,7 +689,7 @@ export default function AdminDashboard() {
                 <span className="relative z-10">{tab.label}</span>
                 {tab.badge ? (
                   <span className="absolute -top-1 -right-1 md:-top-2 md:-right-2 w-5 h-5 md:w-6 md:h-6 bg-red-600 text-white text-[10px] md:text-xs font-black rounded-full flex items-center justify-center animate-bounce shadow-md z-20 border-2 border-white">
-                    {tab.badge > 99 ? '99+' : tab.badge}
+                    {typeof tab.badge === 'number' ? (tab.badge > 99 ? '99+' : tab.badge) : ''}
                   </span>
                 ) : null}
               </button>
