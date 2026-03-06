@@ -4,12 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { MapPin, Phone, Mail, Clock, Send } from "lucide-react";
+import { MapPin, Phone, Mail, Clock, Send, MessageSquare } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
+import { useChat } from "@/contexts/ChatContext";
 import { toast } from "sonner";
 
 export default function ContactUs() {
     const { language } = useLanguage();
+    const { openChat } = useChat();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -85,13 +87,24 @@ export default function ContactUs() {
                             </div>
                             <h3 className="text-xl font-bold text-gray-900 mb-4">{language === 'ar' ? "وسائل الاتصال" : "Contact Methods"}</h3>
                             <div className="text-gray-500 font-medium text-sm space-y-2">
-                                <p dir="ltr"><span className="font-bold text-gray-700">Phone:</span> +971588808744</p>
-                                <p dir="ltr"><span className="font-bold text-gray-700">General:</span> info@wolftechno.com</p>
-                                <p dir="ltr"><span className="font-bold text-gray-700">Support Team:</span> support@wolftechno.com</p>
-                                <p dir="ltr"><span className="font-bold text-gray-700">Returns Team:</span> returns@wolftechno.com</p>
-                                <p dir="ltr"><span className="font-bold text-gray-700">Legal Team:</span> legal@wolftechno.com</p>
-                                <p dir="ltr"><span className="font-bold text-gray-700">Marketing:</span> marketing@wolftechno.com</p>
+                                <p dir={language === 'ar' ? 'rtl' : 'ltr'}><span className="font-bold text-gray-700">{language === 'ar' ? "الهاتف:" : "Phone:"}</span> +971588808744</p>
+                                <p dir={language === 'ar' ? 'rtl' : 'ltr'}><span className="font-bold text-gray-700">{language === 'ar' ? "عام:" : "General:"}</span> info@wolftechno.com</p>
+                                <p dir={language === 'ar' ? 'rtl' : 'ltr'}><span className="font-bold text-gray-700">{language === 'ar' ? "فريق الدعم:" : "Support Team:"}</span> support@wolftechno.com</p>
+                                <p dir={language === 'ar' ? 'rtl' : 'ltr'}><span className="font-bold text-gray-700">{language === 'ar' ? "فريق المرتجعات:" : "Returns Team:"}</span> returns@wolftechno.com</p>
+                                <p dir={language === 'ar' ? 'rtl' : 'ltr'}><span className="font-bold text-gray-700">{language === 'ar' ? "الفريق القانوني:" : "Legal Team:"}</span> legal@wolftechno.com</p>
+                                <p dir={language === 'ar' ? 'rtl' : 'ltr'}><span className="font-bold text-gray-700">{language === 'ar' ? "التسويق:" : "Marketing:"}</span> marketing@wolftechno.com</p>
                             </div>
+                        </div>
+
+                        <div className="bg-gradient-to-br from-primary to-purple-600 p-8 rounded-[2rem] shadow-xl text-white hover:scale-[1.02] transition-all cursor-pointer group"
+                            onClick={() => openChat({ recipientId: 1, name: language === 'ar' ? "الدعم المباشر" : "Live Support" })}>
+                            <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-white mb-6 backdrop-blur-md">
+                                <MessageSquare size={24} />
+                            </div>
+                            <h3 className="text-xl font-bold mb-2 group-hover:translate-x-1 transition-transform">{language === 'ar' ? "الدردشة المباشرة" : "Live Chat"}</h3>
+                            <p className="text-white/80 font-medium text-sm">
+                                {language === 'ar' ? "تحدث مع فريقنا مباشرة للحصول على مساعدة فورية." : "Chat with our team directly for instant assistance."}
+                            </p>
                         </div>
 
                         <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 hover:shadow-md transition-all">
