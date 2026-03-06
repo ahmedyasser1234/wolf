@@ -4,13 +4,15 @@ import { giftCards, customerWallets, walletTransactions, users } from '../databa
 import { eq, and, desc } from 'drizzle-orm';
 import { WalletsService } from '../wallets/wallets.service';
 import { PaymentsService } from '../payments/payments.service';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class GiftCardsService {
     constructor(
         private databaseService: DatabaseService,
         private walletsService: WalletsService,
-        private paymentsService: PaymentsService
+        private paymentsService: PaymentsService,
+        private mailService: MailService
     ) { }
 
     async findAll() {
@@ -62,7 +64,7 @@ export class GiftCardsService {
         return card;
     }
 
-    async purchaseGiftCard(userId: number, data: { amount: number, recipientName?: string, paymentMethod: 'wallet' | 'card' }) {
+    async purchaseGiftCard(userId: number, data: { amount: number, recipientName?: string, recipientEmail?: string, paymentMethod: 'wallet' | 'card' }) {
         const [user] = await this.databaseService.db.select().from(users).where(eq(users.id, userId)).limit(1);
         if (!user) throw new NotFoundException('User not found');
 
@@ -80,21 +82,35 @@ export class GiftCardsService {
                 await this.walletsService.deductBalance(userId, amount, `شراء كارت هدية بقيمة ${amount}`);
 
                 // Create active gift card
-                return await this.createGiftCard({
+                const giftCard = await this.createGiftCard({
                     amount,
                     recipientName: data.recipientName,
+                    recipientEmail: data.recipientEmail,
                     senderName: user.name,
                     senderEmail: user.email,
                     paymentMethod: 'wallet',
                     paymentStatus: 'paid',
                     isActive: true
                 });
+
+                // Trigger notification if recipient email is provided
+                if (giftCard.recipientEmail) {
+                    this.mailService.sendGiftCardNotification(
+                        giftCard.recipientEmail,
+                        giftCard.senderName || user.name || 'someone',
+                        Number(giftCard.amount),
+                        giftCard.code
+                    ).catch(err => console.error('Failed to send gift card email (wallet):', err));
+                }
+
+                return giftCard;
             });
         } else {
             // Card payment: Create inactive gift card and return Stripe session
             const card = await this.createGiftCard({
                 amount,
                 recipientName: data.recipientName,
+                recipientEmail: data.recipientEmail,
                 senderName: user.name,
                 senderEmail: user.email,
                 paymentMethod: 'card',
@@ -193,6 +209,16 @@ export class GiftCardsService {
             })
             .where(eq(giftCards.id, giftCardId))
             .returning();
+
+        // Trigger notification if recipient email is provided
+        if (updated?.recipientEmail && updated.isActive && updated.paymentStatus === 'paid') {
+            this.mailService.sendGiftCardNotification(
+                updated.recipientEmail,
+                updated.senderName || 'someone',
+                Number(updated.amount),
+                updated.code
+            ).catch(err => console.error('Failed to send gift card email (card confirmation):', err));
+        }
 
         return updated;
     }

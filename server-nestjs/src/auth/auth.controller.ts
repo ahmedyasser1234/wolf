@@ -87,18 +87,20 @@ export class AuthController {
                 }
             }
 
-            const { token, user } = await this.authService.register({ ...body, logo: logoUrl });
-            console.log('Register success, token created');
+            const result = await this.authService.register({ ...body, logo: logoUrl });
+            console.log('Register success response:', result);
 
-            res.cookie(COOKIE_NAME, token, {
-                httpOnly: true,
-                path: '/',
-                sameSite: 'none',
-                secure: true,
-                maxAge: ONE_YEAR_MS,
-            });
+            if ('token' in result) {
+                res.cookie(COOKIE_NAME, result.token, {
+                    httpOnly: true,
+                    path: '/',
+                    sameSite: 'none',
+                    secure: true,
+                    maxAge: ONE_YEAR_MS,
+                });
+            }
 
-            return { user, token };
+            return result;
         } catch (error) {
             console.error('Register Controller Error:', error);
             throw error;
@@ -114,6 +116,36 @@ export class AuthController {
             secure: true,
         });
         return { success: true };
+    }
+
+    @Post('verify-registration')
+    async verifyRegistration(@Body() body: { email: string; code: string }, @Res({ passthrough: true }) res: Response) {
+        const { token, user } = await this.authService.verifyRegistrationOtp(body.email, body.code);
+
+        res.cookie(COOKIE_NAME, token, {
+            httpOnly: true,
+            path: '/',
+            sameSite: 'none',
+            secure: true,
+            maxAge: ONE_YEAR_MS,
+        });
+
+        return { user, token };
+    }
+
+    @Post('forgot-password')
+    async forgotPassword(@Body() body: { email: string }) {
+        return this.authService.requestPasswordReset(body.email);
+    }
+
+    @Post('reset-password')
+    async resetPassword(@Body() body: any) {
+        return this.authService.resetPassword(body);
+    }
+
+    @Post('resend-otp')
+    async resendOtp(@Body() body: { email: string; type: 'registration' | 'password_reset' }) {
+        return this.authService.resendOtp(body.email, body.type);
     }
 
     @Get('me')

@@ -54,6 +54,18 @@ export class MailService {
         }
     }
 
+    async sendOTP(to: string, code: string, type: 'registration' | 'password_reset') {
+        const subject = type === 'registration'
+            ? 'كود التحقق الخاص بك - WolfTechno 🐺'
+            : 'استعادة كلمة المرور - WolfTechno 🐺';
+
+        const message = type === 'registration'
+            ? `مرحباً بك في WolfTechno! 🐺💙\n\nكود التحقق الخاص بك هو: ${code}\nهذا الكود صالح لمدة 15 دقيقة فقط.`
+            : `لقد طلبت إعادة تعيين كلمة المرور الخاصة بك.\n\nكود التحقق هو: ${code}\nإذا لم تطلب أنت هذا، يرجى تجاهل البريد.`;
+
+        await this.sendMail(to, subject, message);
+    }
+
     async sendOrderConfirmation(to: string, orderNumber: string) {
         const from = this.configService.get<string>('MAIL_FROM') || '"WolfTechno" <noreply@wolftechno.com>';
         const subject = 'تم استلام طلبك بنجاح - WolfTechno 🐺';
@@ -92,5 +104,43 @@ export class MailService {
             this.logger.log(`📝 [Mail Log Preview] To: ${to} | Subject: ${subject}`);
             this.logger.log(`📝 [Mail Log Preview] Content: ${text}`);
         }
+    }
+
+    async sendOrderStatusEmail(to: string, orderNumber: string, statusKey: 'accepted' | 'shipped' | 'rejected', reason?: string) {
+        let subject = '';
+        let message = '';
+
+        switch (statusKey) {
+            case 'accepted':
+                subject = 'تم قبول طلبك بنجاح - WolfTechno 🐺';
+                message = `مرحباً بك!\n\nتم قبول طلبك رقم #${orderNumber} بنجاح، وجارٍ تجهيزه بعناية ليصل إليك في أقرب وقت. 📦✨\n\nشكراً لثقتك بنا! 💙`;
+                break;
+            case 'shipped':
+                subject = 'تم شحن طلبك! 🚚 - WolfTechno 🐺';
+                message = `خبر سعيد! 🎉\n\nتم شحن طلبك رقم #${orderNumber} وهو الآن في الطريق إليك. 🚀\n\nنتمنى أن تنال منتجاتنا إعجابك! 🐺💙`;
+                break;
+            case 'rejected':
+                subject = 'تحديث بخصوص طلبك - WolfTechno 🐺';
+                message = `نعتذر منك، تم رفض طلبك رقم #${orderNumber}.\n${reason ? `السبب: ${reason}` : ''}\n\nإذا كان لديك أي استفسار، يرجى التواصل مع الدعم الفني. 🐺`;
+                break;
+        }
+
+        await this.sendMail(to, subject, message);
+    }
+
+    async sendNewOfferEmail(to: string, offerName: string, discount: string, code?: string) {
+        const subject = 'عرض جديد حصري لك! 🔥 - WolfTechno 🐺';
+        const message = `مرحباً بك! ✨\n\nلدينا عرض جديد رائع من أجلك: "${offerName}"\nاستمتع بخصم يصل إلى ${discount}%! 🎊\n${code ? `استخدم الكود: ${code}` : ''}\n\nلا تفوت الفرصة وتسوق الآن! 🚀🛒\n\nWolfTechno 🐺`;
+
+        await this.sendMail(to, subject, message);
+    }
+
+    async sendGiftCardNotification(to: string, senderName: string, amount: number, code: string) {
+        const subject = 'وصلتك هدية! 🎁 - WolfTechno 🐺';
+        const websiteUrl = this.configService.get<string>('FRONTEND_URL') || 'https://wolftechno.com';
+
+        const message = `مرحباً بك! ✨\n\nلديك مفاجأة رائعة! لقد أرسل لك ${senderName} كارت هدية بقيمة ${amount} درهم. 🎊\n\nيمكنك استخدام هذا الكود عند الدفع للحصول على خصم مباشر على مشترياتك:\nكود الهدية: ${code}\n\nتسوق الآن واستمتع بهديتك: ${websiteUrl}\n\nنتمنى لك تجربة تسوق ممتعة! 🐺💙`;
+
+        await this.sendMail(to, subject, message);
     }
 }

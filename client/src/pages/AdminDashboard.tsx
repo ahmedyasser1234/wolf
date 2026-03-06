@@ -408,8 +408,18 @@ export default function AdminDashboard() {
 
   const pendingInstallmentReviews = dashboardStats?.pendingKycReviews || 0;
 
+  const [lastSeenKycAt, setLastSeenKycAt] = useState<number>(() => {
+    return Number(localStorage.getItem('lastSeenInstallmentOrdersAt') || 0);
+  });
+
+  const showInstallmentBadge = useMemo(() => {
+    if (!dashboardStats?.latestPendingKycAt) return false;
+    const latestAt = new Date(dashboardStats.latestPendingKycAt).getTime();
+    return latestAt > lastSeenKycAt;
+  }, [dashboardStats?.latestPendingKycAt, lastSeenKycAt]);
+
   /* Define tabs with distinct gradient colors */
-  const tabs = useMemo<{ id: string; label: string; icon: any; color?: string; badge?: number }[]>(() => [
+  const tabs = useMemo<{ id: string; label: string; icon: any; color?: string; badge?: number | boolean }[]>(() => [
     { id: "overview", label: t('overview'), icon: LayoutDashboard, color: "from-purple-600 to-pink-600 shadow-purple-500/30" },
     { id: "analytics", label: t('analytics'), icon: BarChart3, color: "from-emerald-400 to-teal-600 shadow-emerald-500/30" },
     { id: "content", label: t('contentManagement'), icon: Edit, color: "from-primary to-rose-600 shadow-primary/30" },
@@ -420,17 +430,25 @@ export default function AdminDashboard() {
     { id: "coupons", label: language === 'ar' ? 'الكوبونات' : 'Coupons', icon: Ticket, color: "from-amber-400 to-orange-600 shadow-amber-500/30" },
     { id: "giftcards", label: language === 'ar' ? 'الجيفت كارد' : 'Gift Cards', icon: Gift, color: "from-emerald-400 to-teal-600 shadow-emerald-500/30" },
     { id: "installments", label: language === 'ar' ? 'التقسيط' : 'Installments', icon: CreditCard, color: "from-violet-400 to-purple-600 shadow-violet-500/30" },
-    { id: "installment-orders", label: language === 'ar' ? 'طلبات التقسيط' : 'Installment Orders', icon: ShoppingCart, badge: dashboardStats?.pendingKycReviews || undefined, color: "from-amber-400 to-orange-500 shadow-amber-500/30" },
+    { id: "installment-orders", label: language === 'ar' ? 'طلبات التقسيط' : 'Installment Orders', icon: ShoppingCart, badge: showInstallmentBadge ? (dashboardStats?.pendingKycReviews || true) : undefined, color: "from-amber-400 to-orange-500 shadow-amber-500/30" },
     { id: "installment-payments", label: language === 'ar' ? 'متابعة الأقساط' : 'Installment Tracking', icon: History, color: "from-indigo-400 to-blue-600 shadow-indigo-500/30" },
     { id: "payments", label: language === 'ar' ? 'بوابات الدفع' : 'Payment Gateways', icon: DollarSign, color: "from-emerald-400 to-teal-600 shadow-emerald-500/30" },
     { id: "orders", label: t('orders'), icon: ShoppingCart, color: "from-orange-500 to-red-600 shadow-orange-500/30" },
     { id: "customers", label: t('customers'), icon: Users, color: "from-sky-500 to-blue-600 shadow-sky-500/30" },
     { id: "chat", label: t('chat'), icon: MessageSquare, badge: unreadCount, color: "from-pink-500 to-primary shadow-pink-500/30" },
     { id: "settings", label: t('settings'), icon: Settings, color: "from-slate-700 to-slate-900 shadow-slate-500/30" },
-  ], [t, unreadCount, language, dashboardStats]);
+  ], [t, unreadCount, language, dashboardStats, showInstallmentBadge]);
 
   const setActiveTab = (tab: typeof activeTab) => {
     setActiveTabInternal(tab);
+
+    // Clear installment badge if clicking the tab
+    if (tab === 'installment-orders') {
+      const now = Date.now();
+      localStorage.setItem('lastSeenInstallmentOrdersAt', now.toString());
+      setLastSeenKycAt(now);
+    }
+
     const params = new URLSearchParams(window.location.search);
     params.set("tab", tab);
     setLocation(window.location.pathname + "?" + params.toString());
@@ -662,7 +680,7 @@ export default function AdminDashboard() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`group h-11 md:h-14 px-5 md:px-8 rounded-xl md:rounded-2xl font-bold text-xs md:text-sm flex items-center gap-2.5 transition-all duration-300 relative overflow-hidden whitespace-nowrap min-w-fit shadow-sm ${activeTab === tab.id
+                className={`group h-11 md:h-14 px-5 md:px-8 rounded-xl md:rounded-2xl font-bold text-xs md:text-sm flex items-center gap-2.5 transition-all duration-300 relative whitespace-nowrap min-w-fit shadow-sm ${activeTab === tab.id
                   ? `bg-gradient-to-r ${tab.color} text-white shadow-lg scale-105 z-10`
                   : "bg-gray-800 text-white hover:bg-gray-700 hover:text-white border border-transparent hover:border-gray-600 hover:shadow-md"
                   }`}

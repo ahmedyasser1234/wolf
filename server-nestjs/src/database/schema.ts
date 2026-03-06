@@ -31,6 +31,7 @@ export const users = pgTable("users", {
     updatedAt: timestamp("updatedAt").defaultNow().notNull(),
     lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
     isDuplicate: boolean("isDuplicate").default(false).notNull(), // Feature 5
+    isVerified: boolean("isVerified").default(false).notNull(),
 });
 
 export type User = typeof users.$inferSelect;

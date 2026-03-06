@@ -3,10 +3,15 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { DatabaseService } from '../database/database.service';
 import { coupons } from '../database/schema';
 import { eq, and, sql } from 'drizzle-orm';
+import { MailService } from '../mail/mail.service';
+import { users } from '../database/schema';
 
 @Injectable()
 export class CouponsService {
-    constructor(private databaseService: DatabaseService) { }
+    constructor(
+        private databaseService: DatabaseService,
+        private mailService: MailService
+    ) { }
 
     async create(data: {
         code: string;
@@ -40,6 +45,29 @@ export class CouponsService {
                 isActive: data.isActive !== undefined ? data.isActive : true,
             })
             .returning();
+
+        // Notify all customers about the new coupon
+        if (coupon.isActive) {
+            const allUsers = await this.databaseService.db
+                .select({ email: users.email })
+                .from(users)
+                .where(eq(users.role, 'customer'));
+
+            const discountValue = coupon.type === 'percentage'
+                ? `${coupon.discountPercent}`
+                : `${coupon.discountAmount}`;
+
+            for (const user of allUsers) {
+                if (user.email) {
+                    this.mailService.sendNewOfferEmail(
+                        user.email,
+                        `كوبون خصم جديد: ${coupon.code}`,
+                        discountValue,
+                        coupon.code
+                    ).catch(err => console.error(`Failed to send coupon email to ${user.email}:`, err));
+                }
+            }
+        }
 
         return coupon;
     }

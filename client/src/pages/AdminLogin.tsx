@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -35,6 +35,13 @@ export default function AdminLogin() {
             setLocation("/admin-dashboard");
         } catch (error: any) {
             const message = error.response?.data?.message || "Invalid credentials or access denied";
+
+            if (message.includes('not verified') || message.includes('التحقق')) {
+                toast.error("Account not verified. Please verify your email.");
+                setLocation(`/verify-email?email=${encodeURIComponent(email.toLowerCase())}&redirect=/admin-dashboard`);
+                return;
+            }
+
             toast.error(message);
         } finally {
             setIsLoading(false);
@@ -98,6 +105,11 @@ export default function AdminLogin() {
                                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                 </button>
                             </div>
+                        </div>
+                        <div className="flex justify-end">
+                            <Link href="/forgot-password" title="Forgot Password" className="text-xs font-black text-primary hover:opacity-80 transition-opacity">
+                                Forgot password?
+                            </Link>
                         </div>
                         <Button
                             className="w-full h-14 bg-primary hover:bg-primary/90 text-white font-bold text-lg rounded-2xl shadow-lg shadow-primary/25 transition-all hover:scale-[1.02] active:scale-95 mt-4"

@@ -26,15 +26,21 @@ export default function AdminRegister() {
         setIsLoading(true);
 
         try {
-            const response = await api.post("/auth/register", {
+            const result = await api.post("/auth/register", {
                 name,
                 email: email.toLowerCase(),
                 password,
                 role: 'admin'
             });
 
-            if (response.data.token) {
-                localStorage.setItem('app_token', response.data.token);
+            if (result.data.requiresVerification) {
+                toast.success("Verification code sent to your email");
+                setLocation(`/verify-email?email=${encodeURIComponent(email.toLowerCase())}&redirect=/admin-dashboard`);
+                return;
+            }
+
+            if (result.data.token) {
+                localStorage.setItem('app_token', result.data.token);
             }
 
             await refresh();

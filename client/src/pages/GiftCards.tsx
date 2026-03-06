@@ -7,7 +7,7 @@ import { useLanguage } from "@/lib/i18n";
 import {
     Gift, Copy, Check, Share2, ChevronRight,
     Sparkles, Heart, ArrowLeft, Loader2, MessageCircle,
-    CreditCard, Wallet
+    CreditCard, Wallet, Mail
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -170,6 +170,7 @@ export default function GiftCards() {
     const [amount, setAmount] = useState<number>(100);
     const [customAmount, setCustomAmount] = useState('');
     const [recipientName, setRecipientName] = useState('');
+    const [recipientEmail, setRecipientEmail] = useState('');
     const [paymentMethod, setPaymentMethod] = useState<'card' | 'wallet'>('card');
     const [result, setResult] = useState<PurchaseResult | null>(null);
 
@@ -181,7 +182,7 @@ export default function GiftCards() {
     const finalAmount = customAmount ? Number(customAmount) : amount;
 
     const purchaseMutation = useMutation({
-        mutationFn: () => endpoints.giftCards.purchase(finalAmount, recipientName || undefined, paymentMethod),
+        mutationFn: () => endpoints.giftCards.purchase(finalAmount, recipientName || undefined, paymentMethod, recipientEmail || undefined),
         onSuccess: (data: PurchaseResult) => {
             if (data.checkoutUrl) {
                 window.location.href = data.checkoutUrl;
@@ -291,6 +292,22 @@ export default function GiftCards() {
                                         onChange={e => setRecipientName(e.target.value)}
                                         placeholder={language === 'ar' ? 'مثال: محمد، سارة...' : 'e.g. John, Sara...'}
                                         className="h-14 bg-gray-800 border-gray-700 text-white rounded-2xl px-5 text-lg placeholder:text-gray-600 focus-visible:ring-purple-500"
+                                    />
+                                </div>
+
+                                {/* Recipient Email */}
+                                <div className="space-y-2">
+                                    <label className="text-sm font-black text-gray-300 uppercase tracking-widest flex items-center gap-2">
+                                        <Mail size={14} className="text-blue-400" />
+                                        {language === 'ar' ? 'بريد المستقبِل (اختياري للإرسال المباشر)' : "Recipient's Email (Optional for direct send)"}
+                                    </label>
+                                    <Input
+                                        type="email"
+                                        value={recipientEmail}
+                                        onChange={e => setRecipientEmail(e.target.value)}
+                                        placeholder={language === 'ar' ? 'example@mail.com' : 'example@mail.com'}
+                                        className="h-14 bg-gray-800 border-gray-700 text-white rounded-2xl px-5 text-lg placeholder:text-gray-600 focus-visible:ring-purple-500 text-left"
+                                        dir="ltr"
                                     />
                                 </div>
 

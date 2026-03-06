@@ -3,10 +3,11 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SignJWT, jwtVerify } from 'jose';
 import { DatabaseService } from '../database/database.service';
-import { users, vendors } from '../database/schema';
-import { eq, sql } from 'drizzle-orm';
+import { users, vendors, otpVerifications } from '../database/schema';
+import { eq, sql, and, gte } from 'drizzle-orm';
 import { SessionPayload } from '../common/constants';
 import { NotificationsService } from '../notifications/notifications.service';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +18,7 @@ export class AuthService {
         private configService: ConfigService,
         private databaseService: DatabaseService,
         private notificationsService: NotificationsService,
+        private mailService: MailService,
     ) {
         const secret = this.configService.get<string>('JWT_SECRET', 'dev-secret-123456');
         this.jwtSecret = new TextEncoder().encode(secret);
@@ -55,7 +57,6 @@ export class AuthService {
         }
     }
 
-    // --- Password Hashing Utilities (using native crypto) ---
     private async hashPassword(password: string): Promise<string> {
         return new Promise((resolve, reject) => {
             const salt = randomBytes(16).toString('hex');
@@ -76,13 +77,9 @@ export class AuthService {
         });
     }
 
-    // --- Auth Flows ---
-
     async register(data: any) {
         const email = data.email.toLowerCase();
-        console.log('AuthService.register called for:', email);
 
-        // Check if user exists
         const existingUser = await this.databaseService.db
             .select()
             .from(users)
@@ -93,7 +90,6 @@ export class AuthService {
             throw new UnauthorizedException('User already exists');
         }
 
-        // Feature 5: Detect Duplicate Accounts
         let isDuplicate = false;
         if (data.phone) {
             const possibleDuplicatePhone = await this.databaseService.db
@@ -108,11 +104,13 @@ export class AuthService {
 
         const hashedPassword = await this.hashPassword(data.password);
         const openId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = new Date(Date.now() + 15 * 60000);
 
         return await this.databaseService.db.transaction(async (tx) => {
             const [newUser] = await tx.insert(users).values({
                 openId,
-                email: email,
+                email,
                 name: data.name,
                 password: hashedPassword,
                 role: data.role || 'customer',
@@ -122,7 +120,15 @@ export class AuthService {
                 loginMethod: 'email',
                 lastSignedIn: new Date(),
                 isDuplicate,
+                isVerified: false,
             }).returning();
+
+            await tx.insert(otpVerifications).values({
+                email,
+                code: otpCode,
+                type: 'registration',
+                expiresAt,
+            });
 
             if (data.role === 'vendor') {
                 const storeSlug = (data.storeNameEn || data.name)
@@ -134,22 +140,14 @@ export class AuthService {
                     storeNameAr: data.storeNameAr || `${data.name}'s Store`,
                     storeNameEn: data.storeNameEn || `${data.name}'s Store`,
                     storeSlug,
-                    email: email,
+                    email,
                     descriptionAr: data.descriptionAr || 'New vendor store',
                     descriptionEn: data.descriptionEn || 'New vendor store',
                     phone: data.phone || null,
-                    cityAr: data.cityAr || null,
-                    cityEn: data.cityEn || null,
-                    countryAr: data.countryAr || null,
-                    countryEn: data.countryEn || null,
-                    addressAr: data.addressAr || null,
-                    addressEn: data.addressEn || null,
-                    logo: data.logo || null,
                     isActive: true,
                     isVerified: false,
                 });
 
-                // Notify Admins about new vendor registration
                 await this.notificationsService.notifyAdmins(
                     'vendor_registration',
                     'تسجيل بائع جديد',
@@ -158,17 +156,120 @@ export class AuthService {
                 );
             }
 
-            // Create session
-            if (data.role === 'vendor') {
-                return {
-                    user: { email: email, name: data.name, role: data.role },
-                    message: 'Registration successful. Your account is pending admin approval.'
-                };
-            }
+            await this.mailService.sendOTP(email, otpCode, 'registration');
 
-            const token = await this.createSessionToken(newUser.id, openId, data.name, data.role || 'customer', email);
-            return { token, user: { email: email, name: data.name, role: data.role } };
+            return {
+                user: { email, name: data.name, role: data.role },
+                requiresVerification: true,
+                message: 'Please verify your email to continue.'
+            };
         });
+    }
+
+    async verifyRegistrationOtp(email: string, code: string) {
+        const emailLower = email.toLowerCase();
+        const [otp] = await this.databaseService.db
+            .select()
+            .from(otpVerifications)
+            .where(and(
+                eq(otpVerifications.email, emailLower),
+                eq(otpVerifications.code, code),
+                eq(otpVerifications.type, 'registration'),
+                gte(otpVerifications.expiresAt, new Date())
+            ))
+            .limit(1);
+
+        if (!otp) {
+            throw new UnauthorizedException('Invalid or expired verification code');
+        }
+
+        const [user] = await this.databaseService.db
+            .update(users)
+            .set({ isVerified: true })
+            .where(eq(users.email, emailLower))
+            .returning();
+
+        await this.databaseService.db.delete(otpVerifications).where(eq(otpVerifications.id, otp.id));
+
+        const token = await this.createSessionToken(user.id, user.openId!, user.name!, user.role, user.email || undefined);
+        return { token, user };
+    }
+
+    async requestPasswordReset(email: string) {
+        const emailLower = email.toLowerCase();
+        const [user] = await this.databaseService.db
+            .select()
+            .from(users)
+            .where(eq(users.email, emailLower))
+            .limit(1);
+
+        if (!user) {
+            return { message: 'If an account exists, a reset code has been sent.' };
+        }
+
+        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = new Date(Date.now() + 15 * 60000);
+
+        await this.databaseService.db.insert(otpVerifications).values({
+            email: emailLower,
+            code: otpCode,
+            type: 'password_reset',
+            expiresAt,
+        });
+
+        await this.mailService.sendOTP(emailLower, otpCode, 'password_reset');
+        return { message: 'Reset code sent.' };
+    }
+
+    async resetPassword(data: any) {
+        const emailLower = data.email.toLowerCase();
+        const [otp] = await this.databaseService.db
+            .select()
+            .from(otpVerifications)
+            .where(and(
+                eq(otpVerifications.email, emailLower),
+                eq(otpVerifications.code, data.code),
+                eq(otpVerifications.type, 'password_reset'),
+                gte(otpVerifications.expiresAt, new Date())
+            ))
+            .limit(1);
+
+        if (!otp) {
+            throw new UnauthorizedException('Invalid or expired reset code');
+        }
+
+        const hashedPassword = await this.hashPassword(data.password);
+
+        await this.databaseService.db
+            .update(users)
+            .set({ password: hashedPassword, updatedAt: new Date() })
+            .where(eq(users.email, emailLower));
+
+        await this.databaseService.db.delete(otpVerifications).where(eq(otpVerifications.id, otp.id));
+
+        return { message: 'Password reset successfully.' };
+    }
+
+    async resendOtp(email: string, type: 'registration' | 'password_reset') {
+        const emailLower = email.toLowerCase();
+
+        await this.databaseService.db.delete(otpVerifications).where(and(
+            eq(otpVerifications.email, emailLower),
+            eq(otpVerifications.type, type)
+        ));
+
+        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = new Date(Date.now() + 15 * 60000);
+
+        await this.databaseService.db.insert(otpVerifications).values({
+            email: emailLower,
+            code: otpCode,
+            type,
+            expiresAt,
+        });
+
+        await this.mailService.sendOTP(emailLower, otpCode, type);
+        return { message: 'New code sent.' };
     }
 
     async login(data: { email: string; password: string; role?: string }) {
@@ -185,7 +286,6 @@ export class AuthService {
 
         const user = userData[0];
 
-        // Role-specific login validation
         if (data.role && user.role !== data.role) {
             const roleLabels: any = {
                 admin: 'Administrator',
@@ -202,7 +302,10 @@ export class AuthService {
             throw new UnauthorizedException('This account has been blocked by the administrator.');
         }
 
-        // Check Vendor Status
+        if (user.loginMethod === 'email' && !user.isVerified) {
+            throw new UnauthorizedException('Your email is not verified. Please verify your email.');
+        }
+
         if (user.role === 'vendor') {
             const vendor = await this.databaseService.db
                 .select()
@@ -226,11 +329,10 @@ export class AuthService {
         }
 
         const token = await this.createSessionToken(user.id, user.openId as string, (user.name || 'User') as string, (user.role || 'customer') as string, user.email || undefined);
-        return { token, user: user };
+        return { token, user };
     }
 
     async loginWithGoogle(token: string) {
-        // Verify token with Google
         try {
             const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${token}`);
             if (!response.ok) throw new Error('Invalid Google Token');
@@ -238,9 +340,8 @@ export class AuthService {
 
             const email = googleData.email.toLowerCase();
             const name = googleData.name;
-            const openId = googleData.sub; // Google's unique user ID
+            const openId = googleData.sub;
 
-            // Check if user exists
             let user = await this.databaseService.db
                 .select()
                 .from(users)
@@ -250,16 +351,16 @@ export class AuthService {
             let userId, userRole, userOpenId, userName;
 
             if (user.length === 0) {
-                // Register new user automatically
                 const newOpenId = `google_${openId}`;
                 const [newUser] = await this.databaseService.db.insert(users).values({
                     openId: newOpenId,
-                    email: email,
-                    name: name,
-                    password: '', // No password for social login
-                    role: 'customer', // Default role
+                    email,
+                    name,
+                    password: '',
+                    role: 'customer',
                     loginMethod: 'google',
                     lastSignedIn: new Date(),
+                    isVerified: true, // Social login is pre-verified
                 }).returning();
 
                 userId = newUser.id;
@@ -268,15 +369,11 @@ export class AuthService {
                 userName = name;
                 user = [newUser];
             } else {
-                // Determine logic for existing user
-                // If they have a password (email login) we allow linking or just logging in.
-                // Here we just log them in. 
                 userId = user[0].id;
                 userRole = user[0].role || 'customer';
                 userOpenId = user[0].openId;
                 userName = user[0].name || name;
 
-                // Update last signed in
                 await this.databaseService.db.update(users)
                     .set({ lastSignedIn: new Date() })
                     .where(eq(users.id, userId));
@@ -296,10 +393,8 @@ export class AuthService {
     }
 
     async devLogin() {
-        // ... kept as is
         const devOpenId = 'dev-admin-123';
 
-        // Upsert dev user
         await this.databaseService.db
             .insert(users)
             .values({
@@ -309,6 +404,7 @@ export class AuthService {
                 role: 'admin',
                 loginMethod: 'dev',
                 lastSignedIn: new Date(),
+                isVerified: true,
             })
             .onConflictDoUpdate({
                 target: users.openId,
@@ -327,12 +423,10 @@ export class AuthService {
         const token = await this.createSessionToken(user[0].id, devOpenId, 'Developer Admin', 'admin', user[0].email || undefined);
         return { token, user: user[0] };
     }
+
     async updateProfile(userId: number, data: any) {
-        // If email is provided, check for uniqueness ensuring it's not the current user's email
         if (data.email) {
             const email = data.email.toLowerCase();
-
-            // Get current user to compare emails
             const [currentUser] = await this.databaseService.db
                 .select()
                 .from(users)
@@ -353,7 +447,6 @@ export class AuthService {
             data.email = email;
         }
 
-        // If password is provided, hash it
         if (data.password) {
             data.password = await this.hashPassword(data.password);
         }
@@ -380,4 +473,3 @@ export class AuthService {
         return result.length > 0 ? result[0] : null;
     }
 }
-

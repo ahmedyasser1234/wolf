@@ -62,6 +62,13 @@ export default function Register() {
                 phone,
                 address
             });
+
+            if (response.data.requiresVerification) {
+                toast.success(language === 'ar' ? 'تم إرسال كود التحقق إلى بريدك' : 'Verification code sent to your email');
+                setLocation(`/verify-email?email=${encodeURIComponent(email.toLowerCase())}&redirect=${encodeURIComponent(redirectPath)}`);
+                return;
+            }
+
             if (response.data.token) {
                 localStorage.setItem('app_token', response.data.token);
             }

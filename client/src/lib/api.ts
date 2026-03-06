@@ -209,7 +209,7 @@ export const endpoints = {
         create: (data: any) => api.post('/gift-cards', data).then(res => res.data),
         delete: (id: number) => api.delete(`/gift-cards/${id}`).then(res => res.data),
         redeem: (code: string) => api.post('/gift-cards/redeem', { code }).then(res => res.data),
-        purchase: (amount: number, recipientName?: string, paymentMethod?: string) => api.post('/gift-cards/purchase', { amount, recipientName, paymentMethod }).then(res => res.data),
+        purchase: (amount: number, recipientName?: string, paymentMethod?: string, recipientEmail?: string) => api.post('/gift-cards/purchase', { amount, recipientName, paymentMethod, recipientEmail }).then(res => res.data),
         confirm: (giftCardId: number) => api.post('/gift-cards/confirm', { giftCardId }).then(res => res.data),
         getMyCards: () => api.get('/gift-cards/my-cards').then(res => res.data),
         validate: (code: string) => api.get(`/gift-cards/validate/${code}`).then(res => res.data),

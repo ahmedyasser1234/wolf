@@ -89,6 +89,13 @@ export default function Login() {
             setLocation(redirectPath);
         } catch (error: any) {
             const message = error.response?.data?.message || (language === 'ar' ? 'فشل تسجيل الدخول. تحقق من بياناتك' : 'Login failed. Check your credentials');
+
+            if (message.includes('not verified') || message.includes('التحقق')) {
+                toast.error(language === 'ar' ? 'حسابك غير مفعل. يرجى تفعيل البريد الإلكتروني' : 'Account not verified. Please verify your email.');
+                setLocation(`/verify-email?email=${encodeURIComponent(email.toLowerCase())}&redirect=${encodeURIComponent(redirectPath)}`);
+                return;
+            }
+
             toast.error(message);
             console.error(error);
         } finally {
@@ -137,8 +144,12 @@ export default function Login() {
                                     onClick={() => setShowPassword(!showPassword)}
                                     className={`absolute inset-y-0 ${language === 'ar' ? 'left-3' : 'right-3'} flex items-center text-gray-500 hover:text-gray-700 focus:outline-none`}
                                 >
-                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </button>
+                            </div>
+                            <div className={`flex justify-${language === 'ar' ? 'start' : 'end'}`}>
+                                <Link href="/forgot-password" title="Forgot Password" className="text-xs font-black text-primary hover:opacity-80 transition-opacity">
+                                    {language === 'ar' ? 'نسيت كلمة المرور؟' : 'Forgot password?'}
+                                </Link>
                             </div>
                         </div>
 

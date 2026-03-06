@@ -1,5 +1,5 @@
 
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { orders, orderItems, products, cartItems, notifications, vendors, coupons, offers, offerItems, users, walletTransactions, customerWallets, installmentPlans, installments, installmentPayments, giftCards } from '../database/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
@@ -12,6 +12,7 @@ import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class OrdersService {
+    private readonly logger = new Logger(OrdersService.name);
     constructor(
         private databaseService: DatabaseService,
         private notificationsService: NotificationsService,
@@ -744,6 +745,23 @@ export class OrdersService {
                 updatedOrder.id
             );
 
+            // Fetch customer email for order status update
+            const [customer] = await this.databaseService.db
+                .select({ email: users.email })
+                .from(users)
+                .where(eq(users.id, updatedOrder.customerId))
+                .limit(1);
+
+            if (customer?.email) {
+                if (newStatusNormalized === 'preparing_shipment') {
+                    await this.mailService.sendOrderStatusEmail(customer.email, updatedOrder.orderNumber, 'accepted').catch(err => this.logger.error('Failed to send status email:', err));
+                } else if (newStatusNormalized === 'shipped') {
+                    await this.mailService.sendOrderStatusEmail(customer.email, updatedOrder.orderNumber, 'shipped').catch(err => this.logger.error('Failed to send status email:', err));
+                } else if (newStatusNormalized === 'cancelled') {
+                    await this.mailService.sendOrderStatusEmail(customer.email, updatedOrder.orderNumber, 'rejected').catch(err => this.logger.error('Failed to send status email:', err));
+                }
+            }
+
             // Vendor Notification (If Delivered)
             if (newStatusNormalized === 'delivered' && vendorUserId) {
                 await this.notificationsService.notify(
@@ -886,6 +904,16 @@ export class OrdersService {
                 order.id
             );
 
+            // Email Notification for KYC Approval
+            const [customer] = await this.databaseService.db
+                .select({ email: users.email })
+                .from(users)
+                .where(eq(users.id, order.customerId))
+                .limit(1);
+            if (customer?.email) {
+                await this.mailService.sendOrderStatusEmail(customer.email, order.orderNumber, 'accepted').catch(err => console.error('Failed to send kyc approval email:', err));
+            }
+
         } else if (action === 'reject') {
             // Refund deposit to wallet (Automated refund on rejection)
             // CRITICAL: Call this BEFORE updating status to cancelled/failed so the check inside refundOrderDeposit passes
@@ -936,6 +964,16 @@ export class OrdersService {
                 message,
                 order.id
             );
+
+            // Email Notification for KYC Rejection
+            const [customer] = await this.databaseService.db
+                .select({ email: users.email })
+                .from(users)
+                .where(eq(users.id, order.customerId))
+                .limit(1);
+            if (customer?.email) {
+                await this.mailService.sendOrderStatusEmail(customer.email, order.orderNumber, 'rejected', reason).catch(err => console.error('Failed to send kyc rejection email:', err));
+            }
         }
 
         return { success: true, order: updatedOrder, action };

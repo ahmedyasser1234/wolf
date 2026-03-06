@@ -1,11 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { offers, offerItems, products } from '../database/schema';
+import { offers, offerItems, products, users } from '../database/schema';
 import { eq, and, desc } from 'drizzle-orm';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class OffersService {
-    constructor(private databaseService: DatabaseService) { }
+    constructor(
+        private databaseService: DatabaseService,
+        private mailService: MailService
+    ) { }
 
     async create(vendorId: number, data: any) {
         // 1. Create Offer
@@ -31,6 +35,24 @@ export class OffersService {
                 productId,
             }));
             await this.databaseService.db.insert(offerItems).values(items);
+        }
+
+        // Notify all customers about the new offer
+        if (createdOffer.isActive) {
+            const allUsers = await this.databaseService.db
+                .select({ email: users.email })
+                .from(users)
+                .where(eq(users.role, 'customer'));
+
+            for (const user of allUsers) {
+                if (user.email) {
+                    this.mailService.sendNewOfferEmail(
+                        user.email,
+                        `عرض جديد: ${createdOffer.nameAr}`,
+                        `${createdOffer.discountPercent}`
+                    ).catch(err => console.error(`Failed to send offer email to ${user.email}:`, err));
+                }
+            }
         }
 
         return createdOffer;

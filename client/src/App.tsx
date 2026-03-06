@@ -40,6 +40,9 @@ const CategoryGroupsPage = lazy(() => import("@/pages/CategoryGroupsPage"));
 const GroupProductsPage = lazy(() => import("@/pages/GroupProductsPage"));
 const GiftCards = lazy(() => import("@/pages/GiftCards"));
 const WalletPage = lazy(() => import("@/pages/Wallet"));
+const VerifyEmail = lazy(() => import("@/pages/VerifyEmail"));
+const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 // Static common components
@@ -595,6 +598,9 @@ function Router() {
         <Route path="/search" component={SearchResults} />
         <Route path="/login" component={Login} />
         <Route path="/register" component={Register} />
+        <Route path="/verify-email" component={VerifyEmail} />
+        <Route path="/forgot-password" component={ForgotPassword} />
+        <Route path="/reset-password" component={ResetPassword} />
 
         {/* Product Routes */}
         <Route path={"/products"} component={Products} />

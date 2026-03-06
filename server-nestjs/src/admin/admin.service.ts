@@ -285,7 +285,10 @@ export class AdminService {
             .where(eq(orders.paymentStatus, 'paid'));
 
         const [pendingKycReviews] = await this.databaseService.db
-            .select({ count: sql`count(*)` })
+            .select({
+                count: sql`count(*)`,
+                latestAt: sql`max(${orders.createdAt})`
+            })
             .from(orders)
             .where(and(
                 sql`${orders.installmentPlanId} IS NOT NULL`,
@@ -298,6 +301,7 @@ export class AdminService {
             totalPaidOrders: Number(paidOrdersCount?.count || 0),
             totalRevenue: Number(revenueTotal?.total || 0),
             pendingKycReviews: Number(pendingKycReviews?.count || 0),
+            latestPendingKycAt: pendingKycReviews?.latestAt || null,
         };
     }
 

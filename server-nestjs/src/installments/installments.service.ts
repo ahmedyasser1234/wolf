@@ -131,11 +131,14 @@ export class InstallmentsService {
                     id: users.id,
                     name: users.name,
                     email: users.email,
-                    phone: users.phone
+                    phone: users.phone,
+                    address: users.address
                 },
                 order: {
                     id: orders.id,
-                    orderNumber: orders.orderNumber
+                    orderNumber: orders.orderNumber,
+                    kycData: orders.kycData,
+                    shippingAddress: orders.shippingAddress
                 }
             })
             .from(installmentPayments)
