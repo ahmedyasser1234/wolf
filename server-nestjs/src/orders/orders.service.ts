@@ -116,7 +116,7 @@ export class OrdersService {
         if (customerRecord?.status === 'deactivated') throw new BadRequestException('حسابك معطّل مؤقتاً ولا يمكنك إتمام الطلب. يرجى التواصل مع الدعم.');
 
         // Group items by vendor
-        const vendorGroups = new Map<number, { items: any[], subtotal: number, vendorUserId: number }>();
+        const vendorGroups = new Map<number, { items: any[], subtotal: number, originalSubtotal: number, vendorUserId: number }>();
         for (const item of cart) {
             const product = await this.databaseService.db
                 .select()
@@ -137,12 +137,16 @@ export class OrdersService {
                     if (vendor.length > 0) vendorUserId = vendor[0].userId;
                 }
                 if (!vendorGroups.has(vendorId)) {
-                    vendorGroups.set(vendorId, { items: [], subtotal: 0, vendorUserId });
+                    vendorGroups.set(vendorId, { items: [], subtotal: 0, originalSubtotal: 0, vendorUserId });
                 }
                 const price = Number(prod.price);
+                const originalPrice = Number(prod.originalPrice) > 0 ? Number(prod.originalPrice) : price;
                 const itemTotal = price * item.quantity;
+                const itemOriginalTotal = originalPrice * item.quantity;
+
                 const group = vendorGroups.get(vendorId)!;
                 group.subtotal += itemTotal;
+                group.originalSubtotal += itemOriginalTotal;
                 group.items.push({
                     productId: prod.id,
                     vendorId: prod.vendorId,
@@ -357,14 +361,19 @@ export class OrdersService {
                     }
 
                     // Discounts & Shipping
-                    let totalDiscount = 0;
+                    const offerDiscount = Math.max(0, group.originalSubtotal - group.subtotal);
+                    let couponDiscount = 0;
                     if (coupon && coupon.vendorId === vendorId) {
-                        totalDiscount = (group.subtotal * coupon.discountPercent) / 100;
+                        couponDiscount = (group.subtotal * coupon.discountPercent) / 100;
                     }
+                    const totalDiscount = offerDiscount + couponDiscount;
+
                     const [vendor] = await tx.select().from(vendors).where(eq(vendors.id, vendorId)).limit(1);
                     const shippingCost = vendor?.shippingCost || 0;
                     const commissionRate = vendor?.commissionRate || 10;
-                    const finalSubtotal = group.subtotal - totalDiscount;
+
+                    // Final amount paid by customer for this vendor's part (excluding shipping)
+                    const finalSubtotal = group.subtotal - couponDiscount;
                     const orderTotal = finalSubtotal + shippingCost;
                     const commission = (finalSubtotal * commissionRate) / 100;
                     const orderNumber = `ORD-${Date.now()}-${(vendorId === null || vendorId === undefined) ? 0 : vendorId}`;
@@ -394,7 +403,7 @@ export class OrdersService {
                             vendorId,
                             status: orderStatus,
                             paymentStatus: orderPaymentStatus,
-                            subtotal: group.subtotal,
+                            subtotal: group.originalSubtotal,
                             discount: totalDiscount,
                             shippingCost,
                             commission,
@@ -537,12 +546,39 @@ export class OrdersService {
         } catch (error) {
             // IMPORTANT: If order creation fails AFTER deposit was deducted (wallet/gift_card),
             // we must refund to prevent money loss.
-            if (installmentPlanId && depositAmount > 0 && resolvedDepositPaymentMethod === 'wallet') {
-                try {
-                    await this.walletsService.topUpBalance(customerId, depositAmount, `استرجاع مقدم بسبب خطأ في إنشاء الطلب`);
-                    console.log(`  - [Rollback] Refunded deposit ${depositAmount} to wallet for customer ${customerId}`);
-                } catch (refundErr) {
-                    console.error('CRITICAL: Failed to refund deposit after order creation failure:', refundErr.message);
+            if (installmentPlanId && depositAmount > 0) {
+                if (resolvedDepositPaymentMethod === 'wallet') {
+                    try {
+                        await this.walletsService.topUpBalance(customerId, depositAmount, `refund_rollback_${Date.now()}`, `استرجاع مقدم بسبب خطأ في إنشاء الطلب`);
+                        console.log(`  - [Rollback] Refunded wallet deposit ${depositAmount} to customer ${customerId}`);
+                    } catch (refundErr) {
+                        console.error('CRITICAL: Failed to refund wallet deposit after order creation failure:', refundErr.message);
+                    }
+                } else if (resolvedDepositPaymentMethod === 'gift_card' && totalPaidByGiftCard > 0) {
+                    try {
+                        // For gift cards, we need to find the card and add back the amount
+                        if (depositGiftCardCode) {
+                            const [giftCard] = await this.databaseService.db
+                                .select()
+                                .from(giftCards)
+                                .where(eq(giftCards.code, depositGiftCardCode.toUpperCase()))
+                                .limit(1);
+
+                            if (giftCard) {
+                                await this.databaseService.db
+                                    .update(giftCards)
+                                    .set({
+                                        amount: Number(giftCard.amount) + totalPaidByGiftCard,
+                                        isRedeemed: false,
+                                        updatedAt: new Date()
+                                    })
+                                    .where(eq(giftCards.id, giftCard.id));
+                                console.log(`  - [Rollback] Refunded gift card amount ${totalPaidByGiftCard} to card ${depositGiftCardCode}`);
+                            }
+                        }
+                    } catch (refundErr) {
+                        console.error('CRITICAL: Failed to refund gift card deposit after order creation failure:', refundErr.message);
+                    }
                 }
             }
             console.error(`❌ [OrdersService] FATAL ERROR in create:`, error);
@@ -776,6 +812,10 @@ export class OrdersService {
             );
 
         } else if (action === 'reject') {
+            // Refund deposit to wallet (Automated refund on rejection)
+            // CRITICAL: Call this BEFORE updating status to cancelled/failed so the check inside refundOrderDeposit passes
+            await this.refundOrderDeposit(orderId);
+
             [updatedOrder] = await this.databaseService.db
                 .update(orders)
                 .set({
@@ -811,9 +851,6 @@ export class OrdersService {
                     await this.databaseService.db.update(products).set({ stock: newStock, sizes: newSizes }).where(eq(products.id, item.productId));
                 }
             }
-
-            // Refund deposit to wallet (Automated refund on rejection)
-            await this.refundOrderDeposit(orderId);
 
             // Notify Customer
             const message = reason ? `نعتذر، تم رفض طلب التقسيط للطلب رقم #${order.orderNumber}: ${reason}. تم استرجاع مبلغ المقدم إلى محفظتك.` : `نعتذر، تم رفض طلب التقسيط للطلب رقم #${order.orderNumber}. تم استرجاع مبلغ المقدم إلى محفظتك.`;

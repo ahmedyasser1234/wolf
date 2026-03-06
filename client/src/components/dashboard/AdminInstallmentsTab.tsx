@@ -39,7 +39,7 @@ export default function AdminInstallmentsTab({
     const [minQuantity, setMinQuantity] = useState<string>("1");
     const [maxQuantity, setMaxQuantity] = useState<string>("0");
     const [isActive, setIsActive] = useState(true);
-    const [collectionId, setCollectionId] = useState<string>("all");
+    const [selectedCollectionIds, setSelectedCollectionIds] = useState<number[]>([]);
 
     const { data: plans, isLoading } = useQuery({
         queryKey: ['admin', 'installments'],
@@ -87,7 +87,7 @@ export default function AdminInstallmentsTab({
         setMinQuantity("1");
         setMaxQuantity("0");
         setIsActive(true);
-        setCollectionId("all");
+        setSelectedCollectionIds([]);
         setEditingPlan(null);
     };
 
@@ -99,7 +99,9 @@ export default function AdminInstallmentsTab({
             downPaymentPercentage: Number(downPaymentPercentage),
             minQuantity: Number(minQuantity),
             maxQuantity: Number(maxQuantity),
-            collectionId: collectionId === "all" ? null : Number(collectionId),
+            collectionIds: selectedCollectionIds,
+            // Keep collectionId for backward compatibility if backend still needs it (optional)
+            collectionId: selectedCollectionIds.length === 1 ? selectedCollectionIds[0] : null,
             isActive
         };
 
@@ -119,7 +121,7 @@ export default function AdminInstallmentsTab({
         setMinQuantity(plan.minQuantity?.toString() || "1");
         setMaxQuantity(plan.maxQuantity?.toString() || "0");
         setIsActive(plan.isActive);
-        setCollectionId(plan.collectionId?.toString() || "all");
+        setSelectedCollectionIds(plan.collectionIds || (plan.collectionId ? [plan.collectionId] : []));
         setIsModalOpen(true);
     };
 
@@ -205,7 +207,7 @@ export default function AdminInstallmentsTab({
                                                     </div>
                                                 </td>
                                                 <td className="py-4 px-6 text-start text-sm text-gray-300">
-                                                    {plan.collectionName || (language === 'ar' ? 'عام' : 'Global')}
+                                                    {plan.collectionNames}
                                                 </td>
                                                 <td className="py-4 px-6 text-center font-black text-white">
                                                     {plan.months} {language === 'ar' ? 'شهر' : 'Months'}
@@ -291,31 +293,46 @@ export default function AdminInstallmentsTab({
                                 </div>
 
                                 <div className="space-y-2 text-start">
-                                    <label className="text-sm font-bold text-gray-300">{language === 'ar' ? 'المجموعة (الماركة)' : 'Collection (Brand)'}</label>
-                                    <Select
-                                        value={collectionId}
-                                        onValueChange={(val) => {
-                                            setCollectionId(val);
-                                            if (val !== "all") {
-                                                const selected = collections?.find((c: any) => c.id.toString() === val);
-                                                if (selected && selected.downPaymentPercentage !== undefined) {
-                                                    setDownPaymentPercentage(selected.downPaymentPercentage.toString());
-                                                }
-                                            }
-                                        }}
-                                    >
-                                        <SelectTrigger className="bg-gray-900 border-gray-800 text-white">
-                                            <SelectValue placeholder={language === 'ar' ? 'اختر المجموعة' : 'Select Collection'} />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-gray-900 border-gray-800 text-white">
-                                            <SelectItem value="all">{language === 'ar' ? 'كل المجموعات (عام)' : 'All Collections (Global)'}</SelectItem>
-                                            {collections?.map((c: any) => (
-                                                <SelectItem key={c.id} value={c.id.toString()}>
+                                    <label className="text-sm font-bold text-gray-300">{language === 'ar' ? 'المجموعات المرتبطة' : 'Linked Collections'}</label>
+                                    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 max-h-48 overflow-y-auto space-y-2">
+                                        <div className="flex items-center gap-2 pb-2 mb-2 border-b border-gray-800">
+                                            <input
+                                                type="checkbox"
+                                                id="all-collections"
+                                                checked={selectedCollectionIds.length === 0}
+                                                onChange={() => setSelectedCollectionIds([])}
+                                                className="w-4 h-4 rounded border-gray-700 bg-gray-800 text-purple-600 focus:ring-purple-500"
+                                            />
+                                            <label htmlFor="all-collections" className="text-sm text-white cursor-pointer font-bold">
+                                                {language === 'ar' ? 'كل المجموعات (عام)' : 'All Collections (Global)'}
+                                            </label>
+                                        </div>
+                                        {collections?.map((c: any) => (
+                                            <div key={c.id} className="flex items-center gap-2">
+                                                <input
+                                                    type="checkbox"
+                                                    id={`col-${c.id}`}
+                                                    checked={selectedCollectionIds.includes(c.id)}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setSelectedCollectionIds([...selectedCollectionIds, c.id]);
+                                                        } else {
+                                                            setSelectedCollectionIds(selectedCollectionIds.filter(id => id !== c.id));
+                                                        }
+                                                    }}
+                                                    className="w-4 h-4 rounded border-gray-700 bg-gray-800 text-purple-600 focus:ring-purple-500"
+                                                />
+                                                <label htmlFor={`col-${c.id}`} className="text-sm text-gray-300 cursor-pointer">
                                                     {language === 'ar' ? c.nameAr : c.nameEn}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                                </label>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <p className="text-[10px] text-gray-500 italic">
+                                        {language === 'ar'
+                                            ? '* إذا لم يتم اختيار أي مجموعة، سيتم اعتبار الخطة عامة لجميع المجموعات.'
+                                            : '* If no collections are selected, the plan will be global for all collections.'}
+                                    </p>
                                 </div>
 
                                 <div className="grid md:grid-cols-2 gap-4">

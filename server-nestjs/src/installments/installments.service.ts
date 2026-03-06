@@ -8,54 +8,44 @@ export class InstallmentsService {
     constructor(private readonly databaseService: DatabaseService) { }
 
     async findAll() {
-        return await this.databaseService.db
-            .select({
-                id: installmentPlans.id,
-                name: installmentPlans.name,
-                collectionId: installmentPlans.collectionId,
-                collectionName: collections.nameEn, // Or Ar based on lang, but usually En is safe for ID
-                months: installmentPlans.months,
-                interestRate: installmentPlans.interestRate,
-                downPaymentPercentage: installmentPlans.downPaymentPercentage,
-                minQuantity: installmentPlans.minQuantity,
-                maxQuantity: installmentPlans.maxQuantity,
-                minAmount: installmentPlans.minAmount,
-                isActive: installmentPlans.isActive,
-                createdAt: installmentPlans.createdAt,
-                updatedAt: installmentPlans.updatedAt,
-            })
-            .from(installmentPlans)
-            .leftJoin(collections, eq(installmentPlans.collectionId, collections.id));
+        const plans = await this.databaseService.db
+            .select()
+            .from(installmentPlans);
+
+        const allCollections = await this.databaseService.db
+            .select()
+            .from(collections);
+
+        const collectionMap = new Map(allCollections.map(c => [c.id, c.nameEn]));
+
+        return plans.map(plan => ({
+            ...plan,
+            collectionNames: plan.collectionIds && plan.collectionIds.length > 0
+                ? plan.collectionIds.map(id => collectionMap.get(id)).filter(Boolean).join(', ')
+                : 'Global'
+        }));
     }
 
     async findActive(collectionId?: number) {
-        let query = this.databaseService.db
-            .select({
-                id: installmentPlans.id,
-                name: installmentPlans.name,
-                collectionId: installmentPlans.collectionId,
-                months: installmentPlans.months,
-                interestRate: installmentPlans.interestRate,
-                downPaymentPercentage: installmentPlans.downPaymentPercentage,
-                minQuantity: installmentPlans.minQuantity,
-                maxQuantity: installmentPlans.maxQuantity,
-                minAmount: installmentPlans.minAmount,
-                isActive: installmentPlans.isActive,
-            })
-            .from(installmentPlans)
-            .where(eq(installmentPlans.isActive, true));
-
         if (collectionId) {
             // Show global plans AND plans for this specific collection
             return await this.databaseService.db
                 .select()
                 .from(installmentPlans)
                 .where(
-                    sql`${installmentPlans.isActive} = true AND (${installmentPlans.collectionId} IS NULL OR ${installmentPlans.collectionId} = ${collectionId})`
+                    sql`${installmentPlans.isActive} = true AND (
+                        ${installmentPlans.collectionIds} IS NULL OR 
+                        array_length(${installmentPlans.collectionIds}, 1) IS NULL OR 
+                        ${collectionId} = ANY(${installmentPlans.collectionIds}) OR 
+                        ${installmentPlans.collectionId} = ${collectionId}
+                    )`
                 );
         }
 
-        return await query;
+        return await this.databaseService.db
+            .select()
+            .from(installmentPlans)
+            .where(eq(installmentPlans.isActive, true));
     }
 
     async findOne(id: number) {
@@ -81,12 +71,14 @@ export class InstallmentsService {
             })
             .returning();
 
-        // SYNC: If plan is for a collection, update collection down payment
-        if (newPlan.collectionId && newPlan.downPaymentPercentage !== undefined) {
-            await this.databaseService.db
-                .update(collections)
-                .set({ downPaymentPercentage: newPlan.downPaymentPercentage, updatedAt: new Date() })
-                .where(eq(collections.id, newPlan.collectionId));
+        // SYNC: Update all collections in the array
+        if (newPlan.collectionIds && newPlan.collectionIds.length > 0 && newPlan.downPaymentPercentage !== undefined) {
+            for (const cId of newPlan.collectionIds) {
+                await this.databaseService.db
+                    .update(collections)
+                    .set({ downPaymentPercentage: newPlan.downPaymentPercentage, updatedAt: new Date() })
+                    .where(eq(collections.id, cId));
+            }
         }
 
         return newPlan;
@@ -102,12 +94,14 @@ export class InstallmentsService {
             .where(eq(installmentPlans.id, id))
             .returning();
 
-        // SYNC: If plan is for a collection, update collection down payment
-        if (updatedPlan.collectionId && updatedPlan.downPaymentPercentage !== undefined) {
-            await this.databaseService.db
-                .update(collections)
-                .set({ downPaymentPercentage: updatedPlan.downPaymentPercentage, updatedAt: new Date() })
-                .where(eq(collections.id, updatedPlan.collectionId));
+        // SYNC: Update all collections in the array
+        if (updatedPlan.collectionIds && updatedPlan.collectionIds.length > 0 && updatedPlan.downPaymentPercentage !== undefined) {
+            for (const cId of updatedPlan.collectionIds) {
+                await this.databaseService.db
+                    .update(collections)
+                    .set({ downPaymentPercentage: updatedPlan.downPaymentPercentage, updatedAt: new Date() })
+                    .where(eq(collections.id, cId));
+            }
         }
 
         return updatedPlan;

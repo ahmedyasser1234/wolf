@@ -686,7 +686,8 @@ export const customerWallets = pgTable("customerWallets", {
 export const installmentPlans = pgTable("installmentPlans", {
     id: serial("id").primaryKey(),
     name: text("name").notNull(),
-    collectionId: integer("collectionId"), // Link to specific collection (brand)
+    collectionId: integer("collectionId"), // Link to specific collection (brand) - Deprecated in favor of collectionIds
+    collectionIds: integer("collectionIds").array(), // Supports multiple collections
     months: integer("months").notNull(),
     interestRate: doublePrecision("interestRate").default(0).notNull(),
     downPaymentPercentage: doublePrecision("downPaymentPercentage").default(0).notNull(),
