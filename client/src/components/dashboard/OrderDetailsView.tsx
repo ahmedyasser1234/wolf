@@ -124,14 +124,20 @@ export default function OrderDetailsView({ orderId, onClose }: OrderDetailsViewP
                     <img src="${order.kycData.faceId || order.kycData.faceImage}" alt="Face ID">
                 </div>` : ''}
                 
-                ${(order.kycData.residencyDoc || order.kycData.idImage) ? `
+                ${(order.kycData.idFrontImage || order.kycData.residencyDoc || order.kycData.idImage) ? `
                 <div class="kyc-item">
-                    <span class="label">${isAr ? 'الهوية / الإقامة' : 'ID / Residency'}</span>
-                    <img src="${order.kycData.residencyDoc || order.kycData.idImage}" alt="ID Document">
+                    <span class="label">${isAr ? 'وجه الهوية' : 'ID Front'}</span>
+                    <img src="${order.kycData.idFrontImage || order.kycData.residencyDoc || order.kycData.idImage}" alt="ID Front">
+                </div>` : ''}
+
+                ${(order.kycData.idBackImage) ? `
+                <div class="kyc-item">
+                    <span class="label">${isAr ? 'ظهر الهوية' : 'ID Back'}</span>
+                    <img src="${order.kycData.idBackImage}" alt="ID Back">
                 </div>` : ''}
                 
                 ${(order.kycData.passportDoc || order.kycData.passportImage) ? `
-                <div class="kyc-item" style="grid-column: span 2;">
+                <div class="kyc-item" style="grid-column: span ${(order.kycData.idBackImage) ? 1 : 2};">
                     <span class="label">${isAr ? 'الجواز / الملف الإضافي' : 'Passport / Extra'}</span>
                     <img src="${order.kycData.passportDoc || order.kycData.passportImage}" alt="Passport">
                 </div>` : ''}
@@ -546,20 +552,26 @@ export default function OrderDetailsView({ orderId, onClose }: OrderDetailsViewP
                                     <div className="pt-4 border-t border-slate-50">
                                         <span className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 block">{language === 'ar' ? "مستندات العميل (KYC)" : "Customer Documents (KYC)"}</span>
                                         <div className="grid grid-cols-3 gap-3">
-                                            {order.kycData.faceId && (
-                                                <a href={order.kycData.faceId} target="_blank" rel="noopener noreferrer" className="block p-2 border border-slate-100 rounded-xl hover:bg-slate-50 transition-colors text-center">
+                                            {(order.kycData.faceId || order.kycData.faceImage) && (
+                                                <a href={order.kycData.faceId || order.kycData.faceImage} target="_blank" rel="noopener noreferrer" className="block p-2 border border-slate-100 rounded-xl hover:bg-slate-50 transition-colors text-center">
                                                     <span className="text-[10px] font-bold text-slate-500 block mb-1">{language === 'ar' ? "صورة الوجه" : "Face ID"}</span>
                                                     <span className="text-[10px] font-black text-pink-600">{language === 'ar' ? "عرض" : "View"}</span>
                                                 </a>
                                             )}
-                                            {order.kycData.residencyDoc && (
-                                                <a href={order.kycData.residencyDoc} target="_blank" rel="noopener noreferrer" className="block p-2 border border-slate-100 rounded-xl hover:bg-slate-50 transition-colors text-center">
-                                                    <span className="text-[10px] font-bold text-slate-500 block mb-1">{language === 'ar' ? "إثبات سكن" : "Residency"}</span>
+                                            {(order.kycData.idFrontImage || order.kycData.residencyDoc || order.kycData.idImage) && (
+                                                <a href={order.kycData.idFrontImage || order.kycData.residencyDoc || order.kycData.idImage} target="_blank" rel="noopener noreferrer" className="block p-2 border border-slate-100 rounded-xl hover:bg-slate-50 transition-colors text-center">
+                                                    <span className="text-[10px] font-bold text-slate-500 block mb-1">{language === 'ar' ? "وجه الهوية" : "ID Front"}</span>
                                                     <span className="text-[10px] font-black text-pink-600">{language === 'ar' ? "عرض" : "View"}</span>
                                                 </a>
                                             )}
-                                            {order.passportDoc && (
-                                                <a href={order.passportDoc} target="_blank" rel="noopener noreferrer" className="block p-2 border border-slate-100 rounded-xl hover:bg-slate-50 transition-colors text-center">
+                                            {order.kycData.idBackImage && (
+                                                <a href={order.kycData.idBackImage} target="_blank" rel="noopener noreferrer" className="block p-2 border border-slate-100 rounded-xl hover:bg-slate-50 transition-colors text-center">
+                                                    <span className="text-[10px] font-bold text-slate-500 block mb-1">{language === 'ar' ? "ظهر الهوية" : "ID Back"}</span>
+                                                    <span className="text-[10px] font-black text-pink-600">{language === 'ar' ? "عرض" : "View"}</span>
+                                                </a>
+                                            )}
+                                            {(order.kycData.passportDoc || order.kycData.passportImage) && (
+                                                <a href={order.kycData.passportDoc || order.kycData.passportImage} target="_blank" rel="noopener noreferrer" className="block p-2 border border-slate-100 rounded-xl hover:bg-slate-50 transition-colors text-center">
                                                     <span className="text-[10px] font-bold text-slate-500 block mb-1">{language === 'ar' ? "الجواز/الهوية" : "Passport/ID"}</span>
                                                     <span className="text-[10px] font-black text-pink-600">{language === 'ar' ? "عرض" : "View"}</span>
                                                 </a>

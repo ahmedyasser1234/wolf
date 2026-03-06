@@ -710,7 +710,7 @@ function AppContent() {
   const isHome = location === '/';
 
   return (
-    <div className="flex flex-col min-h-screen" dir={dir}>
+    <div className="flex flex-col min-h-screen w-full max-w-full overflow-x-hidden" dir={dir}>
       <ScrollToTop />
       <Toaster />
       <Navigation
@@ -719,7 +719,7 @@ function AppContent() {
         unreadCount={unreadCount}
         systemUnreadCount={systemUnreadCount}
       />
-      <main className={`flex-1 page-content ${!HERO_PAGES.includes(location) ? (location.startsWith('/checkout') ? 'pt-0' : 'pt-24 md:pt-28') : ''}`}>
+      <main className={`flex-1 page-content w-full max-w-full overflow-x-hidden ${!HERO_PAGES.includes(location) ? (location.startsWith('/checkout') ? 'pt-0' : 'pt-24 md:pt-28') : ''}`}>
         <Router />
       </main>
       <Footer />

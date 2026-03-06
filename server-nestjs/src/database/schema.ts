@@ -711,3 +711,26 @@ export const accountStatusLogs = pgTable("accountStatusLogs", {
 }, (table) => ({
     customerIdIdx: index("accountStatusLogs_customerId_idx").on(table.customerId),
 }));
+
+export const installmentPayments = pgTable("installmentPayments", {
+    id: serial("id").primaryKey(),
+    installmentId: integer("installmentId").notNull(), // Links to installments table
+    orderId: integer("orderId").notNull(),
+    customerId: integer("customerId").notNull(),
+    dueDate: timestamp("dueDate").notNull(),
+    amount: doublePrecision("amount").notNull(),
+    status: text("status").default("pending").notNull(), // pending, paid, overdue
+    paymentDate: timestamp("paymentDate"),
+    paymentMethod: text("paymentMethod"),
+    transactionId: text("transactionId"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+}, (table) => ({
+    installmentIdIdx: index("installment_payments_installmentId_idx").on(table.installmentId),
+    orderIdIdx: index("installment_payments_orderId_idx").on(table.orderId),
+    customerIdIdx: index("installment_payments_customerId_idx").on(table.customerId),
+    dueDateIdx: index("installment_payments_dueDate_idx").on(table.dueDate),
+}));
+
+export type InstallmentPayment = typeof installmentPayments.$inferSelect;
+export type InsertInstallmentPayment = typeof installmentPayments.$inferInsert;

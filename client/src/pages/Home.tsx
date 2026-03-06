@@ -180,9 +180,9 @@ export default function Home() {
               {language === 'ar' ? 'مستقبل التكنولوجيا بين يديك' : 'The Future of Tech in Your Hands'}
             </motion.div>
 
-            <h2 className="leading-tight flex flex-col items-center">
-              <span className="text-6xl sm:text-8xl lg:text-[120px] font-black tracking-tight bg-gradient-to-r from-[#D4AF37] via-[#F2D06B] to-[#D4AF37] bg-clip-text text-transparent mb-2 drop-shadow-2xl">WOLF</span>
-              <span className="text-3xl sm:text-5xl lg:text-[60px] font-medium bg-gradient-to-r from-[#D4AF37] via-[#F2D06B] to-[#D4AF37] bg-clip-text text-transparent tracking-[0.2em] uppercase">{language === 'ar' ? 'تكنو' : 'Techno'}</span>
+            <h2 className="leading-tight flex flex-col items-center w-full px-2">
+              <span className="text-5xl sm:text-7xl md:text-8xl lg:text-[120px] font-black tracking-tight bg-gradient-to-r from-[#D4AF37] via-[#F2D06B] to-[#D4AF37] bg-clip-text text-transparent mb-2 drop-shadow-2xl">WOLF</span>
+              <span className="text-2xl sm:text-4xl md:text-5xl lg:text-[60px] font-medium bg-gradient-to-r from-[#D4AF37] via-[#F2D06B] to-[#D4AF37] bg-clip-text text-transparent tracking-[0.2em] uppercase">{language === 'ar' ? 'تكنو' : 'Techno'}</span>
             </h2>
 
             <motion.p
@@ -412,19 +412,19 @@ export default function Home() {
               initial={{ opacity: 0, x: 50 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="w-full lg:w-1/2 text-center lg:text-left rtl:lg:text-right relative flex flex-col"
+              className="w-full lg:w-1/2 text-center lg:text-left rtl:lg:text-right relative flex flex-col items-center lg:items-start"
             >
-              <h2 className="text-4xl lg:text-6xl font-black text-white mb-6 leading-tight max-w-full">
+              <h2 className="text-3xl sm:text-4xl lg:text-6xl font-black text-white mb-4 lg:mb-6 leading-tight max-w-full">
                 {language === 'ar' ? "أداء استثنائي" : "Exceptional Performance"}
               </h2>
-              <p className="text-2xl lg:text-4xl text-primary font-bold mb-6">
+              <p className="text-xl sm:text-2xl lg:text-4xl text-primary font-bold mb-4 lg:mb-6">
                 {language === 'ar' ? "تكنولوجيا متطورة" : "Cutting-edge Tech"}
               </p>
-              <p className="text-gray-400 text-lg mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0">
+              <p className="text-gray-400 text-base sm:text-lg mb-6 lg:mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0">
                 {language === 'ar' ? "اكتشف مجموعتنا المميزة التي تجمع بين القوة والأناقة العصرية، مصممة خصيصاً لتلبية احتياجاتك الرقمية." : "Discover our premium collection that combines power with modern elegance, designed specifically to meet your digital needs."}
               </p>
               <Link href="/products" className="relative z-10 w-fit mx-auto lg:mx-0">
-                <Button className="bg-primary text-primary-foreground px-10 py-6 rounded-lg text-lg font-bold hover:bg-primary/90 transition-all hover:scale-105 shadow-primary/20 shadow-lg">
+                <Button className="bg-primary text-primary-foreground px-8 lg:px-10 py-5 lg:py-6 rounded-lg text-base lg:text-lg font-bold hover:bg-primary/90 transition-all hover:scale-105 shadow-primary/20 shadow-lg">
                   {t('shopNow')}
                 </Button>
               </Link>

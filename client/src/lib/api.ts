@@ -192,6 +192,9 @@ export const endpoints = {
         create: (data: any) => api.post('/installments', data).then(res => res.data),
         update: (id: number, data: any) => api.patch(`/installments/${id}`, data).then(res => res.data),
         delete: (id: number) => api.delete(`/installments/${id}`).then(res => res.data),
+        getPaymentsAdmin: (params: any) => api.get('/installments/payments/admin', { params }).then(res => res.data),
+        getPaymentsCustomer: (customerId: number) => api.get(`/installments/payments/customer/${customerId}`).then(res => res.data),
+        payInstallment: (id: number, data: { customerId: number; paymentMethod: string }) => api.post(`/installments/payments/${id}/pay`, data).then(res => res.data),
     },
     paymentGateways: {
         listEnabled: () => api.get('/payment-gateways/enabled').then(res => res.data),

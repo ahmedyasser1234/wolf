@@ -70,6 +70,12 @@ export class MailService {
 نتمنى لك تجربة تسوق رائعة معنا، ونشكرك على ثقتك بنا. 🚀
 `;
 
+        await this.sendMail(to, subject, text);
+    }
+
+    async sendMail(to: string, subject: string, text: string) {
+        const from = this.configService.get<string>('MAIL_FROM') || '"WolfTechno" <noreply@wolftechno.com>';
+
         if (this.transporter) {
             try {
                 await this.transporter.sendMail({
@@ -78,13 +84,13 @@ export class MailService {
                     subject,
                     text,
                 });
-                this.logger.log(`✅ Order confirmation email sent to ${to} for order ${orderNumber}`);
+                this.logger.log(`✅ Email sent to ${to} | Subject: ${subject}`);
             } catch (error) {
                 this.logger.error(`❌ Failed to send email to ${to}:`, error);
             }
         } else {
-            this.logger.log(`📝 [Mail Log] To: ${to} | Subject: ${subject}`);
-            this.logger.log(`📝 [Mail Log] Content: ${text}`);
+            this.logger.log(`📝 [Mail Log Preview] To: ${to} | Subject: ${subject}`);
+            this.logger.log(`📝 [Mail Log Preview] Content: ${text}`);
         }
     }
 }

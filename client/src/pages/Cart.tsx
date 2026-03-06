@@ -472,42 +472,42 @@ export default function Cart() {
       </div>
       {/* Checkout Choice Dialog */}
       <Dialog open={isSelectionModalOpen} onOpenChange={setIsSelectionModalOpen}>
-        <DialogContent className="max-w-2xl rounded-[2.5rem] p-8 font-arabic" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+        <DialogContent className="w-[95vw] max-w-2xl rounded-[2rem] md:rounded-[2.5rem] p-4 md:p-8 font-arabic max-h-[90vh] overflow-y-auto" dir={language === 'ar' ? 'rtl' : 'ltr'}>
           <DialogHeader>
-            <DialogTitle className="text-3xl font-black text-center mb-6 text-black">
+            <DialogTitle className="text-2xl md:text-3xl font-black text-center mb-4 md:mb-6 text-black">
               {language === 'ar' ? 'اختر طريقة الدفع' : 'Choose Payment Method'}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 my-2 md:my-4">
             {/* Cash Option */}
             <div
               onClick={() => {
                 setSelectedMethod('cash');
                 setSelectedPlanId(null);
               }}
-              className={`p-8 rounded-[2rem] border-2 cursor-pointer transition-all flex flex-col items-center gap-4 ${selectedMethod === 'cash' ? 'border-primary bg-primary/5 shadow-lg shadow-primary/10' : 'border-gray-100 hover:border-gray-200 bg-white'}`}
+              className={`p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] border-2 cursor-pointer transition-all flex flex-col items-center gap-3 md:gap-4 ${selectedMethod === 'cash' ? 'border-primary bg-primary/5 shadow-lg shadow-primary/10' : 'border-gray-100 hover:border-gray-200 bg-white'}`}
             >
-              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${selectedMethod === 'cash' ? 'bg-primary text-white' : 'bg-gray-50 text-gray-400'}`}>
-                <Banknote size={32} />
+              <div className={`w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center ${selectedMethod === 'cash' ? 'bg-primary text-white' : 'bg-gray-50 text-gray-400'}`}>
+                <Banknote size={28} />
               </div>
               <div className="text-center">
-                <h3 className="text-xl font-black mb-1 text-black">{language === 'ar' ? 'دفع اجمالى الطلب' : 'Pay Full Amount'}</h3>
-                <p className="text-sm text-gray-600 font-bold">{language === 'ar' ? 'دفع إجمالي الطلب نقداً أو بالبطاقة' : 'Pay full total via Cash or Card'}</p>
+                <h3 className="text-lg md:text-xl font-black mb-1 text-black">{language === 'ar' ? 'دفع كامل' : 'Pay Full Amount'}</h3>
+                <p className="text-xs md:text-sm text-gray-600 font-bold">{language === 'ar' ? 'دفع إجمالي الطلب نقداً أو بالبطاقة' : 'Pay full total via Cash or Card'}</p>
               </div>
             </div>
 
             {/* Installments Option */}
             <div
               onClick={() => setSelectedMethod('installments')}
-              className={`p-8 rounded-[2rem] border-2 cursor-pointer transition-all flex flex-col items-center gap-4 ${selectedMethod === 'installments' ? 'border-primary bg-primary/5 shadow-lg shadow-primary/10' : 'border-gray-100 hover:border-gray-200 bg-white'}`}
+              className={`p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] border-2 cursor-pointer transition-all flex flex-col items-center gap-3 md:gap-4 ${selectedMethod === 'installments' ? 'border-primary bg-primary/5 shadow-lg shadow-primary/10' : 'border-gray-100 hover:border-gray-200 bg-white'}`}
             >
-              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${selectedMethod === 'installments' ? 'bg-primary text-white' : 'bg-gray-50 text-gray-400'}`}>
-                <Clock size={32} />
+              <div className={`w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl flex items-center justify-center ${selectedMethod === 'installments' ? 'bg-primary text-white' : 'bg-gray-50 text-gray-400'}`}>
+                <Clock size={28} />
               </div>
               <div className="text-center">
-                <h3 className="text-xl font-black mb-1 text-black">{language === 'ar' ? 'تقسيط مريح' : 'Easy Installments'}</h3>
-                <p className="text-sm text-gray-600 font-bold">{language === 'ar' ? 'قسم مشترياتك على دفعات شهرية' : 'Split your purchase into monthly payments'}</p>
+                <h3 className="text-lg md:text-xl font-black mb-1 text-black">{language === 'ar' ? 'تقسيط مريح' : 'Easy Installments'}</h3>
+                <p className="text-xs md:text-sm text-gray-600 font-bold">{language === 'ar' ? 'قسم مشترياتك على دفعات شهرية' : 'Split your purchase into monthly payments'}</p>
               </div>
             </div>
           </div>
@@ -521,22 +521,22 @@ export default function Cart() {
                 exit={{ opacity: 0, height: 0 }}
                 className="overflow-hidden"
               >
-                <div className="pt-4 space-y-3">
-                  <p className="font-bold text-black mb-2">{language === 'ar' ? 'اختر خطة التقسيط:' : 'Select Installment Plan:'}</p>
-                  <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto px-1">
+                <div className="pt-2 md:pt-4 space-y-2 md:space-y-3">
+                  <p className="font-bold text-black mb-1 md:mb-2 text-sm md:text-base">{language === 'ar' ? 'اختر خطة التقسيط:' : 'Select Installment Plan:'}</p>
+                  <div className="grid grid-cols-1 gap-2 md:gap-3 max-h-[250px] md:max-h-[300px] overflow-y-auto px-1">
                     {installmentPlans?.map((plan: any) => (
                       <div
                         key={plan.id}
                         onClick={() => setSelectedPlanId(plan.id)}
-                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex justify-between items-center ${selectedPlanId === plan.id ? 'border-primary bg-primary/5' : 'border-gray-100 hover:border-gray-200 bg-white'}`}
+                        className={`p-3 md:p-4 rounded-xl md:rounded-2xl border-2 cursor-pointer transition-all flex justify-between items-center ${selectedPlanId === plan.id ? 'border-primary bg-primary/5' : 'border-gray-100 hover:border-gray-200 bg-white'}`}
                       >
                         <div className="flex flex-col">
-                          <span className="font-black text-lg text-black">{language === 'ar' ? plan.nameAr : plan.nameEn}</span>
-                          <span className="text-sm text-gray-600 font-bold">{plan.months} {language === 'ar' ? 'أشهر' : 'Months'} • {plan.interestRate}% {language === 'ar' ? 'فوائد' : 'Interest'}</span>
+                          <span className="font-black text-base md:text-lg text-black">{language === 'ar' ? plan.nameAr : plan.nameEn}</span>
+                          <span className="text-xs md:text-sm text-gray-600 font-bold">{plan.months} {language === 'ar' ? 'أشهر' : 'Months'} • {plan.interestRate}% {language === 'ar' ? 'فوائد' : 'Interest'}</span>
                         </div>
                         <div className="flex flex-col text-left items-end">
-                          <span className="font-black text-primary">{formatPrice((total * (1 + (plan.interestRate || 0) / 100)) / plan.months)}</span>
-                          <span className="text-xs text-gray-600 font-bold">{language === 'ar' ? 'شهرياً' : 'per month'}</span>
+                          <span className="font-black text-primary text-sm md:text-lg">{formatPrice((total * (1 + (plan.interestRate || 0) / 100)) / plan.months)}</span>
+                          <span className="text-[10px] md:text-xs text-gray-600 font-bold">{language === 'ar' ? 'شهرياً' : 'per month'}</span>
                         </div>
                       </div>
                     ))}
@@ -551,22 +551,22 @@ export default function Cart() {
             )}
           </AnimatePresence>
 
-          <DialogFooter className="mt-8 flex gap-3">
+          <div className="mt-6 md:mt-8 flex flex-col md:flex-row gap-3">
             <Button
               variant="outline"
               onClick={() => setIsSelectionModalOpen(false)}
-              className="h-14 rounded-full flex-1 font-bold text-lg"
+              className="h-12 md:h-14 rounded-full flex-1 font-bold text-base md:text-lg order-2 md:order-1"
             >
               {language === 'ar' ? 'إلغاء' : 'Cancel'}
             </Button>
             <Button
               onClick={handleConfirmCheckout}
               disabled={!selectedMethod || (selectedMethod === 'installments' && !selectedPlanId)}
-              className="h-14 rounded-full flex-[2] bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-lg shadow-primary/20"
+              className="h-12 md:h-14 rounded-full flex-[2] bg-primary hover:bg-primary/90 text-white font-bold text-base md:text-lg shadow-lg shadow-primary/20 order-1 md:order-2"
             >
               {language === 'ar' ? 'متابعة' : 'Continue'}
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

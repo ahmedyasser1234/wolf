@@ -1,7 +1,7 @@
 
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { orders, orderItems, products, cartItems, notifications, vendors, coupons, offers, offerItems, users, walletTransactions, customerWallets, installmentPlans, installments, giftCards } from '../database/schema';
+import { orders, orderItems, products, cartItems, notifications, vendors, coupons, offers, offerItems, users, walletTransactions, customerWallets, installmentPlans, installments, installmentPayments, giftCards } from '../database/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CouponsService } from '../coupons/coupons.service';
@@ -844,6 +844,38 @@ export class OrdersService {
                     updatedAt: new Date()
                 })
                 .where(eq(installments.id, installment.id));
+
+            // Generate Payment Schedule
+            const months = Number(installment.installmentsCount);
+            const totalToFinance = Number(installment.totalAmount);
+            const monthlyAmount = totalToFinance / months;
+
+            const paymentRecords = [];
+            for (let i = 1; i <= months; i++) {
+                const dueDate = new Date();
+                dueDate.setMonth(dueDate.getMonth() + i);
+
+                paymentRecords.push({
+                    installmentId: installment.id,
+                    orderId: order.id,
+                    customerId: order.customerId,
+                    dueDate,
+                    amount: monthlyAmount,
+                    status: 'pending',
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                });
+            }
+
+            if (paymentRecords.length > 0) {
+                await this.databaseService.db.insert(installmentPayments).values(paymentRecords);
+
+                // Set first payment date
+                await this.databaseService.db
+                    .update(installments)
+                    .set({ nextPaymentDate: paymentRecords[0].dueDate })
+                    .where(eq(installments.id, installment.id));
+            }
 
             // Notify Customer
             await this.notificationsService.notify(

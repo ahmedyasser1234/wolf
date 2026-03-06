@@ -168,14 +168,20 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
                     <img src="${order.kycData.faceId || order.kycData.faceImage}" alt="Face ID">
                 </div>` : ''}
                 
-                ${(order.kycData.residencyDoc || order.kycData.idImage) ? `
+                ${(order.kycData.idFrontImage || order.kycData.residencyDoc || order.kycData.idImage) ? `
                 <div class="kyc-item">
-                    <span class="label">${isAr ? 'الهوية / الإقامة' : 'ID / Residency'}</span>
-                    <img src="${order.kycData.residencyDoc || order.kycData.idImage}" alt="ID Document">
+                    <span class="label">${isAr ? 'وجه الهوية' : 'ID Front'}</span>
+                    <img src="${order.kycData.idFrontImage || order.kycData.residencyDoc || order.kycData.idImage}" alt="ID Front">
+                </div>` : ''}
+
+                ${(order.kycData.idBackImage) ? `
+                <div class="kyc-item">
+                    <span class="label">${isAr ? 'ظهر الهوية' : 'ID Back'}</span>
+                    <img src="${order.kycData.idBackImage}" alt="ID Back">
                 </div>` : ''}
                 
                 ${(order.kycData.passportDoc || order.kycData.passportImage) ? `
-                <div class="kyc-item" style="grid-column: span 2;">
+                <div class="kyc-item" style="grid-column: span ${(order.kycData.idBackImage) ? 1 : 2};">
                     <span class="label">${isAr ? 'الجواز / الملف الإضافي' : 'Passport / Extra'}</span>
                     <img src="${order.kycData.passportDoc || order.kycData.passportImage}" alt="Passport">
                 </div>` : ''}
@@ -749,17 +755,32 @@ export default function OrdersTab({ vendorId, onCustomerClick }: OrdersTabProps)
                                             </div>
                                         )}
 
-                                        {(kycModalOrder.kycData.residencyDoc || kycModalOrder.kycData.idImage) && (
+                                        {(kycModalOrder.kycData.idFrontImage || kycModalOrder.kycData.residencyDoc || kycModalOrder.kycData.idImage) && (
                                             <div className="bg-gray-900 p-4 rounded-2xl border border-gray-800">
                                                 <div className="flex items-center gap-2 mb-3">
                                                     <CreditCard className="w-4 h-4 text-green-400" />
-                                                    <span className="text-[10px] font-black text-white">{language === 'ar' ? 'الهوية / الإقامة' : 'ID / Residency'}</span>
+                                                    <span className="text-[10px] font-black text-white">{language === 'ar' ? 'وجه الهوية' : 'ID Front'}</span>
                                                 </div>
                                                 <img
-                                                    src={kycModalOrder.kycData.residencyDoc || kycModalOrder.kycData.idImage}
-                                                    alt="ID"
+                                                    src={kycModalOrder.kycData.idFrontImage || kycModalOrder.kycData.residencyDoc || kycModalOrder.kycData.idImage}
+                                                    alt="ID Front"
                                                     className="w-full h-32 rounded-xl object-cover border-2 border-gray-700 cursor-zoom-in"
-                                                    onClick={() => window.open(kycModalOrder.kycData.residencyDoc || kycModalOrder.kycData.idImage, '_blank')}
+                                                    onClick={() => window.open(kycModalOrder.kycData.idFrontImage || kycModalOrder.kycData.residencyDoc || kycModalOrder.kycData.idImage, '_blank')}
+                                                />
+                                            </div>
+                                        )}
+
+                                        {kycModalOrder.kycData.idBackImage && (
+                                            <div className="bg-gray-900 p-4 rounded-2xl border border-gray-800">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <CreditCard className="w-4 h-4 text-emerald-400" />
+                                                    <span className="text-[10px] font-black text-white">{language === 'ar' ? 'ظهر الهوية' : 'ID Back'}</span>
+                                                </div>
+                                                <img
+                                                    src={kycModalOrder.kycData.idBackImage}
+                                                    alt="ID Back"
+                                                    className="w-full h-32 rounded-xl object-cover border-2 border-gray-700 cursor-zoom-in"
+                                                    onClick={() => window.open(kycModalOrder.kycData.idBackImage, '_blank')}
                                                 />
                                             </div>
                                         )}

@@ -118,6 +118,7 @@ const AdminPaymentGatewaysTab = lazy(() => import("@/components/dashboard/AdminP
 const AdminOrdersTab = lazy(() => import("@/components/dashboard/OrdersTab"));
 const AdminCustomersTab = lazy(() => import("@/components/dashboard/CustomersTab"));
 const MessagesTab = lazy(() => import("@/components/dashboard/MessagesTab"));
+const AdminInstallmentPaymentsTab = lazy(() => import("@/components/dashboard/AdminInstallmentPaymentsTab"));
 
 
 interface CardHeaderProps {
@@ -323,7 +324,7 @@ export default function AdminDashboard() {
   const [customerDetails, setCustomerDetails] = useState<any>(null);
   const [detailsCustomerId, setDetailsCustomerId] = useState<number | null>(null);
 
-  const [activeTab, setActiveTabInternal] = useState<"overview" | "analytics" | "products" | "categories" | "collections" | "offers" | "coupons" | "giftcards" | "installments" | "installment-orders" | "payments" | "orders" | "customers" | "chat" | "content" | "settings">(() => {
+  const [activeTab, setActiveTabInternal] = useState<"overview" | "analytics" | "products" | "categories" | "collections" | "offers" | "coupons" | "giftcards" | "installments" | "installment-orders" | "payments" | "orders" | "customers" | "chat" | "content" | "settings" | "installment-payments">(() => {
     const params = new URLSearchParams(window.location.search);
     return (params.get("tab") as any) || "overview";
   });
@@ -419,12 +420,13 @@ export default function AdminDashboard() {
     { id: "giftcards", label: language === 'ar' ? 'الجيفت كارد' : 'Gift Cards', icon: Gift, color: "from-emerald-400 to-teal-600 shadow-emerald-500/30" },
     { id: "installments", label: language === 'ar' ? 'التقسيط' : 'Installments', icon: CreditCard, color: "from-violet-400 to-purple-600 shadow-violet-500/30" },
     { id: "installment-orders", label: language === 'ar' ? 'طلبات التقسيط' : 'Installment Orders', icon: ShoppingCart, badge: dashboardStats?.pendingKycReviews || undefined, color: "from-amber-400 to-orange-500 shadow-amber-500/30" },
+    { id: "installment-payments", label: language === 'ar' ? 'متابعة الأقساط' : 'Installment Tracking', icon: History, color: "from-indigo-400 to-blue-600 shadow-indigo-500/30" },
     { id: "payments", label: language === 'ar' ? 'بوابات الدفع' : 'Payment Gateways', icon: DollarSign, color: "from-emerald-400 to-teal-600 shadow-emerald-500/30" },
     { id: "orders", label: t('orders'), icon: ShoppingCart, color: "from-orange-500 to-red-600 shadow-orange-500/30" },
     { id: "customers", label: t('customers'), icon: Users, color: "from-sky-500 to-blue-600 shadow-sky-500/30" },
     { id: "chat", label: t('chat'), icon: MessageSquare, badge: unreadCount, color: "from-pink-500 to-primary shadow-pink-500/30" },
     { id: "settings", label: t('settings'), icon: Settings, color: "from-slate-700 to-slate-900 shadow-slate-500/30" },
-  ], [t, unreadCount, language]);
+  ], [t, unreadCount, language, dashboardStats]);
 
   const setActiveTab = (tab: typeof activeTab) => {
     setActiveTabInternal(tab);
@@ -864,6 +866,13 @@ export default function AdminDashboard() {
           {
             activeTab === "installment-orders" && (
               <InstallmentOrdersTab />
+            )
+          }
+
+          {/* Installment Payments Tracking Tab */}
+          {
+            activeTab === "installment-payments" && (
+              <AdminInstallmentPaymentsTab />
             )
           }
 

@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import UserPointsView from "@/components/account/UserPointsView";
+import MyInstallments from "@/components/dashboard/MyInstallments";
 
 export default function Profile() {
     const { user, loading, logout } = useAuth();
@@ -426,6 +427,13 @@ export default function Profile() {
                             </CardContent>
                         </Card>
                     </section>
+
+                    {/* My Installments Section */}
+                    {user.role === 'customer' && (
+                        <section>
+                            <MyInstallments customerId={user.id} />
+                        </section>
+                    )}
 
                     {/* Quick Settings */}
                     <section>

@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { installmentPlans, collections } from '../database/schema';
-import { eq, or, isNull, sql } from 'drizzle-orm';
+import { installmentPlans, collections, installmentPayments, orders, users } from '../database/schema';
+import { eq, or, isNull, sql, and, gte, lte, desc } from 'drizzle-orm';
 
 @Injectable()
 export class InstallmentsService {
@@ -105,6 +105,106 @@ export class InstallmentsService {
         }
 
         return updatedPlan;
+    }
+
+    async getPaymentsForAdmin(date: string, status?: string, page = 1, limit = 10) {
+        const offset = (page - 1) * limit;
+
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const whereClause = [
+            gte(installmentPayments.dueDate, startOfDay),
+            lte(installmentPayments.dueDate, endOfDay)
+        ];
+
+        if (status) {
+            whereClause.push(eq(installmentPayments.status, status));
+        }
+
+        const data = await this.databaseService.db
+            .select({
+                payment: installmentPayments,
+                customer: {
+                    id: users.id,
+                    name: users.name,
+                    email: users.email,
+                    phone: users.phone
+                },
+                order: {
+                    id: orders.id,
+                    orderNumber: orders.orderNumber
+                }
+            })
+            .from(installmentPayments)
+            .innerJoin(users, eq(installmentPayments.customerId, users.id))
+            .innerJoin(orders, eq(installmentPayments.orderId, orders.id))
+            .where(and(...whereClause))
+            .limit(limit)
+            .offset(offset)
+            .orderBy(desc(installmentPayments.dueDate));
+
+        const [totalCount] = await this.databaseService.db
+            .select({ count: sql<number>`count(*)` })
+            .from(installmentPayments)
+            .where(and(...whereClause));
+
+        return {
+            data,
+            meta: {
+                total: Number(totalCount.count),
+                page,
+                limit,
+                totalPages: Math.ceil(Number(totalCount.count) / limit)
+            }
+        };
+    }
+
+    async getPaymentsForCustomer(customerId: number) {
+        return await this.databaseService.db
+            .select({
+                payment: installmentPayments,
+                order: {
+                    id: orders.id,
+                    orderNumber: orders.orderNumber
+                }
+            })
+            .from(installmentPayments)
+            .innerJoin(orders, eq(installmentPayments.orderId, orders.id))
+            .where(eq(installmentPayments.customerId, customerId))
+            .orderBy(desc(installmentPayments.dueDate));
+    }
+
+    async payInstallment(paymentId: number, customerId: number, paymentMethod: string) {
+        const [payment] = await this.databaseService.db
+            .select()
+            .from(installmentPayments)
+            .where(and(eq(installmentPayments.id, paymentId), eq(installmentPayments.customerId, customerId)))
+            .limit(1);
+
+        if (!payment) throw new NotFoundException('Payment record not found');
+        if (payment.status === 'paid') throw new Error('هذا القسط مدفوع بالفعل');
+
+        // Update payment record
+        const [updatedPayment] = await this.databaseService.db
+            .update(installmentPayments)
+            .set({
+                status: 'paid',
+                paymentDate: new Date(),
+                paymentMethod: paymentMethod,
+                updatedAt: new Date()
+            })
+            .where(eq(installmentPayments.id, paymentId))
+            .returning();
+
+        // Update main installment record remaining amount
+        await this.databaseService.db.execute(
+            sql`UPDATE installments SET "remainingAmount" = "remainingAmount" - ${payment.amount}, "updatedAt" = NOW() WHERE id = ${payment.installmentId}`
+        );
+
+        return updatedPayment;
     }
 
     async delete(id: number) {
