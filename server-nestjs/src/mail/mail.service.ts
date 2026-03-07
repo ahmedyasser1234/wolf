@@ -21,19 +21,23 @@ export class MailService {
                 host,
                 port: Number(port),
                 secure: Number(port) === 465, // true for 465, false for other ports
+                pool: true, // Use connection pooling
+                maxConnections: 5,
+                maxMessages: 100,
                 auth: {
                     user,
                     pass,
                 },
                 tls: {
                     // Do not fail on invalid certs (common for custom SMTP/VPS)
-                    rejectUnauthorized: false
+                    rejectUnauthorized: false,
+                    minVersion: 'TLSv1.2'
                 },
                 // If using port 587, often STARTTLS is required
                 requireTLS: Number(port) === 587,
-                connectionTimeout: 15000, // 15 seconds
-                greetingTimeout: 15000,
-                socketTimeout: 15000,
+                connectionTimeout: 30000, // 30 seconds
+                greetingTimeout: 30000,
+                socketTimeout: 30000,
                 debug: true, // Show protocol logs in console
                 logger: true, // Use nodemailer's internal logger
             });
