@@ -49,11 +49,12 @@ export class GiftCardsController {
     // Customer: Purchase a new gift card
     @UseGuards(JwtAuthGuard)
     @Post('purchase')
-    async purchase(@Request() req, @Body() data: { amount: number, recipientName?: string, paymentMethod?: 'wallet' | 'card' }) {
+    async purchase(@Request() req, @Body() data: { amount: number, recipientName?: string, recipientEmail?: string, paymentMethod?: 'wallet' | 'card' }) {
         const userId = req.user.id;
         return this.giftCardsService.purchaseGiftCard(userId, {
             amount: data.amount,
             recipientName: data.recipientName,
+            recipientEmail: data.recipientEmail,
             paymentMethod: data.paymentMethod || 'card' // Default to card
         });
     }

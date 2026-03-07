@@ -302,7 +302,7 @@ export class AuthService {
             throw new UnauthorizedException('This account has been blocked by the administrator.');
         }
 
-        if (user.loginMethod === 'email' && !user.isVerified) {
+        if (user.loginMethod === 'email' && !user.isVerified && user.role !== 'admin') {
             throw new UnauthorizedException('Your email is not verified. Please verify your email.');
         }
 
