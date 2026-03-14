@@ -63,10 +63,24 @@ export default function InstallmentOrdersTab() {
         const customerEmail = order.customer?.email || 'N/A';
         const isAr = language === 'ar';
 
-        const resolveUrl = (url: string) => {
-            if (!url) return '';
-            if (url.startsWith('http')) return url;
-            return `http://${window.location.hostname}:5000${url}`;
+        const resolveUrl = (rawUrl: any) => {
+            if (!rawUrl || typeof rawUrl !== 'string') return '';
+            const url = rawUrl.trim();
+            if (url.startsWith('http') || url.startsWith('data:')) return url;
+            
+            const protocol = window.location.protocol;
+            const hostname = window.location.hostname;
+            const origin = window.location.origin;
+            
+            let baseUrl = '';
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                baseUrl = `${protocol}//localhost:5000`;
+            } else {
+                baseUrl = `${origin}/api`;
+            }
+            
+            const separator = url.startsWith('/') ? '' : '/';
+            return `${baseUrl}${separator}${url}`;
         };
 
         const htmlContent = `
@@ -589,7 +603,10 @@ export default function InstallmentOrdersTab() {
                                                 className="w-full h-40 rounded-xl object-cover border-2 border-gray-700 cursor-zoom-in"
                                                 onClick={() => {
                                                     const url = kycModalOrder.kycData.faceIdImage || kycModalOrder.kycData.faceId || kycModalOrder.kycData.faceImage;
-                                                    const fullUrl = url.startsWith('http') ? url : `http://${window.location.hostname}:5000${url}`;
+                                                    if (!url) return;
+                                                    const fullUrl = (url.startsWith('http') || url.startsWith('data:')) 
+                                                        ? url 
+                                                        : `${window.location.origin}${window.location.hostname === 'localhost' ? ':5000' : '/api'}${url.startsWith('/') ? '' : '/'}${url}`;
                                                     window.open(fullUrl, '_blank');
                                                 }}
                                             />
@@ -608,7 +625,10 @@ export default function InstallmentOrdersTab() {
                                                 className="w-full h-40 rounded-xl object-cover border-2 border-gray-700 cursor-zoom-in"
                                                 onClick={() => {
                                                     const url = kycModalOrder.kycData.idFrontImage || kycModalOrder.kycData.residencyImage || kycModalOrder.kycData.residencyDoc || kycModalOrder.kycData.idImage;
-                                                    const fullUrl = url.startsWith('http') ? url : `http://${window.location.hostname}:5000${url}`;
+                                                    if (!url) return;
+                                                    const fullUrl = (url.startsWith('http') || url.startsWith('data:')) 
+                                                        ? url 
+                                                        : `${window.location.origin}${window.location.hostname === 'localhost' ? ':5000' : '/api'}${url.startsWith('/') ? '' : '/'}${url}`;
                                                     window.open(fullUrl, '_blank');
                                                 }}
                                             />
@@ -627,7 +647,10 @@ export default function InstallmentOrdersTab() {
                                                 className="w-full h-40 rounded-xl object-cover border-2 border-gray-700 cursor-zoom-in"
                                                 onClick={() => {
                                                     const url = kycModalOrder.kycData.idBackImage;
-                                                    const fullUrl = url.startsWith('http') ? url : `http://${window.location.hostname}:5000${url}`;
+                                                    if (!url) return;
+                                                    const fullUrl = (url.startsWith('http') || url.startsWith('data:')) 
+                                                        ? url 
+                                                        : `${window.location.origin}${window.location.hostname === 'localhost' ? ':5000' : '/api'}${url.startsWith('/') ? '' : '/'}${url}`;
                                                     window.open(fullUrl, '_blank');
                                                 }}
                                             />
@@ -646,7 +669,10 @@ export default function InstallmentOrdersTab() {
                                                 className="w-full h-48 rounded-xl object-cover border-2 border-gray-700 cursor-zoom-in"
                                                 onClick={() => {
                                                     const url = kycModalOrder.kycData.passportImage || kycModalOrder.kycData.passportDoc;
-                                                    const fullUrl = url.startsWith('http') ? url : `http://${window.location.hostname}:5000${url}`;
+                                                    if (!url) return;
+                                                    const fullUrl = (url.startsWith('http') || url.startsWith('data:')) 
+                                                        ? url 
+                                                        : `${window.location.origin}${window.location.hostname === 'localhost' ? ':5000' : '/api'}${url.startsWith('/') ? '' : '/'}${url}`;
                                                     window.open(fullUrl, '_blank');
                                                 }}
                                             />
