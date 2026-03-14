@@ -63,6 +63,12 @@ export default function InstallmentOrdersTab() {
         const customerEmail = order.customer?.email || 'N/A';
         const isAr = language === 'ar';
 
+        const resolveUrl = (url: string) => {
+            if (!url) return '';
+            if (url.startsWith('http')) return url;
+            return `http://${window.location.hostname}:5000${url}`;
+        };
+
         const htmlContent = `
 <!DOCTYPE html>
 <html lang="${isAr ? 'ar' : 'en'}" dir="${isAr ? 'rtl' : 'ltr'}">
@@ -70,63 +76,83 @@ export default function InstallmentOrdersTab() {
     <meta charset="UTF-8">
     <title>Order Report #${order.orderNumber}</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; color: #333; margin: 0; padding: 40px; }
-        .container { max-width: 800px; margin: auto; background: #fff; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 30px; }
-        .header h1 { margin: 0; color: #e91e63; font-size: 28px; }
-        .header .order-no { font-weight: bold; color: #888; }
-        .section { margin-bottom: 30px; }
-        .section-title { font-size: 18px; font-weight: bold; color: #e91e63; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 15px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .field { margin-bottom: 10px; }
-        .label { font-size: 12px; color: #888; font-weight: bold; text-transform: uppercase; display: block; }
-        .value { font-size: 16px; font-weight: bold; }
-        .kyc-images { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px; }
-        .kyc-item { border: 1px solid #eee; padding: 10px; border-radius: 10px; text-align: center; }
-        .kyc-item img { max-width: 100%; height: auto; border-radius: 5px; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th { background: #f8f9fa; text-align: ${isAr ? 'right' : 'left'}; padding: 12px; font-size: 13px; color: #888; border-bottom: 2px solid #eee; }
-        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
-        .product-img { width: 50px; height: 60px; object-fit: cover; border-radius: 5px; display: block; }
-        .total-row { background: #fdf2f5; font-weight: bold; font-size: 18px; color: #e91e63; }
-        .footer { text-align: center; margin-top: 50px; font-size: 12px; color: #aaa; }
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+        body { font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; color: #1a1a1a; margin: 0; padding: 40px; }
+        .container { max-width: 900px; margin: auto; background: #fff; padding: 50px; border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.08); position: relative; overflow: hidden; }
+        .watermark { position: absolute; top: -50px; right: -50px; opacity: 0.03; width: 400px; z-index: 0; pointer-events: none; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #f0f2f5; padding-bottom: 30px; margin-bottom: 40px; position: relative; z-index: 1; }
+        .header-logo { font-size: 32px; font-weight: 900; color: #7c3aed; letter-spacing: -1px; }
+        .header-info { text-align: ${isAr ? 'left' : 'right'}; }
+        .section { margin-bottom: 40px; position: relative; z-index: 1; }
+        .section-title { font-size: 20px; font-weight: 900; color: #1a1a1a; display: flex; align-items: center; gap: 10px; margin-bottom: 25px; padding-bottom: 10px; border-bottom: 2px solid #7c3aed; width: fit-content; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; }
+        .field { background: #f8fafc; padding: 15px 20px; border-radius: 15px; border: 1px solid #e2e8f0; }
+        .label { font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; display: block; }
+        .value { font-size: 16px; font-weight: 700; color: #1a1a1a; }
+        .kyc-images { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-top: 20px; }
+        .kyc-item { background: #fff; border: 2px solid #f1f5f9; padding: 15px; border-radius: 20px; text-align: center; transition: all 0.3s ease; }
+        .kyc-item:hover { border-color: #7c3aed; }
+        .kyc-item img { width: 100%; height: 250px; object-fit: cover; border-radius: 12px; margin-top: 15px; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 20px; border-radius: 20px; overflow: hidden; border: 1px solid #e2e8f0; }
+        th { background: #f8fafc; text-align: ${isAr ? 'right' : 'left'}; padding: 18px; font-size: 13px; font-weight: 900; color: #64748b; }
+        td { padding: 18px; border-top: 1px solid #e2e8f0; font-size: 14px; font-weight: 600; }
+        .product-img { width: 60px; height: 80px; object-fit: cover; border-radius: 10px; }
+        .total-row { background: #7c3aed; color: #fff; font-weight: 900; }
+        .total-row td { border: none; font-size: 20px; padding: 25px; }
+        .footer { text-align: center; margin-top: 60px; padding-top: 30px; border-top: 1px solid #e2e8f0; font-size: 13px; color: #64748b; font-weight: 700; }
+        .badge { display: inline-block; padding: 5px 12px; border-radius: 10px; font-size: 11px; font-weight: 900; text-transform: uppercase; }
+        .badge-deposit { background: #dcfce7; color: #15803d; }
     </style>
 </head>
 <body>
     <div class="container">
+        <svg class="watermark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <text x="0" y="50" font-family="Cairo" font-size="20" fill="currentColor">FUSTAN</text>
+        </svg>
+
         <div class="header">
-            <h1>${isAr ? 'تقرير الطلب' : 'Order Report'}</h1>
-            <div class="order-no">#${order.orderNumber}</div>
+            <div>
+                <div class="header-logo">FUSTAN / WOLF TECHNO</div>
+                <div style="font-weight: 700; color: #64748b; margin-top: 5px;">${isAr ? 'تقرير بيانات العميل والطلب' : 'Customer & Order Data Report'}</div>
+            </div>
+            <div class="header-info">
+                <div style="font-size: 24px; font-weight: 900;">#${order.orderNumber}</div>
+                <div style="font-weight: 700; color: #64748b; font-size: 14px;">${new Date(order.createdAt).toLocaleDateString(isAr ? 'ar-EG' : 'en-US')}</div>
+            </div>
         </div>
 
         <div class="section">
-            <div class="section-title">${isAr ? 'بيانات العميل' : 'Customer Details'}</div>
+            <div class="section-title">
+                ${isAr ? '👤 بيانات العميل' : '👤 Customer Identity'}
+            </div>
             <div class="grid">
                 <div class="field">
-                    <span class="label">${isAr ? 'الاسم' : 'Name'}</span>
+                    <span class="label">${isAr ? 'الاسم بالكامل' : 'Full Name'}</span>
                     <span class="value">${customerName}</span>
                 </div>
                 <div class="field">
-                    <span class="label">${isAr ? 'الهاتف' : 'Phone'}</span>
+                    <span class="label">${isAr ? 'رقم الهاتف' : 'Phone Number'}</span>
                     <span class="value">${customerPhone}</span>
                 </div>
                 <div class="field">
-                    <span class="label">${isAr ? 'البريد' : 'Email'}</span>
+                    <span class="label">${isAr ? 'البريد الإلكتروني' : 'Email Address'}</span>
                     <span class="value">${customerEmail}</span>
                 </div>
                 <div class="field">
-                    <span class="label">${isAr ? 'تاريخ الطلب' : 'Order Date'}</span>
-                    <span class="value">${new Date(order.createdAt).toLocaleString(isAr ? 'ar-EG' : 'en-US')}</span>
+                    <span class="label">${isAr ? 'عنوان السكن' : 'Address'}</span>
+                    <span class="value">${order.kycData?.residentialAddress || order.shippingAddress?.address || 'N/A'}</span>
                 </div>
             </div>
         </div>
 
         ${order.kycData ? `
         <div class="section">
-            <div class="section-title">${isAr ? 'بيانات التحقق (KYC)' : 'Verification (KYC)'}</div>
-            <div class="grid">
+            <div class="section-title">
+                ${isAr ? '🆔 بيانات التحقق (KYC)' : '🆔 Verification Data'}
+            </div>
+            <div class="grid" style="margin-bottom: 30px;">
                 <div class="field">
-                    <span class="label">${isAr ? 'رقم الهوية' : 'ID Number'}</span>
+                    <span class="label">${isAr ? 'رقم الهوية / الإقامة' : 'National ID'}</span>
                     <span class="value">${order.kycData.idNumber || 'N/A'}</span>
                 </div>
                 <div class="field">
@@ -134,71 +160,75 @@ export default function InstallmentOrdersTab() {
                     <span class="value">${order.kycData.passportNumber || 'N/A'}</span>
                 </div>
                 <div class="field">
-                    <span class="label">${isAr ? 'تاريخ الميلاد' : 'DOB'}</span>
+                    <span class="label">${isAr ? 'تاريخ الميلاد' : 'Date of Birth'}</span>
                     <span class="value">${order.kycData.dob || 'N/A'}</span>
-                </div>
-                <div class="field">
-                    <span class="label">${isAr ? 'عنوان السكن' : 'Residential Address'}</span>
-                    <span class="value">${order.kycData.residentialAddress || 'N/A'}</span>
                 </div>
             </div>
             
             <div class="kyc-images">
                 ${(order.kycData.faceId || order.kycData.faceIdImage || order.kycData.faceImage) ? `
                 <div class="kyc-item">
-                    <span class="label">${isAr ? 'صورة الوجه' : 'Face ID'}</span>
-                    <img src="${order.kycData.faceId || order.kycData.faceIdImage || order.kycData.faceImage}" alt="Face ID">
+                    <span class="label">${isAr ? 'صورة الوجه' : 'Face Photo'}</span>
+                    <img src="${resolveUrl(order.kycData.faceId || order.kycData.faceIdImage || order.kycData.faceImage)}" alt="Face ID">
                 </div>` : ''}
                 
                 ${(order.kycData.idFrontImage || order.kycData.residencyDoc || order.kycData.residencyImage || order.kycData.idImage) ? `
                 <div class="kyc-item">
                     <span class="label">${isAr ? 'وجه الهوية' : 'ID Front'}</span>
-                    <img src="${order.kycData.idFrontImage || order.kycData.residencyDoc || order.kycData.residencyImage || order.kycData.idImage}" alt="ID Front">
+                    <img src="${resolveUrl(order.kycData.idFrontImage || order.kycData.residencyDoc || order.kycData.residencyImage || order.kycData.idImage)}" alt="ID Front">
                 </div>` : ''}
 
                 ${(order.kycData.idBackImage) ? `
                 <div class="kyc-item">
                     <span class="label">${isAr ? 'ظهر الهوية' : 'ID Back'}</span>
-                    <img src="${order.kycData.idBackImage}" alt="ID Back">
+                    <img src="${resolveUrl(order.kycData.idBackImage)}" alt="ID Back">
                 </div>` : ''}
                 
                 ${(order.kycData.passportDoc || order.kycData.passportImage) ? `
                 <div class="kyc-item" style="grid-column: span ${(order.kycData.idBackImage) ? 1 : 2};">
-                    <span class="label">${isAr ? 'الجواز / الملف الإضافي' : 'Passport / Extra'}</span>
-                    <img src="${order.kycData.passportDoc || order.kycData.passportImage}" alt="Passport">
+                    <span class="label">${isAr ? 'صورة الجواز / المستند الإضافي' : 'Passport / Extra Document'}</span>
+                    <img src="${resolveUrl(order.kycData.passportDoc || order.kycData.passportImage)}" alt="Passport">
                 </div>` : ''}
             </div>
         </div>
         ` : ''}
 
         <div class="section">
-            <div class="section-title">${isAr ? 'المنتجات المطلوبة' : 'Ordered Products'}</div>
+            <div class="section-title">
+                ${isAr ? '🛍️ تفاصيل الطلب' : '🛍️ Order Details'}
+            </div>
             <table>
                 <thead>
                     <tr>
-                        <th>${isAr ? 'الصورة' : 'Img'}</th>
                         <th>${isAr ? 'المنتج' : 'Product'}</th>
+                        <th>${isAr ? 'البيانات' : 'Details'}</th>
                         <th>${isAr ? 'الكمية' : 'Qty'}</th>
-                        <th>${isAr ? 'الإجمالي' : 'Total'}</th>
+                        <th>${isAr ? 'الإجمالي' : 'Subtotal'}</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${order.items?.map((item: any) => `
                     <tr>
-                        <td>
-                            <img class="product-img" src="${item.product?.images?.[0] || item.productImage?.[0] || ''}" alt="P">
+                        <td style="width: 80px;">
+                            <img class="product-img" src="${resolveUrl(item.product?.images?.[0] || item.productImage?.[0] || '')}" alt="P">
                         </td>
                         <td>
-                            <div style="font-weight:bold">${isAr ? (item.product?.nameAr || item.productNameAr) : (item.product?.nameEn || item.productNameEn)}</div>
-                            <div style="font-size:11px; color:#888">${Number(item.price).toFixed(2)} ${t('currency')}</div>
+                            <div style="font-weight: 900; font-size: 15px;">${isAr ? (item.product?.nameAr || item.productNameAr) : (item.product?.nameEn || item.productNameEn)}</div>
+                            <div style="font-size: 12px; color: #64748b; font-weight: 700; margin-top: 4px;">
+                                ${item.size ? `Size: ${item.size} | ` : ''}${Number(item.price).toFixed(2)} ${t('currency')}
+                            </div>
                         </td>
-                        <td>${item.quantity}</td>
-                        <td style="font-weight:bold">${Number(item.total).toFixed(2)} ${t('currency')}</td>
+                        <td style="font-weight: 900;">${item.quantity}</td>
+                        <td style="font-weight: 900; color: #7c3aed;">${Number(item.total).toFixed(2)} ${t('currency')}</td>
                     </tr>
                     `).join('')}
                     <tr class="total-row">
-                        <td colspan="3" style="text-align:${isAr ? 'left' : 'right'}">${isAr ? 'الإجمالي الكلي' : 'Grand Total'}</td>
-                        <td>${Number(order.total).toFixed(2)} ${t('currency')}</td>
+                        <td colspan="3" style="text-align: ${isAr ? 'left' : 'right'}; border-radius: ${isAr ? '0 20px 20px 0' : '20px 0 0 20px'};">
+                            ${isAr ? 'الإجمالي الكلي للطلب' : 'Grand Total Price'}
+                        </td>
+                        <td style="border-radius: ${isAr ? '20px 0 0 20px' : '0 20px 20px 0'};">
+                            ${Number(order.total).toFixed(2)} ${t('currency')}
+                        </td>
                     </tr>
                 </tbody>
             </table>
@@ -206,22 +236,23 @@ export default function InstallmentOrdersTab() {
 
         ${order.installmentPlan ? `
         <div class="section">
-            <div class="section-title">${isAr ? 'خطة التقسيط' : 'Installment Plan'}</div>
+            <div class="section-title">
+                ${isAr ? '💳 بيانات الدفع والتقسيط' : '💳 Payment & Installments'}
+            </div>
             <div class="grid">
                 <div class="field">
-                    <span class="label">${isAr ? 'الخطة' : 'Plan'}</span>
-                    <span class="value">${order.installmentPlan.name}</span>
+                    <span class="label">${isAr ? 'خطة التقسيط المختارة' : 'Installment Plan'}</span>
+                    <span class="value">${order.installmentPlan.name} (${order.installmentPlan.months} ${isAr ? 'أشهر' : 'Mo'})</span>
+                </div>
+                <div class="field" style="background: #ecfdf5; border-color: #10b981;">
+                    <span class="label" style="color: #059669;">${isAr ? 'المقدم المدفوع (تأكيد)' : 'Downpayment (Paid)'}</span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="value" style="color: #047857;">${Number(order.depositAmount).toFixed(2)} ${t('currency')}</span>
+                        <span class="badge badge-deposit">${isAr ? 'تم الدفع' : 'PAID'}</span>
+                    </div>
                 </div>
                 <div class="field">
-                    <span class="label">${isAr ? 'المدة' : 'Duration'}</span>
-                    <span class="value">${order.installmentPlan.months} ${isAr ? 'شهر' : 'Months'}</span>
-                </div>
-                <div class="field">
-                    <span class="label">${isAr ? 'المقدم المدفوع' : 'Amount Paid'}</span>
-                    <span class="value">${Number(order.depositAmount).toFixed(2)} ${t('currency')}</span>
-                </div>
-                <div class="field">
-                    <span class="label">${isAr ? 'طريقة الدفع' : 'Payment Method'}</span>
+                    <span class="label">${isAr ? 'طريقة دفع المقدم' : 'Deposit Method'}</span>
                     <span class="value">${order.depositPaymentMethod || 'N/A'}</span>
                 </div>
             </div>
@@ -229,7 +260,8 @@ export default function InstallmentOrdersTab() {
         ` : ''}
 
         <div class="footer">
-            Wolf Techno / Fustan - ${new Date().getFullYear()} &copy;
+            <div style="margin-bottom: 5px;">هذا التقرير يحتوي على بيانات حساسة للعملاء - يرجى التعامل معه بحذر</div>
+            FUSTAN E-COMMERCE SYSTEM &copy; ${new Date().getFullYear()} | WOLF TECHNO
         </div>
     </div>
 </body>
@@ -363,8 +395,8 @@ export default function InstallmentOrdersTab() {
 
                                     {/* Right: Actions */}
                                     <div className="flex gap-3 flex-shrink-0">
-                                        {['pending_kyc_review', 'awaiting_deposit_payment'].includes(order.paymentStatus) && (
-                                            <div className="flex gap-2">
+                                        <div className="flex gap-2">
+                                            {['pending_kyc_review', 'awaiting_deposit_payment'].includes(order.paymentStatus) && (
                                                 <Button
                                                     onClick={() => setKycModalOrder(order)}
                                                     className="bg-amber-500 hover:bg-amber-400 text-black font-black rounded-2xl px-6 h-12 gap-2"
@@ -372,17 +404,17 @@ export default function InstallmentOrdersTab() {
                                                     <Eye className="w-4 h-4" />
                                                     {language === 'ar' ? 'مراجعة الطلب' : 'Review Request'}
                                                 </Button>
-                                                <Button
-                                                    variant="outline"
-                                                    size="icon"
-                                                    onClick={() => handleDownloadFullOrderData(order)}
-                                                    className="w-12 h-12 rounded-2xl border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
-                                                    title={language === 'ar' ? 'تنزيل كافة البيانات' : 'Download All Data'}
-                                                >
-                                                    <Download className="w-5 h-5" />
-                                                </Button>
-                                            </div>
-                                        )}
+                                            )}
+                                            <Button
+                                                variant="outline"
+                                                size="icon"
+                                                onClick={() => handleDownloadFullOrderData(order)}
+                                                className="w-12 h-12 rounded-2xl border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+                                                title={language === 'ar' ? 'تنزيل كافة البيانات' : 'Download All Data'}
+                                            >
+                                                <Download className="w-5 h-5" />
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
                             </CardContent>
