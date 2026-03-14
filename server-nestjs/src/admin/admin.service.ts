@@ -1,7 +1,7 @@
 import { scrypt, randomBytes } from 'node:crypto';
 import { Injectable, UnauthorizedException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { vendors, users, orders, products, categories, conversations, messages, cartItems, wishlist, notifications, productColors, reviews, shipping, offerItems, collections, coupons, offers, vendorReviews, vendorPayouts, vendorWallets, paymentGateways, installmentPlans, orderItems, accountStatusLogs, customerWallets, userPoints, giftCards } from '../database/schema';
+import { vendors, users, orders, products, categories, conversations, messages, cartItems, wishlist, notifications, productColors, reviews, shipping, offerItems, collections, coupons, offers, vendorReviews, vendorPayouts, vendorWallets, paymentGateways, installmentPlans, orderItems, accountStatusLogs, customerWallets, userPoints, giftCards, walletTransactions } from '../database/schema';
 import { eq, and, desc, sql, ne, inArray } from 'drizzle-orm';
 import * as xlsx from 'xlsx';
 
@@ -576,6 +576,14 @@ export class AdminService {
             .where(eq(customerWallets.userId, id))
             .limit(1);
 
+        const transactions = wallet 
+            ? await this.databaseService.db
+                .select()
+                .from(walletTransactions)
+                .where(eq(walletTransactions.walletId, wallet.id))
+                .orderBy(desc(walletTransactions.createdAt))
+            : [];
+
         const [points] = await this.databaseService.db
             .select()
             .from(userPoints)
@@ -589,6 +597,7 @@ export class AdminService {
                 total: orders.total,
                 status: orders.status,
                 paymentStatus: orders.paymentStatus,
+                paymentMethod: orders.paymentMethod,
                 createdAt: orders.createdAt,
             })
             .from(orders)
@@ -601,18 +610,29 @@ export class AdminService {
             .from(giftCards)
             .orderBy(desc(giftCards.createdAt));
 
-        const customerGiftCards = allCards.filter(c =>
-            (c.recipientEmail && c.recipientEmail.toLowerCase() === userEmail) ||
-            (c.senderEmail && c.senderEmail.toLowerCase() === userEmail) ||
+        const purchasedGiftCards = allCards.filter(c => 
+            c.senderEmail && c.senderEmail.toLowerCase() === userEmail
+        );
+        
+        const receivedGiftCards = allCards.filter(c => 
+            c.recipientEmail && c.recipientEmail.toLowerCase() === userEmail
+        );
+
+        const redeemedGiftCards = allCards.filter(c => 
             c.redeemedByUserId === id
         );
 
         return {
             ...user,
             wallet: wallet || { balance: 0 },
+            walletTransactions: transactions,
             points: points || { points: 0 },
             orders: customerOrders,
-            giftCards: customerGiftCards
+            giftCards: {
+                purchased: purchasedGiftCards,
+                received: receivedGiftCards,
+                redeemed: redeemedGiftCards
+            }
         };
     }
 

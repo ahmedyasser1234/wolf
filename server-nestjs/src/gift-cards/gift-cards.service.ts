@@ -17,8 +17,23 @@ export class GiftCardsService {
 
     async findAll() {
         return await this.databaseService.db
-            .select()
+            .select({
+                id: giftCards.id,
+                code: giftCards.code,
+                amount: giftCards.amount,
+                senderName: giftCards.senderName,
+                senderEmail: giftCards.senderEmail,
+                recipientName: giftCards.recipientName,
+                recipientEmail: giftCards.recipientEmail,
+                isRedeemed: giftCards.isRedeemed,
+                redeemedAt: giftCards.redeemedAt,
+                isActive: giftCards.isActive,
+                createdAt: giftCards.createdAt,
+                redeemerName: users.name,
+                redeemerEmail: users.email
+            })
             .from(giftCards)
+            .leftJoin(users, eq(giftCards.redeemedByUserId, users.id))
             .orderBy(desc(giftCards.createdAt));
     }
 

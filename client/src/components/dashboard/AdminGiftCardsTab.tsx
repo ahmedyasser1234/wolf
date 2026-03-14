@@ -134,6 +134,7 @@ export default function AdminGiftCardsTab({
                                 <tr className="border-b border-gray-800 bg-gray-800/30">
                                     <th className="py-4 px-6 font-bold text-gray-400 text-start text-xs uppercase tracking-widest">{language === 'ar' ? 'الكود' : 'Code'}</th>
                                     <th className="py-4 px-6 font-bold text-gray-400 text-center text-xs uppercase tracking-widest">{language === 'ar' ? 'القيمة' : 'Value'}</th>
+                                    <th className="py-4 px-6 font-bold text-gray-400 text-center text-xs uppercase tracking-widest">{language === 'ar' ? 'بيانات الحساب' : 'Account Info'}</th>
                                     <th className="py-4 px-6 font-bold text-gray-400 text-center text-xs uppercase tracking-widest">{language === 'ar' ? 'الحالة' : 'Status'}</th>
                                     <th className="py-4 px-6 font-bold text-gray-400 text-end text-xs uppercase tracking-widest">{language === 'ar' ? 'الإجراءات' : 'Actions'}</th>
                                 </tr>
@@ -150,7 +151,7 @@ export default function AdminGiftCardsTab({
                                     ))
                                 ) : displayCards.length === 0 ? (
                                     <tr>
-                                        <td colSpan={4} className="py-12 text-center text-gray-500 font-bold">
+                                        <td colSpan={5} className="py-12 text-center text-gray-500 font-bold">
                                             {language === 'ar' ? 'لا توجد جيفت كارد حالياً' : 'No gift cards found'}
                                         </td>
                                     </tr>
@@ -167,6 +168,25 @@ export default function AdminGiftCardsTab({
                                                 <span className="text-emerald-400 font-black text-lg">
                                                     {formatPrice(card.amount || 0)}
                                                 </span>
+                                            </td>
+                                            <td className="py-4 px-6 text-center">
+                                                <div className="flex flex-col items-center gap-1 text-xs">
+                                                    {(card.senderName || card.senderEmail) ? (
+                                                        <div className="flex flex-col items-center">
+                                                            <span className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter">{language === 'ar' ? 'المشتري:' : 'Purchased By:'}</span>
+                                                            <span className="text-white font-bold">{card.senderName || card.senderEmail}</span>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-gray-600 italic">{language === 'ar' ? 'إنشاء أدمن' : 'Admin Created'}</span>
+                                                    )}
+                                                    
+                                                    {card.isRedeemed && (
+                                                        <div className="flex flex-col items-center mt-1 pt-1 border-t border-gray-800 w-full">
+                                                            <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-tighter">{language === 'ar' ? 'المستخدم:' : 'Redeemed By:'}</span>
+                                                            <span className="text-emerald-400 font-bold">{card.redeemerName || card.redeemerEmail || (language === 'ar' ? 'غير معروف' : 'Unknown')}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td className="py-4 px-6 text-center">
                                                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${card.isRedeemed ? 'bg-red-900/30 text-red-400' : 'bg-emerald-900/30 text-emerald-400'}`}>

@@ -324,6 +324,7 @@ export default function AdminDashboard() {
   const [customerDetailsOpen, setCustomerDetailsOpen] = useState(false);
   const [customerDetails, setCustomerDetails] = useState<any>(null);
   const [detailsCustomerId, setDetailsCustomerId] = useState<number | null>(null);
+  const [customerHistoryTab, setCustomerHistoryTab] = useState<'orders' | 'gift_cards' | 'wallet'>('orders');
 
   const [activeTab, setActiveTabInternal] = useState<"overview" | "analytics" | "products" | "categories" | "collections" | "offers" | "coupons" | "giftcards" | "installments" | "installment-orders" | "payments" | "orders" | "customers" | "chat" | "content" | "settings" | "installment-payments">(() => {
     const params = new URLSearchParams(window.location.search);
@@ -1809,78 +1810,197 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div>
-                <h4 className="font-bold text-white mb-2">{language === 'ar' ? 'الرصيد والنقاط' : 'Balance & Points'}</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-                    <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-1">{language === 'ar' ? 'رصيد المحفظة' : 'Wallet Balance'}</p>
-                    <p className="text-lg font-black text-emerald-500">{Number(customerDetails.wallet?.balance || 0).toFixed(2)} {t('currency')}</p>
-                  </div>
-                  <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-                    <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-1">{language === 'ar' ? 'نقاط الولاء' : 'Loyalty Points'}</p>
-                    <p className="text-lg font-black text-blue-500">{customerDetails.points?.points || 0}</p>
-                  </div>
-                </div>
+              {/* Tab Filters */}
+              <div className="flex bg-gray-900 p-1 rounded-xl border border-gray-800">
+                <button
+                  onClick={() => setCustomerHistoryTab('orders')}
+                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all ${customerHistoryTab === 'orders' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                >
+                  {t('orders')}
+                </button>
+                <button
+                  onClick={() => setCustomerHistoryTab('gift_cards')}
+                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all ${customerHistoryTab === 'gift_cards' ? 'bg-purple-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                >
+                  {language === 'ar' ? 'كروت الهدايا' : 'Gift Cards'}
+                </button>
+                <button
+                  onClick={() => setCustomerHistoryTab('wallet')}
+                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all ${customerHistoryTab === 'wallet' ? 'bg-emerald-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                >
+                  {language === 'ar' ? 'المحفظة' : 'Wallet'}
+                </button>
               </div>
 
-              {customerDetails.giftCards && customerDetails.giftCards.length > 0 && (
-                <div>
-                  <h4 className="font-bold text-white mb-2">{language === 'ar' ? 'كروت الهدايا' : 'Gift Cards'}</h4>
-                  <div className="space-y-2">
-                    {customerDetails.giftCards.map((card: any) => (
-                      <div key={card.id} className="bg-gray-900 border border-gray-800 rounded-xl p-3 flex justify-between items-center">
-                        <div>
-                          <p className="font-mono text-xs text-white">{card.code}</p>
-                          <p className="text-[10px] text-gray-500">
-                            {card.isRedeemed ? (language === 'ar' ? 'تم الاستخدام' : 'Redeemed') : (language === 'ar' ? 'متاح' : 'Available')}
-                          </p>
+              {/* Orders Tab Content */}
+              {customerHistoryTab === 'orders' && (
+                <div className="space-y-4">
+                  <h4 className="font-bold text-white flex items-center gap-2">
+                    <ShoppingCart className="w-4 h-4 text-blue-500" />
+                    {t('orders')}
+                  </h4>
+                  {customerDetails.orders && customerDetails.orders.length > 0 ? (
+                    <div className="space-y-3">
+                      {customerDetails.orders.map((order: any) => (
+                        <div 
+                          key={order.id} 
+                          className="border border-gray-800 rounded-xl p-4 flex items-center justify-between hover:bg-gray-800/50 cursor-pointer transition-colors group"
+                          onClick={async () => {
+                            try {
+                              const fullOrder = await endpoints.orders.get(order.id);
+                              setSelectedOrder(fullOrder);
+                              setIsAdminOrderModalOpen(true);
+                            } catch (err) {
+                              toast.error(language === 'ar' ? 'فشل تحميل تفاصيل الطلب' : 'Failed to load order details');
+                            }
+                          }}
+                        >
+                          <div>
+                            <p className="font-bold text-sm text-white group-hover:text-blue-400 transition-colors uppercase">{order.orderNumber}</p>
+                            <p className="text-[10px] text-gray-400 font-medium">{new Date(order.createdAt).toLocaleDateString()}</p>
+                            <p className="text-[9px] text-gray-500 mt-1 uppercase font-bold tracking-tighter">
+                              {({
+                                'card': language === 'ar' ? 'بطاقة' : 'Card',
+                                'cash': language === 'ar' ? 'كاش' : 'Cash',
+                                'wallet': language === 'ar' ? 'محفظة' : 'Wallet',
+                                'gift_card': language === 'ar' ? 'جيفت كارد' : 'Gift Card',
+                                'installments': language === 'ar' ? 'تقسيط' : 'Installments'
+                              } as any)[order.paymentMethod] || order.paymentMethod}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-black text-sm text-blue-500">{order.total?.toLocaleString()} {t('currency')}</p>
+                            <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tight mt-1 ${
+                              order.status === 'delivered' || order.status === 'completed' ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800/50' :
+                              order.status === 'cancelled' ? 'bg-red-900/30 text-red-400 border border-red-800/50' : 
+                              'bg-amber-900/30 text-amber-500 border border-amber-800/50'
+                            }`}>
+                              {order.status}
+                            </span>
+                          </div>
                         </div>
-                        <p className="font-bold text-sm text-purple-400">{Number(card.amount).toFixed(2)} {t('currency')}</p>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-8 text-center bg-gray-900/50 rounded-2xl border border-dashed border-gray-800">
+                      <p className="text-sm text-gray-500 italic font-medium">{language === 'ar' ? 'لا توجد طلبات سابقة' : 'No previous orders found.'}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Gift Cards Tab Content */}
+              {customerHistoryTab === 'gift_cards' && (
+                <div className="space-y-6">
+                  {/* Purchased */}
+                  <div className="space-y-3">
+                    <h4 className="font-bold text-white text-sm flex items-center gap-2">
+                      <Gift className="w-4 h-4 text-purple-500" />
+                      {language === 'ar' ? 'كروت اشتراها العميل' : 'Gift Cards Purchased'}
+                    </h4>
+                    {customerDetails.giftCards?.purchased?.length > 0 ? (
+                      <div className="grid gap-2">
+                        {customerDetails.giftCards.purchased.map((card: any) => (
+                          <div key={card.id} className="bg-gray-900/70 border border-gray-800 p-3 rounded-xl flex justify-between items-center group">
+                            <div>
+                              <p className="font-mono text-xs text-white group-hover:text-purple-400 transition-colors uppercase">{card.code}</p>
+                              <p className="text-[10px] text-gray-500 font-bold uppercase mt-1">
+                                {card.isRedeemed ? (language === 'ar' ? 'تم الاستخدام' : 'Redeemed') : (language === 'ar' ? 'متاح' : 'Available')}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-black text-sm text-purple-400">{Number(card.amount).toFixed(2)} {t('currency')}</p>
+                              <p className="text-[9px] text-gray-600 mt-1">{new Date(card.createdAt).toLocaleDateString()}</p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    ) : (
+                      <p className="text-xs text-gray-600 italic px-2">{language === 'ar' ? 'لم يقم بشراء كروت بعد' : 'No gift cards purchased yet.'}</p>
+                    )}
+                  </div>
+
+                  {/* Redeemed */}
+                  <div className="space-y-3 border-t border-gray-800 pt-4">
+                    <h4 className="font-bold text-white text-sm flex items-center gap-2">
+                      <History className="w-4 h-4 text-emerald-500" />
+                      {language === 'ar' ? 'كروت استخدمها العميل' : 'Gift Cards Redeemed'}
+                    </h4>
+                    {customerDetails.giftCards?.redeemed?.length > 0 ? (
+                      <div className="grid gap-2">
+                        {customerDetails.giftCards.redeemed.map((card: any) => (
+                          <div key={card.id} className="bg-gray-900/70 border border-emerald-900/30 p-3 rounded-xl flex justify-between items-center bg-emerald-950/5">
+                            <div>
+                              <p className="font-mono text-xs text-white uppercase">{card.code}</p>
+                              <p className="text-[10px] text-emerald-500 font-bold uppercase mt-1">
+                                {language === 'ar' ? 'تم الشحن' : 'Redeemed'}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-black text-sm text-emerald-400">{Number(card.amount).toFixed(2)} {t('currency')}</p>
+                              <p className="text-[9px] text-gray-600 mt-1">{card.redeemedAt ? new Date(card.redeemedAt).toLocaleDateString() : '-'}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-600 italic px-2">{language === 'ar' ? 'لم يقم باستخدام كروت بعد' : 'No gift cards redeemed yet.'}</p>
+                    )}
                   </div>
                 </div>
               )}
 
-              <div>
-                <h4 className="font-bold text-white mb-2">{t('contactInfo')}</h4>
-                <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-white">{t('mobileNumber')}</span>
-                    <span className="text-sm font-medium">{customerDetails.phone || '-'}</span>
+              {/* Wallet Tab Content */}
+              {customerHistoryTab === 'wallet' && (
+                <div className="space-y-4">
+                  <div className="bg-emerald-950/20 border border-emerald-900/30 p-4 rounded-2xl flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-emerald-600 tracking-wider mb-1">{language === 'ar' ? 'الرصيد الحالي' : 'Current Balance'}</p>
+                      <h3 className="text-2xl font-black text-emerald-400">{Number(customerDetails.wallet?.balance || 0).toFixed(2)} <span className="text-xs font-bold opacity-70">{t('currency')}</span></h3>
+                    </div>
+                    <div className="w-12 h-12 bg-emerald-900/30 rounded-xl flex items-center justify-center">
+                      <Wallet className="w-6 h-6 text-emerald-500" />
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-white">{t('address')}</span>
-                    <span className="text-sm font-medium max-w-[200px] text-right truncate">{customerDetails.address || '-'}</span>
-                  </div>
-                </div>
-              </div>
 
-              <div>
-                <h4 className="font-bold text-white mb-2">{t('orders')}</h4>
-                {customerDetails.orders && customerDetails.orders.length > 0 ? (
-                  <div className="space-y-3">
-                    {customerDetails.orders.map((order: any) => (
-                      <div key={order.id} className="border border-gray-800 rounded-xl p-4 flex items-center justify-between">
-                        <div>
-                          <p className="font-bold text-sm text-white">{order.orderNumber}</p>
-                          <p className="text-xs text-white">{new Date(order.createdAt).toLocaleDateString()}</p>
+                  <h4 className="font-bold text-white text-sm mt-6 flex items-center gap-2">
+                    <History className="w-4 h-4 text-blue-500" />
+                    {language === 'ar' ? 'سجل العمليات' : 'Transaction History'}
+                  </h4>
+                  {customerDetails.walletTransactions && customerDetails.walletTransactions.length > 0 ? (
+                    <div className="space-y-2">
+                      {customerDetails.walletTransactions.map((tx: any) => (
+                        <div key={tx.id} className="bg-gray-900 border border-gray-800 p-4 rounded-xl flex justify-between items-center transition-all hover:border-gray-700">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className={`w-2 h-2 rounded-full ${tx.amount > 0 ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]'}`}></span>
+                              <p className="text-xs font-black text-white uppercase tracking-tight">
+                                {language === 'ar' 
+                                  ? (tx.type === 'funding' ? 'شحن رصيد' : tx.type === 'payment' ? 'دفع لطلب' : tx.type === 'refund' ? 'استرجاع' : 'تحويل')
+                                  : tx.type.toUpperCase()
+                                }
+                              </p>
+                            </div>
+                            <p className="text-[10px] text-gray-400 font-medium leading-relaxed max-w-[200px]">{tx.description || '-'}</p>
+                            <p className="text-[9px] text-gray-600 font-bold">{new Date(tx.createdAt).toLocaleString()}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className={`text-sm font-black ${tx.amount > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                              {tx.amount > 0 ? '+' : ''}{Number(tx.amount).toFixed(2)}
+                            </p>
+                            <p className="text-[9px] font-bold text-gray-700 uppercase">{t('currency')}</p>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-black text-sm text-blue-600">{order.total?.toLocaleString()} {t('currency')}</p>
-                          <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold mt-1 ${order.status === 'completed' ? 'bg-green-100 text-green-700' :
-                            order.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
-                            }`}>
-                            {order.status}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-white italic">No orders found.</p>
-                )}
-              </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-8 text-center bg-gray-900/50 rounded-2xl border border-dashed border-gray-800">
+                      <p className="text-sm text-gray-500 italic font-medium">{language === 'ar' ? 'لا توجد عمليات مسبقة' : 'No transactions found.'}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
             </div>
           ) : null}
         </SheetContent>
