@@ -477,7 +477,7 @@ export class PaymentsService {
                     },
                     {
                         headers: {
-                            Authorization: `Bearer ${config.secretKey}`,
+                            Authorization: `Bearer ${config.secretKey || config.publishableKey}`,
                             'X-Merchant-ID': config.merchantId || config.publishableKey
                         }
                     }

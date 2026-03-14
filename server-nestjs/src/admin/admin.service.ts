@@ -1049,6 +1049,24 @@ export class AdminService {
     }
 
     async updatePaymentGatewayToggle(id: number, isEnabled: boolean) {
+        if (isEnabled) {
+            const [gateway] = await this.databaseService.db
+                .select()
+                .from(paymentGateways)
+                .where(eq(paymentGateways.id, id))
+                .limit(1);
+
+            if (gateway && !['cash_on_delivery', 'installments', 'cash'].includes(gateway.name)) {
+                if (!gateway.secretKey && !gateway.publishableKey) {
+                    throw new BadRequestException(
+                        gateway.displayNameAr 
+                        ? `لا يمكن تفعيل ${gateway.displayNameAr} بدون إدخال مفاتيح الربط (API Keys) وحفظها أولاً`
+                        : `Cannot enable ${gateway.displayNameEn || 'gateway'} without saving API keys first`
+                    );
+                }
+            }
+        }
+
         const [updated] = await this.databaseService.db
             .update(paymentGateways)
             .set({ isActive: isEnabled, updatedAt: new Date() })

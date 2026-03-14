@@ -109,8 +109,8 @@ const GATEWAY_CONFIGS: Record<string, {
         color: "#FFD700",
         icon: <ShieldCheck size={22} />,
         fields: [
-            { key: 'publishableKey', labelAr: 'مفتاح API', labelEn: 'API Key' },
-            { key: 'secretKey', labelAr: 'المفتاح السري', labelEn: 'Secret Key', isSecret: true },
+            { key: 'secretKey', labelAr: 'مفتاح API الربط (Secret/API Key)', labelEn: 'API / Secret Key', placeholder: 'sk_live_...', isSecret: true },
+            { key: 'publishableKey', labelAr: 'معرف التاجر / المفتاح العلني', labelEn: 'Merchant ID / Public Key', placeholder: 'MID-12345' },
         ]
     },
     paymennt: {
@@ -325,7 +325,21 @@ function GatewayCard({ gw }: { gw: Gateway }) {
 
                     <div className="grid grid-cols-2 gap-2 pt-4 mt-auto border-t border-gray-800/50">
                         <button
-                            onClick={() => toggleMutation.mutate({ id: gw.id, isEnabled: true })}
+                            onClick={() => {
+                                if (hasChanges) {
+                                    toast.error(language === 'ar' 
+                                        ? 'يرجى حفظ الإعدادات أولاً قبل التفعيل' 
+                                        : 'Please save settings before enabling');
+                                    return;
+                                }
+                                if (!gw.secretKey && !gw.publishableKey) {
+                                    toast.error(language === 'ar'
+                                        ? 'يجب إدخال مفاتيح الربط وحفظها أولاً'
+                                        : 'API Keys must be saved first');
+                                    return;
+                                }
+                                toggleMutation.mutate({ id: gw.id, isEnabled: true });
+                            }}
                             disabled={gw.isActive || toggleMutation.isPending}
                             className={`h-10 sm:h-9 rounded-xl text-sm md:text-xs font-black flex items-center justify-center gap-1.5 transition-all
                 ${gw.isActive
