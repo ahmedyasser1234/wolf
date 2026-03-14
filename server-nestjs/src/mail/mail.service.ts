@@ -106,6 +106,23 @@ export class MailService {
         }
     }
 
+    async sendNewOfferEmail(to: string, offerName: string, discount: string, code?: string) {
+        const template = await this.emailTemplatesService.findByType('new_offer_notification');
+        if (template) {
+            const subject = template.subjectAr;
+            const body = this.emailTemplatesService.replacePlaceholders(template.bodyAr, { 
+                offerName, 
+                discount, 
+                code: code || '' 
+            });
+            await this.sendMail(to, subject, body);
+        } else {
+            const subject = 'عرض جديد حصري لك! 🔥 - WolfTechno 🐺';
+            const message = `لدينا عرض جديد: ${offerName} بخصم ${discount}%!`;
+            await this.sendMail(to, subject, message);
+        }
+    }
+
     async sendMail(to: string, subject: string, text: string) {
         const from = this.configService.get<string>('MAIL_FROM') || '"WolfTechno" <noreply@wolftechno.com>';
         if (this.transporter) {

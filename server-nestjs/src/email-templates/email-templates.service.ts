@@ -112,6 +112,16 @@ export class EmailTemplatesService implements OnModuleInit {
                 bodyAr: 'مرحباً بك! ✨\n\nلديك مفاجأة رائعة! لقد أرسل لك {{senderName}} كارت هدية بقيمة {{amount}} درهم. 🎊\n\nيمكنك استخدام هذا الكود عند الدفع للحصول على خصم مباشر على مشترياتك:\nكود الهدية: {{code}}\n\nنتمنى لك تجربة تسوق ممتعة! 🐺💙',
                 bodyEn: 'Hello! ✨\n\nYou have a wonderful surprise! {{senderName}} has sent you a gift card worth {{amount}} AED. 🎊\n\nYou can use this code at checkout to get a direct discount on your purchases:\nGift Code: {{code}}\n\nWe wish you an enjoyable shopping experience! 🐺💙',
                 variables: ['senderName', 'amount', 'code'],
+            },
+            {
+                type: 'new_offer_notification',
+                nameAr: 'إشعار عرض جديد',
+                nameEn: 'New Offer Notification',
+                subjectAr: 'عرض جديد حصري لك! 🔥 - WolfTechno 🐺',
+                subjectEn: 'Exclusive New Offer for You! 🔥 - WolfTechno 🐺',
+                bodyAr: 'مرحباً بك! ✨\n\nلدينا عرض جديد رائع من أجلك: "{{offerName}}"\nاستمتع بخصم يصل إلى {{discount}}%! 🎊\n{{code}} \n\nلا تفوت الفرصة وتسوق الآن! 🚀🛒\n\nWolfTechno 🐺',
+                bodyEn: 'Hello! ✨\n\nWe have a great new offer for you: "{{offerName}}"\nEnjoy a discount of up to {{discount}}%! 🎊\n{{code}} \n\nDon\'t miss the chance and shop now! 🚀🛒\n\nWolfTechno 🐺',
+                variables: ['offerName', 'discount', 'code'],
             }
         ];
 
