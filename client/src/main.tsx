@@ -8,6 +8,13 @@ import "./index.css";
 
 const queryClient = new QueryClient();
 
+// Handle dynamic import failures (vite chunk load error)
+window.addEventListener('error', (e) => {
+  if (e.message.includes('dynamically imported module') || e.message.includes('Failed to fetch dynamically imported module')) {
+    window.location.reload();
+  }
+}, true);
+
 createRoot(document.getElementById("root")!).render(
   <QueryClientProvider client={queryClient}>
     <HelmetProvider>

@@ -48,11 +48,13 @@ import { QuickViewModal } from "@/components/home/QuickViewModal";
 
 function RelatedProducts({ collectionId, currentProductId, language }: { collectionId?: number, currentProductId: number, language: string }) {
   const { t } = useLanguage();
-  const { data: relatedProducts, isLoading } = useQuery({
+  const { data: relatedProductsData, isLoading } = useQuery({
     queryKey: ['products', 'related', collectionId],
     queryFn: () => endpoints.products.list({ collectionId }),
     enabled: !!collectionId
   });
+
+  const relatedProducts = relatedProductsData?.data || [];
 
   if (isLoading || !relatedProducts || !Array.isArray(relatedProducts) || relatedProducts.length <= 1) return null;
 
@@ -214,8 +216,8 @@ export default function ProductDetail() {
       } else {
         result = await endpoints.products.list();
       }
-      // Handle potential { products: [], total: 0 } structure or direct array
-      return Array.isArray(result) ? result : (result?.products || []);
+      // Handle new structure { data, total }
+      return result?.data || [];
     },
     enabled: !!productData
   });
@@ -355,7 +357,7 @@ export default function ProductDetail() {
         <OffersDisplay productId={product.id} language={language} />
       </section>
 
-      <section className="container mx-auto px-2 md:px-4 mt-4 overflow-hidden w-full max-w-[100vw]">
+      <section className="container mx-auto px-2 md:px-4 lg:px-24 xl:px-32 mt-4 overflow-hidden w-full max-w-[100vw]">
         <div className="grid lg:grid-cols-[1fr_550px] gap-6 md:gap-12 relative items-start w-full">
           {/* Left: Product Media */}
           <div className="relative w-full max-w-full">
@@ -547,7 +549,7 @@ export default function ProductDetail() {
                 {collection ? (language === 'ar' ? collection.nameAr : collection.nameEn) : 'Exclusive Edition'}
               </div>
 
-              <h1 className="text-3xl md:text-5xl lg:text-7xl font-black text-gray-900 mb-4 md:mb-6 leading-[1.2] md:leading-[1.1] tracking-tighter text-right">
+              <h1 className="text-3xl md:text-5xl lg:text-5xl font-black text-gray-900 mb-4 md:mb-6 leading-[1.2] md:leading-[1.1] tracking-tighter text-right">
                 {language === 'ar' ? product.nameAr : product.nameEn}
               </h1>
 
@@ -673,7 +675,7 @@ export default function ProductDetail() {
                       const interestAmount = product.price * (plan.interestRate || 0) / 100;
                       const totalWithInterest = product.price + interestAmount;
 
-                      const dpPct = plan.downPaymentPercentage > 0 ? plan.downPaymentPercentage : (category?.downPaymentPercentage || 0);
+                      const dpPct = plan.downPaymentPercentage > 0 ? plan.downPaymentPercentage : (collection?.downPaymentPercentage || 0);
 
                       if (dpPct <= 0) return null;
 
@@ -775,7 +777,7 @@ export default function ProductDetail() {
                             const basePrice = product.price * quantity;
                             const interestAmount = basePrice * (plan.interestRate || 0) / 100;
                             const totalWithInterest = basePrice + interestAmount;
-                            const dpPct = plan.downPaymentPercentage > 0 ? plan.downPaymentPercentage : (category?.downPaymentPercentage || 0);
+                            const dpPct = plan.downPaymentPercentage > 0 ? plan.downPaymentPercentage : (collection?.downPaymentPercentage || 0);
                             const downPayment = totalWithInterest * dpPct / 100;
                             const financedAmount = totalWithInterest - downPayment;
                             const monthly = financedAmount / plan.months;

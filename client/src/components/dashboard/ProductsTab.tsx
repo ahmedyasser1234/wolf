@@ -49,12 +49,22 @@ export default function ProductsTab({ collectionId, onProductClick, onPreview, s
     const [colorVariants, setColorVariants] = useState<{ id?: number; colorName: string; colorCode: string; quantity?: string | number; imageFiles: File[]; existingImages?: string[] }[]>([]);
     const [sku, setSku] = useState("");
     const [tags, setTags] = useState("");
+    const [page, setPage] = useState(1);
+    const limit = 20;
 
     // Queries
-    const { data: products, isLoading } = useQuery({
-        queryKey: ['products', collectionId],
-        queryFn: async () => await endpoints.products.list({ collectionId: collectionId || undefined }),
+    const { data: productsData, isLoading } = useQuery({
+        queryKey: ['products', collectionId, page],
+        queryFn: async () => await endpoints.products.list({
+            collectionId: collectionId || undefined,
+            page,
+            limit
+        }),
     });
+
+    const products = productsData?.data || [];
+    const total = productsData?.total || 0;
+    const totalPages = Math.ceil(total / limit);
 
     const { data: collections } = useQuery({
         queryKey: ['collections'],
@@ -358,6 +368,39 @@ export default function ProductsTab({ collectionId, onProductClick, onPreview, s
                     </Card>
                 ))}
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-4 mt-12 pb-8">
+                    <Button
+                        variant="outline"
+                        disabled={page === 1}
+                        onClick={() => {
+                            setPage(p => Math.max(1, p - 1));
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="rounded-xl border-gray-800 bg-gray-900 text-white hover:bg-gray-800 h-12 px-6 font-bold"
+                    >
+                        {language === 'ar' ? 'السابق' : 'Previous'}
+                    </Button>
+                    <div className="flex items-center gap-2">
+                        <span className="text-gray-400 font-bold">
+                            {language === 'ar' ? `صفحة ${page} من ${totalPages}` : `Page ${page} of ${totalPages}`}
+                        </span>
+                    </div>
+                    <Button
+                        variant="outline"
+                        disabled={page === totalPages}
+                        onClick={() => {
+                            setPage(p => Math.min(totalPages, p + 1));
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="rounded-xl border-gray-800 bg-gray-900 text-white hover:bg-gray-800 h-12 px-6 font-bold"
+                    >
+                        {language === 'ar' ? 'التالي' : 'Next'}
+                    </Button>
+                </div>
+            )}
 
             {products?.length === 0 && (
                 <div className="py-20 text-center bg-gray-900/50 rounded-[40px] border-2 border-dashed border-gray-800 animate-in fade-in zoom-in duration-500">

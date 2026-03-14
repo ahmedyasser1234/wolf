@@ -48,9 +48,7 @@ export default function GroupProductsPage() {
             : group.nameEn || group.nameAr
         : groupSlug;
 
-    const productList: any[] = Array.isArray(products)
-        ? products
-        : products?.products || [];
+    const productList: any[] = (products as any)?.data || [];
 
     return (
         <>

@@ -15,13 +15,13 @@ export default function SearchResults() {
     const queryParams = new URLSearchParams(searchString);
     const query = queryParams.get("q") || "";
 
-    const { data: results, isLoading } = useQuery({
+    const { data: resultsData, isLoading } = useQuery({
         queryKey: ['products', 'search', query],
         queryFn: () => endpoints.products.list({ search: query }),
         enabled: query.length > 0
     });
 
-    const products = Array.isArray(results) ? results : [];
+    const products = resultsData?.data || [];
 
     return (
         <div className="min-h-screen bg-gray-50/30 pb-20 pt-24 md:pt-32">
@@ -64,7 +64,7 @@ export default function SearchResults() {
                     </div>
                 ) : products.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                        {products.map((product, index) => (
+                        {products.map((product: any, index: number) => (
                             <ProductCard key={product.id} product={product} index={index} />
                         ))}
                     </div>

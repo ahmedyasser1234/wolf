@@ -31,12 +31,23 @@ export class ProductsController {
         @Query('collectionId') collectionId?: string,
         @Query('limit') limit?: string,
         @Query('offset') offset?: string,
+        @Query('page') page?: string,
     ) {
+        const finalLimit = limit ? parseInt(limit) : 20;
+        let finalOffset = offset ? parseInt(offset) : 0;
+
+        if (page && !offset) {
+            const pageNum = parseInt(page);
+            if (pageNum > 0) {
+                finalOffset = (pageNum - 1) * finalLimit;
+            }
+        }
+
         return this.productsService.findAll(
             search,
             categoryId ? parseInt(categoryId) : undefined,
-            limit ? parseInt(limit) : 20,
-            offset ? parseInt(offset) : 0,
+            finalLimit,
+            finalOffset,
             undefined, // vendorId is removed
             collectionId ? parseInt(collectionId) : undefined,
         );

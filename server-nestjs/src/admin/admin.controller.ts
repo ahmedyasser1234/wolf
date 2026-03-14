@@ -108,9 +108,18 @@ export class AdminController {
     }
 
     @Get('products')
-    async getProducts(@Req() req: Request, @Query('search') search?: string) {
+    async getProducts(
+        @Req() req: Request,
+        @Query('search') search?: string,
+        @Query('page') page?: string,
+        @Query('limit') limit?: string
+    ) {
         await this.checkAdmin(req);
-        return this.adminService.getAllProducts(search);
+        return this.adminService.getAllProducts(
+            search,
+            page ? parseInt(page) : 1,
+            limit ? parseInt(limit) : 20
+        );
     }
 
     @Get('conversations')

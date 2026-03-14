@@ -8,6 +8,7 @@ import { useLanguage } from "@/lib/i18n";
 import { toast } from "sonner";
 import { useRef } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { downloadInvoice } from "@/lib/downloadInvoice";
 
 const ORDER_STATUSES: Record<string, { labelAr: string; labelEn: string; icon: any; color: string; step: number }> = {
     pending: { labelAr: "قيد الانتظار", labelEn: "Pending", icon: Clock, color: "orange", step: 1 },
@@ -255,6 +256,15 @@ Generated at: ${new Date().toLocaleString()}
                                     <span className="text-xs">{language === 'ar' ? 'تحميل بيانات التحقق' : 'Download KYC'}</span>
                                 </Button>
                             )}
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => downloadInvoice(order, language, t)}
+                                className="h-8 px-3 text-gray-900 border-gray-300 hover:bg-gray-100 font-bold gap-2"
+                            >
+                                <Download className="w-4 h-4" />
+                                <span className="text-xs">{language === 'ar' ? 'تنزيل الفاتورة' : 'Download Invoice'}</span>
+                            </Button>
                         </CardHeader>
                         <CardContent className="space-y-3 sm:space-y-4">
                             <div className="flex justify-between text-gray-600 text-sm sm:text-base">

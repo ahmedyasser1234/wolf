@@ -58,6 +58,7 @@ export default function Checkout() {
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [giftCardInfo, setGiftCardInfo] = useState<any>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   // Wallet-initiated flow state
   const isFromWallet = new URLSearchParams(window.location.search).get('from') === 'wallet';
@@ -138,6 +139,9 @@ export default function Checkout() {
   const finalTotal = total - discountAmount;
 
   const gateways = (gatewaysData as any[]) || [];
+  const hasCod = gateways.some(g => ['cash_on_delivery', 'cod', 'cash_payment', 'cash'].includes(g.name));
+  const hasCard = gateways.some(g => !['cash_on_delivery', 'cod', 'cash_payment', 'cash', 'installments'].includes(g.name));
+  const cardGateway = gateways.find(g => !['cash_on_delivery', 'cod', 'cash_payment', 'cash', 'installments'].includes(g.name));
 
   const validateCouponMutation = useMutation({
     mutationFn: (code: string) => endpoints.coupons.validate(code),
@@ -212,6 +216,11 @@ export default function Checkout() {
   const handlePlaceOrder = () => {
     if (!formData.address || !formData.city) {
       toast.error(language === 'ar' ? 'يرجى إكمال بيانات الشحن' : 'Please complete shipping address');
+      return;
+    }
+
+    if (!termsAccepted) {
+      toast.error(language === 'ar' ? 'يجب الموافقة على الشروط والأحكام' : 'You must accept the terms and conditions');
       return;
     }
 
@@ -425,7 +434,8 @@ export default function Checkout() {
                         <Button
                           onClick={() => {
                             setWalletFlowChoice('full');
-                            setFormData(prev => ({ ...prev, paymentMethod: 'card' })); // 'card' here means full payment route
+                            setDepositMethod('wallet'); 
+                            setFormData(prev => ({ ...prev, paymentMethod: 'wallet' })); 
                             setStep('deposit');
                           }}
                           className="h-20 rounded-2xl bg-emerald-500/10 border-2 border-emerald-500 text-emerald-700 hover:bg-emerald-500/20 flex flex-col gap-1 items-center justify-center shadow-none"
@@ -483,7 +493,8 @@ export default function Checkout() {
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {[
-                          { id: 'card', label: language === 'ar' ? 'بطاقة بنكية' : 'Bank Card', Icon: CreditCard, hidden: isFromWallet },
+                          { id: 'card', label: language === 'ar' ? 'بطاقة بنكية' : 'Bank Card', Icon: CreditCard, hidden: !hasCard || isFromWallet },
+                          { id: 'cod', label: language === 'ar' ? 'الدفع عند الاستلام' : 'Cash on Delivery', Icon: Truck, hidden: !hasCod || isFromWallet || formData.paymentMethod === 'installments' },
                           { id: 'wallet', label: language === 'ar' ? 'المحفظة' : 'Wallet', Icon: Wallet, hidden: false },
                           { id: 'gift_card', label: language === 'ar' ? 'كارت هدية' : 'Gift Card', Icon: Gift, hidden: isFromWallet },
                         ].filter(m => !m.hidden).map((m) => (
@@ -534,16 +545,33 @@ export default function Checkout() {
                       )}
 
                       {depositMethod === 'wallet' && (
-                        <div className="mt-4 p-4 bg-blue-50 rounded-xl flex justify-between items-center">
-                          <span className="font-bold text-blue-700">{formatPrice(walletData?.wallet?.balance || 0)}</span>
-                          <span className="text-blue-600 font-bold">{language === 'ar' ? 'رصيدك الحالي' : 'Your Current Balance'}</span>
+                        <div className="mt-4 p-6 bg-blue-50 rounded-2xl border-2 border-blue-100 flex justify-between items-center shadow-sm">
+                          <span className="font-black text-blue-700 text-2xl">{formatPrice(walletData?.wallet?.balance || 0)}</span>
+                          <div className="text-right">
+                            <span className="text-blue-600 font-black block">{language === 'ar' ? 'رصيد المحفظة المتاح' : 'Available Wallet Balance'}</span>
+                            <span className="text-blue-400 text-xs font-bold">{language === 'ar' ? 'سيتم الخصم منه مباشرة' : 'Will be deducted immediately'}</span>
+                          </div>
                         </div>
                       )}
                     </div>
 
+                    {/* Terms and Conditions Checkbox */}
+                    <div className="mt-8 p-4 bg-gray-50 rounded-2xl border border-gray-100 flex items-center gap-3 cursor-pointer select-none" onClick={() => setTermsAccepted(!termsAccepted)}>
+                      <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${termsAccepted ? 'bg-primary border-primary' : 'bg-white border-gray-300'}`}>
+                        {termsAccepted && <CheckCircle2 className="w-4 h-4 text-white" />}
+                      </div>
+                      <p className="text-sm font-bold text-gray-700">
+                        {language === 'ar' ? (
+                          <>أوافق على <span className="text-primary underline">الشروط والأحكام</span> وسياسة الخصوصية</>
+                        ) : (
+                          <>I agree to the <span className="text-primary underline">Terms and Conditions</span> and Privacy Policy</>
+                        )}
+                      </p>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4 mt-12">
                       <Button onClick={() => setStep(formData.paymentMethod === 'installments' ? "kyc" : "shipping")} variant="outline" className="h-14 md:h-16 rounded-full border-2 text-lg font-bold font-arabic text-gray-900 border-gray-300">{t('back')}</Button>
-                      <Button onClick={handlePlaceOrder} disabled={placeOrderMutation.isPending} className="h-14 md:h-16 rounded-full bg-primary hover:bg-primary/90 text-lg md:text-xl font-bold text-white shadow-xl shadow-primary/20 font-arabic">
+                      <Button onClick={handlePlaceOrder} disabled={placeOrderMutation.isPending || !termsAccepted} className={`h-14 md:h-16 rounded-full text-lg md:text-xl font-bold text-white shadow-xl font-arabic transition-all ${placeOrderMutation.isPending || !termsAccepted ? 'bg-gray-300 shadow-none cursor-not-allowed' : 'bg-primary hover:bg-primary/90 shadow-primary/20'}`}>
                         {placeOrderMutation.isPending ? <Loader2 className="animate-spin" /> : (language === 'ar' ? 'إرسال الطلب' : 'Place Order')}
                       </Button>
                     </div>

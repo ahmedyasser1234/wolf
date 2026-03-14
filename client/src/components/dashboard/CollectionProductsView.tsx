@@ -52,7 +52,7 @@ export default function CollectionProductsView({ vendorId, collectionId, onBack,
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                    {products?.length === 0 ? (
+                    {(products as any)?.data?.length === 0 ? (
                         <div className="col-span-full py-32 text-center bg-white rounded-[40px] border-2 border-dashed border-slate-100">
                             <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
                                 <Package className="w-10 h-10 text-slate-200" />
@@ -63,7 +63,7 @@ export default function CollectionProductsView({ vendorId, collectionId, onBack,
                             </p>
                         </div>
                     ) : (
-                        products?.map((product: any) => (
+                        (products as any)?.data?.map((product: any) => (
                             <Card
                                 key={product.id}
                                 className="group border-0 shadow-xl shadow-slate-100/50 rounded-[40px] overflow-hidden bg-white hover:scale-[1.02] transition-all duration-500 cursor-pointer"

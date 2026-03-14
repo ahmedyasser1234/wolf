@@ -143,7 +143,7 @@ export const endpoints = {
         deleteCustomer: (id: number) => api.delete(`/admin/customers/${id}`).then(res => res.data),
         getCustomerStatusLogs: (id: number) => api.get(`/admin/customers/${id}/status-logs`).then(res => res.data),
         getOrders: (params?: any) => api.get('/admin/orders', { params }).then(res => res.data),
-        getProducts: (search?: string) => api.get('/admin/products', { params: { search } }).then(res => res.data),
+        getProducts: (params?: any) => api.get('/admin/products', { params }).then(res => res.data),
         globalSearch: (q: string) => api.get('/admin/search', { params: { q } }).then(res => res.data),
         exportCustomers: () => api.get('/admin/export/customers', { responseType: 'blob' }).then(res => res.data),
         importCustomers: (file: File) => {

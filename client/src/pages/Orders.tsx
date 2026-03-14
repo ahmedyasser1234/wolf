@@ -26,6 +26,7 @@ import {
 import { toast } from "sonner";
 import { useLanguage } from "@/lib/i18n";
 import { useState } from "react";
+import { downloadInvoice } from "@/lib/downloadInvoice";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { motion } from "framer-motion";
 
@@ -339,7 +340,7 @@ export default function Orders() {
                                 {t('viewDetails')}
                               </Button>
                             </Link>
-                            <Button variant="outline" className="flex-1 lg:flex-none border-gray-300 text-gray-900 hover:bg-gray-100 rounded-xl h-12 font-bold gap-2">
+                            <Button onClick={() => downloadInvoice(order, language, t)} variant="outline" className="flex-1 lg:flex-none border-gray-300 text-gray-900 hover:bg-gray-100 rounded-xl h-12 font-bold gap-2">
                               <Download className="w-4 h-4" />
                               {language === 'ar' ? 'الفاتورة' : 'Invoice'}
                             </Button>

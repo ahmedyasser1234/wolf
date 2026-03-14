@@ -75,7 +75,7 @@ export default function Products() {
   });
 
   // Derived state for UI
-  const productData = (products as any[]) || [];
+  const productData = (products as any)?.data || [];
 
   // Filter & Sort
   const filteredProducts = useMemo(() => {
@@ -135,7 +135,7 @@ export default function Products() {
     }))
   ];
 
-  const topRated = productData.sort((a, b) => b.rating - a.rating).slice(0, 3);
+  const topRated = productData.sort((a: any, b: any) => b.rating - a.rating).slice(0, 3);
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] pb-20">
@@ -175,7 +175,7 @@ export default function Products() {
             <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
               <Button
                 variant="outline"
-                className="lg:hidden"
+                className="lg:hidden border-white/20 text-white hover:bg-white/10"
                 onClick={() => setShowFilters(!showFilters)}
               >
                 <SlidersHorizontal size={18} className="mr-2" />

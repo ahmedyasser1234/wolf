@@ -92,7 +92,7 @@ export function FlashSalesSection({ onQuickView }: FlashSalesSectionProps) {
                             <Skeleton key={i} className="aspect-[2/3] w-full rounded-[30px] bg-white/5" />
                         ))
                     ) : (
-                        products?.map((product: any, i: number) => (
+                        ((products as any)?.data || []).map((product: any, i: number) => (
                             <div key={i} className="bg-white rounded-[2rem] p-3 shadow-2xl shadow-black/20">
                                 <ProductCard
                                     product={{ ...product, discount: 30 }} // Mocking high discount 

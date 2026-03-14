@@ -633,7 +633,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="h-screen bg-background flex flex-col overflow-hidden" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       {/* Desktop Navbar */}
       <header className="h-20 bg-background border-b border-gray-800 flex items-center justify-between px-4 md:px-8 sticky top-0 z-40">
         <div className="flex items-center gap-6">
@@ -673,7 +673,7 @@ export default function AdminDashboard() {
       </header>
 
       {/* Navigation Tabs */}
-      <div className="bg-background border-b border-gray-800 relative">
+      <div className="bg-background border-b border-gray-800 sticky top-20 z-30 shadow-md">
         <div className="container mx-auto px-4 py-4 md:py-6">
           <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-2 px-2 lg:flex-wrap lg:overflow-visible lg:pb-0">
             {tabs.map((tab) => (
@@ -1572,28 +1572,46 @@ export default function AdminDashboard() {
 
                   <div className="grid grid-cols-3 gap-3">
                     {selectedOrder.kycData.faceId && (
-                      <a href={selectedOrder.kycData.faceId} target="_blank" rel="noopener noreferrer" className="block group">
-                        <div className="aspect-square rounded-xl bg-gray-800 border border-gray-700 flex flex-col items-center justify-center gap-2 overflow-hidden hover:border-emerald-500 transition-all">
-                          <ImageIcon className="w-6 h-6 text-gray-500 group-hover:text-emerald-500" />
-                          <span className="text-[10px] text-white font-bold">{language === 'ar' ? 'صورة الوجه' : 'Face ID'}</span>
+                      <div className="group relative aspect-square rounded-xl bg-gray-800 border border-gray-700 flex flex-col items-center justify-center gap-2 overflow-hidden hover:border-emerald-500 transition-all">
+                        <ImageIcon className="w-6 h-6 text-gray-500 group-hover:text-emerald-500" />
+                        <span className="text-[10px] text-white font-bold">{language === 'ar' ? 'صورة الوجه' : 'Face ID'}</span>
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-3 transition-opacity">
+                          <a href={selectedOrder.kycData.faceId} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors">
+                            <Eye className="w-5 h-5 text-white" />
+                          </a>
+                          <a href={selectedOrder.kycData.faceId} download={`face_id_${selectedOrder.orderNumber}.jpg`} className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors">
+                            <Download className="w-5 h-5 text-white" />
+                          </a>
                         </div>
-                      </a>
+                      </div>
                     )}
                     {selectedOrder.kycData.residencyDoc && (
-                      <a href={selectedOrder.kycData.residencyDoc} target="_blank" rel="noopener noreferrer" className="block group">
-                        <div className="aspect-square rounded-xl bg-gray-800 border border-gray-700 flex flex-col items-center justify-center gap-2 overflow-hidden hover:border-emerald-500 transition-all">
-                          <ImageIcon className="w-6 h-6 text-gray-500 group-hover:text-emerald-500" />
-                          <span className="text-[10px] text-white font-bold">{language === 'ar' ? 'إثبات السكن' : 'Residency'}</span>
+                      <div className="group relative aspect-square rounded-xl bg-gray-800 border border-gray-700 flex flex-col items-center justify-center gap-2 overflow-hidden hover:border-emerald-500 transition-all">
+                        <ImageIcon className="w-6 h-6 text-gray-500 group-hover:text-emerald-500" />
+                        <span className="text-[10px] text-white font-bold">{language === 'ar' ? 'إثبات السكن' : 'Residency'}</span>
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-3 transition-opacity">
+                          <a href={selectedOrder.kycData.residencyDoc} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors">
+                            <Eye className="w-5 h-5 text-white" />
+                          </a>
+                          <a href={selectedOrder.kycData.residencyDoc} download={`residency_${selectedOrder.orderNumber}.jpg`} className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors">
+                            <Download className="w-5 h-5 text-white" />
+                          </a>
                         </div>
-                      </a>
+                      </div>
                     )}
                     {selectedOrder.kycData.passportDoc && (
-                      <a href={selectedOrder.kycData.passportDoc} target="_blank" rel="noopener noreferrer" className="block group">
-                        <div className="aspect-square rounded-xl bg-gray-800 border border-gray-700 flex flex-col items-center justify-center gap-2 overflow-hidden hover:border-emerald-500 transition-all">
-                          <ImageIcon className="w-6 h-6 text-gray-500 group-hover:text-emerald-500" />
-                          <span className="text-[10px] text-white font-bold">{language === 'ar' ? 'الجواز/الهوية' : 'Passport/ID'}</span>
+                      <div className="group relative aspect-square rounded-xl bg-gray-800 border border-gray-700 flex flex-col items-center justify-center gap-2 overflow-hidden hover:border-emerald-500 transition-all">
+                        <ImageIcon className="w-6 h-6 text-gray-500 group-hover:text-emerald-500" />
+                        <span className="text-[10px] text-white font-bold">{language === 'ar' ? 'الجواز/الهوية' : 'Passport/ID'}</span>
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-3 transition-opacity">
+                          <a href={selectedOrder.kycData.passportDoc} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors">
+                            <Eye className="w-5 h-5 text-white" />
+                          </a>
+                          <a href={selectedOrder.kycData.passportDoc} download={`passport_${selectedOrder.orderNumber}.jpg`} className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors">
+                            <Download className="w-5 h-5 text-white" />
+                          </a>
                         </div>
-                      </a>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1790,6 +1808,39 @@ export default function AdminDashboard() {
                   <p className="text-xs text-white mt-1">Joined {new Date(customerDetails.createdAt).toLocaleDateString()}</p>
                 </div>
               </div>
+
+              <div>
+                <h4 className="font-bold text-white mb-2">{language === 'ar' ? 'الرصيد والنقاط' : 'Balance & Points'}</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                    <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-1">{language === 'ar' ? 'رصيد المحفظة' : 'Wallet Balance'}</p>
+                    <p className="text-lg font-black text-emerald-500">{Number(customerDetails.wallet?.balance || 0).toFixed(2)} {t('currency')}</p>
+                  </div>
+                  <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                    <p className="text-[10px] uppercase tracking-wider text-gray-500 font-bold mb-1">{language === 'ar' ? 'نقاط الولاء' : 'Loyalty Points'}</p>
+                    <p className="text-lg font-black text-blue-500">{customerDetails.points?.points || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              {customerDetails.giftCards && customerDetails.giftCards.length > 0 && (
+                <div>
+                  <h4 className="font-bold text-white mb-2">{language === 'ar' ? 'كروت الهدايا' : 'Gift Cards'}</h4>
+                  <div className="space-y-2">
+                    {customerDetails.giftCards.map((card: any) => (
+                      <div key={card.id} className="bg-gray-900 border border-gray-800 rounded-xl p-3 flex justify-between items-center">
+                        <div>
+                          <p className="font-mono text-xs text-white">{card.code}</p>
+                          <p className="text-[10px] text-gray-500">
+                            {card.isRedeemed ? (language === 'ar' ? 'تم الاستخدام' : 'Redeemed') : (language === 'ar' ? 'متاح' : 'Available')}
+                          </p>
+                        </div>
+                        <p className="font-bold text-sm text-purple-400">{Number(card.amount).toFixed(2)} {t('currency')}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <h4 className="font-bold text-white mb-2">{t('contactInfo')}</h4>

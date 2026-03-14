@@ -15,6 +15,25 @@ export class PaymentsService {
         private httpService: HttpService
     ) { }
 
+    async getActiveCardGateway() {
+        const gateways = await this.databaseService.db
+            .select()
+            .from(paymentGateways)
+            .where(eq(paymentGateways.isActive, true));
+
+        // Filter out non-card gateways
+        const cardGateways = gateways.filter(g => 
+            !['cash_on_delivery', 'installments', 'cash'].includes(g.name) && 
+            (g.secretKey || g.publishableKey)
+        );
+
+        if (cardGateways.length === 0) return null;
+
+        // Return the first one (prioritize stripe if multiple are active)
+        const stripe = cardGateways.find(g => g.name === 'stripe');
+        return stripe || cardGateways[0];
+    }
+
     private async getGatewayConfig(name: string) {
         const [gateway] = await this.databaseService.db
             .select()

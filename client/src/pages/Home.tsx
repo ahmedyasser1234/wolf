@@ -62,28 +62,32 @@ export default function Home() {
   });
 
   // Fetch Featured Products (Limited to 4)
-  const { data: featuredProducts, isLoading: featuredLoading } = useQuery({
+  const { data: featuredProductsData, isLoading: featuredLoading } = useQuery({
     queryKey: ['products', 'featured'],
     queryFn: () => endpoints.products.list({ limit: 4 })
   });
+  const featuredProducts = featuredProductsData?.data || [];
 
   // Fetch New Arrivals (Latest products)
-  const { data: newArrivals, isLoading: newArrivalsLoading } = useQuery({
+  const { data: newArrivalsData, isLoading: newArrivalsLoading } = useQuery({
     queryKey: ['products', 'new-arrivals'],
     queryFn: () => endpoints.products.list({ limit: 6, orderBy: 'createdAt' })
   });
+  const newArrivals = newArrivalsData?.data || [];
 
   // Fetch Best Sellers (Most viewed/popular products)
-  const { data: bestSellers, isLoading: bestSellersLoading } = useQuery({
+  const { data: bestSellersData, isLoading: bestSellersLoading } = useQuery({
     queryKey: ['products', 'bestsellers'],
     queryFn: () => endpoints.products.list({ limit: 6 })
   });
+  const bestSellers = bestSellersData?.data || [];
 
   // Fetch All/Filtered Products
-  const { data: products, isLoading: productsLoading } = useQuery({
+  const { data: productsData, isLoading: productsLoading } = useQuery({
     queryKey: ['products', selectedCategory],
     queryFn: () => endpoints.products.list({ collectionId: selectedCategory ?? undefined, limit: 12 })
   });
+  const products = productsData?.data || [];
 
   // Fetch Store Reviews
   const { data: storeReviews, isLoading: storeReviewsLoading } = useQuery({
@@ -290,7 +294,7 @@ export default function Home() {
 
                         {/* Gold Bottom Overlay */}
                         <div className="absolute bottom-0 left-0 right-0 h-0 opacity-0 bg-primary/90 backdrop-blur-md flex flex-col items-center justify-center text-center p-6 transition-all duration-300 group-hover:h-[40%] group-hover:opacity-100 overflow-hidden">
-                          <h3 className="text-2xl font-bold text-primary-foreground mb-2 leading-tight opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
+                          <h3 className="text-base md:text-lg font-bold text-primary-foreground mb-2 leading-tight opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100 line-clamp-3">
                             {language === 'ar' ? product.nameAr : product.nameEn}
                           </h3>
                           <p className="text-primary-foreground/90 text-lg font-medium mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-150">
@@ -556,7 +560,7 @@ export default function Home() {
                             />
                           </div>
                           <div className="absolute bottom-0 left-0 right-0 h-0 opacity-0 bg-primary/90 backdrop-blur-md flex flex-col items-center justify-center text-center p-6 transition-all duration-300 group-hover:h-[40%] group-hover:opacity-100 overflow-hidden z-20">
-                            <h3 className="text-2xl font-black text-primary-foreground mb-2 leading-tight">
+                            <h3 className="text-base md:text-lg font-black text-primary-foreground mb-2 leading-tight line-clamp-3">
                               {language === 'ar' ? product.nameAr : product.nameEn}
                             </h3>
                             <p className="text-primary-foreground/90 text-lg font-bold mb-4">
@@ -620,7 +624,7 @@ export default function Home() {
                           />
                         </div>
                         <div className="absolute bottom-0 left-0 right-0 h-0 opacity-0 bg-primary/90 backdrop-blur-md flex flex-col items-center justify-center text-center p-6 transition-all duration-300 group-hover:h-[45%] group-hover:opacity-100 overflow-hidden">
-                          <h3 className="text-2xl md:text-3xl font-black text-primary-foreground mb-2">
+                          <h3 className="text-base md:text-lg font-black text-primary-foreground mb-2 line-clamp-3">
                             {language === 'ar' ? product.nameAr : product.nameEn}
                           </h3>
                           <p className="text-primary-foreground/90 text-lg font-bold mb-4">

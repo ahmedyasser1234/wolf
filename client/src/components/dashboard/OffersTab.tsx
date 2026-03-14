@@ -49,12 +49,13 @@ export default function OffersTab({ vendorId }: OffersTabProps) {
         queryFn: async () => await endpoints.products.list({ vendorId }),
     });
 
+    const productsList = (products as any)?.data || [];
+
     const filteredProducts = useMemo(() => {
-        if (!products) return [];
-        return products.filter((p: any) =>
+        return productsList.filter((p: any) =>
             (p.nameAr + p.nameEn).toLowerCase().includes(productSearch.toLowerCase())
         );
-    }, [products, productSearch]);
+    }, [productsList, productSearch]);
 
     const createOffer = useMutation({
         mutationFn: async (data: any) => await endpoints.offers.create(data),

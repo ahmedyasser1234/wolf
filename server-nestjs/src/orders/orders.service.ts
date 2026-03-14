@@ -1,7 +1,7 @@
 
 import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { orders, orderItems, products, cartItems, notifications, vendors, coupons, offers, offerItems, users, walletTransactions, customerWallets, installmentPlans, installments, installmentPayments, giftCards } from '../database/schema';
+import { orders, orderItems, products, cartItems, notifications, vendors, coupons, offers, offerItems, users, walletTransactions, customerWallets, installmentPlans, installments, installmentPayments, giftCards, collections } from '../database/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CouponsService } from '../coupons/coupons.service';
@@ -222,6 +222,18 @@ export class OrdersService {
         let depositAmount = 0;
         let stripeCheckoutUrl: string | null = null;
         let totalPaidByGiftCard = 0;
+
+        // Dynamic Gateway Selection
+        const activeCardGateway = (paymentMethod === 'card' || depositPaymentMethod === 'card') 
+            ? await this.paymentsService.getActiveCardGateway() 
+            : null;
+
+        if ((paymentMethod === 'card' || depositPaymentMethod === 'card') && !activeCardGateway) {
+            throw new BadRequestException(language === 'ar' 
+                ? 'لا توجد بوابة دفع متاحة حالياً لعمليات الفيزا/الماستر كارد' 
+                : 'No active payment gateway available for card payments');
+        }
+
         let resolvedDepositPaymentMethod = (depositPaymentMethod || 'card') as 'card' | 'wallet' | 'gift_card';
         console.log(`   - [Installment Check] depositPaymentMethod: ${depositPaymentMethod}, resolved: ${resolvedDepositPaymentMethod}`);
 
@@ -230,6 +242,27 @@ export class OrdersService {
             const grossTotal = Array.from(vendorGroups.values()).reduce((sum, g) => sum + g.subtotal, 0);
             const totalItems = cart.reduce((sum, i) => sum + i.quantity, 0);
 
+            // Apply coupon discount to gross total if applicable
+            let totalCouponDiscount = 0;
+            if (couponCode) {
+                try {
+                    const c = await this.couponsService.findByCode(couponCode);
+                    if (c) {
+                        for (const [vendorId, group] of vendorGroups) {
+                            if (c.vendorId === vendorId) {
+                                if (c.type === 'fixed') {
+                                    totalCouponDiscount += Number(c.discountAmount || 0);
+                                } else {
+                                    totalCouponDiscount += (group.subtotal * (c.discountPercent || 0)) / 100;
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {}
+            }
+
+            const discountedGrossTotal = Math.max(0, grossTotal - totalCouponDiscount);
+
             const [plan] = await this.databaseService.db
                 .select()
                 .from(installmentPlans)
@@ -237,7 +270,7 @@ export class OrdersService {
                 .limit(1);
 
             if (!plan) throw new BadRequestException('خطة التقسيط غير موجودة');
-            if (grossTotal < Number(plan.minAmount)) {
+            if (discountedGrossTotal < Number(plan.minAmount)) {
                 throw new BadRequestException(`الحد الأدنى للتقسيط هو ${plan.minAmount}`);
             }
             const minQ = plan.minQuantity || 1;
@@ -246,9 +279,24 @@ export class OrdersService {
                 throw new BadRequestException(`هذا النظام متاح فقط لعدد منتجات بين ${minQ} و ${maxQ > 0 ? maxQ : '∞'}`);
             }
 
-            const interestAmount = grossTotal * (plan.interestRate || 0) / 100;
-            const totalWithInterest = grossTotal + interestAmount;
-            const dpPct = plan.downPaymentPercentage || 0;
+            // Fallback for down payment percentage: check collection if plan has 0
+            let dpPct = plan.downPaymentPercentage || 0;
+            if (dpPct === 0) {
+                // Get downPaymentPercentage from the collection of the first product in the cart
+                const collectionData = await this.databaseService.db
+                    .select({ downPaymentPercentage: collections.downPaymentPercentage })
+                    .from(collections)
+                    .innerJoin(products, eq(products.collectionId, collections.id))
+                    .where(eq(products.id, cart[0].productId))
+                    .limit(1);
+
+                if (collectionData[0]?.downPaymentPercentage) {
+                    dpPct = Number(collectionData[0].downPaymentPercentage);
+                }
+            }
+
+            const interestAmount = discountedGrossTotal * (plan.interestRate || 0) / 100;
+            const totalWithInterest = discountedGrossTotal + interestAmount;
             depositAmount = totalWithInterest * dpPct / 100;
 
             if (depositAmount <= 0) throw new BadRequestException('مبلغ المقدم غير صحيح');
@@ -324,17 +372,37 @@ export class OrdersService {
             // ============================================================
             let grossTotal = Array.from(vendorGroups.values()).reduce((sum, g) => sum + g.subtotal, 0);
 
+            // Apply coupon discount for regular flow calculation
+            let totalCouponDiscount = 0;
+            if (couponCode) {
+                try {
+                    const c = await this.couponsService.findByCode(couponCode);
+                    if (c) {
+                        for (const [vendorId, group] of vendorGroups) {
+                            if (c.vendorId === vendorId) {
+                                if (c.type === 'fixed') {
+                                    totalCouponDiscount += Number(c.discountAmount || 0);
+                                } else {
+                                    totalCouponDiscount += (group.subtotal * (c.discountPercent || 0)) / 100;
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {}
+            }
+            const discountedGrossTotal = Math.max(0, grossTotal - totalCouponDiscount);
+
             if (paymentMethod === 'wallet') {
                 const [wallet] = await this.databaseService.db
                     .select()
                     .from(customerWallets)
                     .where(eq(customerWallets.userId, customerId))
                     .limit(1);
-                if (!wallet || Number(wallet.balance) < grossTotal) {
-                    throw new BadRequestException(`رصيد المحفظة غير كافٍ. الرصيد المتاح: ${wallet?.balance || 0}, المطلوب: ${grossTotal}`);
+                if (!wallet || Number(wallet.balance) < discountedGrossTotal) {
+                    throw new BadRequestException(`رصيد المحفظة غير كافٍ. الرصيد المتاح: ${wallet?.balance || 0}, المطلوب: ${discountedGrossTotal}`);
                 }
-                await this.walletsService.deductBalance(customerId, grossTotal, `طلب شراء - ${paymentMethod}`);
-                console.log(`  - [Payment] Deducted ${grossTotal} from wallet for customer ${customerId}`);
+                await this.walletsService.deductBalance(customerId, discountedGrossTotal, `طلب شراء - ${paymentMethod}`);
+                console.log(`  - [Payment] Deducted ${discountedGrossTotal} from wallet for customer ${customerId}`);
 
             } else if (paymentMethod === 'gift_card') {
                 if (!depositGiftCardCode) throw new BadRequestException('يرجى إدخال كود كارت الهدية');
@@ -347,8 +415,8 @@ export class OrdersService {
                 if (giftCard.isRedeemed || Number(giftCard.amount) <= 0) throw new BadRequestException('هذا الكارت تم استخدامه بالفعل أو رصيده انتهى');
                 if (!giftCard.isActive) throw new BadRequestException('بطاقة الهدية غير مفعلة');
 
-                const amountFromCard = Math.min(Number(giftCard.amount), grossTotal);
-                const remainingToPay = grossTotal - amountFromCard;
+                const amountFromCard = Math.min(Number(giftCard.amount), discountedGrossTotal);
+                const remainingToPay = discountedGrossTotal - amountFromCard;
 
                 // Update card balance
                 const newCardBalance = Number(giftCard.amount) - amountFromCard;
@@ -373,8 +441,6 @@ export class OrdersService {
                     } else {
                         // Mark for card payment
                         paymentMethod = 'card';
-                        // grossTotal is used for Stripe session later
-                        // We need to update grossTotal or whatever is used for grandTotal
                     }
                 }
                 console.log(`  - [Payment] Gift card used. Remaining: ${newCardBalance}. Was partial: ${remainingToPay > 0}`);
@@ -408,7 +474,11 @@ export class OrdersService {
                     const offerDiscount = Math.max(0, group.originalSubtotal - group.subtotal);
                     let couponDiscount = 0;
                     if (coupon && coupon.vendorId === vendorId) {
-                        couponDiscount = (group.subtotal * coupon.discountPercent) / 100;
+                        if (coupon.type === 'fixed') {
+                            couponDiscount = Number(coupon.discountAmount || 0);
+                        } else {
+                            couponDiscount = (group.subtotal * (coupon.discountPercent || 0)) / 100;
+                        }
                     }
                     const totalDiscount = offerDiscount + couponDiscount;
 
@@ -523,7 +593,7 @@ export class OrdersService {
             if (installmentPlanId && resolvedDepositPaymentMethod === 'card' && createdOrders.length > 0) {
                 const [customer] = await this.databaseService.db.select().from(users).where(eq(users.id, customerId)).limit(1);
                 const session = await this.paymentsService.createCheckoutSession(
-                    'stripe',
+                    activeCardGateway!.name,
                     createdOrders[0].id,
                     depositAmount,
                     customer.email!
@@ -536,7 +606,7 @@ export class OrdersService {
 
                 if (grandTotal > 0) {
                     const session = await this.paymentsService.createCheckoutSession(
-                        'stripe',
+                        activeCardGateway!.name,
                         createdOrders[0].id,
                         grandTotal,
                         customer.email!

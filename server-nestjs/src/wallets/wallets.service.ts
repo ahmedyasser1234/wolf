@@ -165,7 +165,15 @@ export class WalletsService {
         return { wallet, transactions };
     }
 
-    async createTopUpSession(userId: number, userEmail: string, amount: number, gateway: string) {
-        return this.paymentsService.createWalletTopUpSession(gateway, userId, amount, userEmail);
+    async createTopUpSession(userId: number, userEmail: string, amount: number, gateway?: string) {
+        let selectedGateway = gateway;
+        if (!selectedGateway) {
+            const activeGw = await this.paymentsService.getActiveCardGateway();
+            if (!activeGw) {
+                throw new BadRequestException('لا توجد بوابة دفع متاحة حالياً لشحن المحفظة');
+            }
+            selectedGateway = activeGw.name;
+        }
+        return this.paymentsService.createWalletTopUpSession(selectedGateway, userId, amount, userEmail);
     }
 }

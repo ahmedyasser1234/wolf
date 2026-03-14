@@ -20,7 +20,7 @@ export class WalletsController {
     }
 
     @Post('topup-session')
-    async createTopUpSession(@Request() req, @Body('amount') amount: number, @Body('gateway') gateway: string = 'stripe') {
+    async createTopUpSession(@Request() req, @Body('amount') amount: number, @Body('gateway') gateway?: string) {
         const userId = req.user.id;
         const userEmail = req.user.email;
         // Import PaymentsService or use it if already injected

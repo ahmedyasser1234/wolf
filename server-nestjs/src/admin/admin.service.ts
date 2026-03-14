@@ -1,7 +1,7 @@
 import { scrypt, randomBytes } from 'node:crypto';
 import { Injectable, UnauthorizedException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { vendors, users, orders, products, categories, conversations, messages, cartItems, wishlist, notifications, productColors, reviews, shipping, offerItems, collections, coupons, offers, vendorReviews, vendorPayouts, vendorWallets, paymentGateways, installmentPlans, orderItems, accountStatusLogs } from '../database/schema';
+import { vendors, users, orders, products, categories, conversations, messages, cartItems, wishlist, notifications, productColors, reviews, shipping, offerItems, collections, coupons, offers, vendorReviews, vendorPayouts, vendorWallets, paymentGateways, installmentPlans, orderItems, accountStatusLogs, customerWallets, userPoints, giftCards } from '../database/schema';
 import { eq, and, desc, sql, ne, inArray } from 'drizzle-orm';
 import * as xlsx from 'xlsx';
 
@@ -305,19 +305,36 @@ export class AdminService {
         };
     }
 
-    async getAllProducts(search?: string) {
-        let query = this.databaseService.db
-            .select()
-            .from(products);
+    async getAllProducts(search?: string, page = 1, limit = 20) {
+        const offset = (page - 1) * limit;
+        const conditions = [];
 
         if (search) {
             const searchPattern = `%${search.toLowerCase()}%`;
-            query = query.where(
+            conditions.push(
                 sql`lower(${products.nameAr}) LIKE ${searchPattern} OR lower(${products.nameEn}) LIKE ${searchPattern}`
-            ) as any;
+            );
         }
 
-        return await query.orderBy(desc(products.createdAt));
+        const whereCondition = conditions.length > 0 ? and(...conditions) : undefined;
+
+        // Get total count
+        const [totalResult] = await this.databaseService.db
+            .select({ count: sql`count(*)` })
+            .from(products)
+            .where(whereCondition);
+
+        const total = Number(totalResult?.count || 0);
+
+        const data = await this.databaseService.db
+            .select()
+            .from(products)
+            .where(whereCondition)
+            .orderBy(desc(products.createdAt))
+            .limit(limit)
+            .offset(offset);
+
+        return { data, total };
     }
 
     async getAllConversations(adminId: number) {
@@ -548,8 +565,22 @@ export class AdminService {
             .limit(1);
 
         if (customer.length === 0) {
-            throw new UnauthorizedException('Customer not found');
+            throw new NotFoundException('Customer not found');
         }
+
+        const user = customer[0];
+
+        const [wallet] = await this.databaseService.db
+            .select()
+            .from(customerWallets)
+            .where(eq(customerWallets.userId, id))
+            .limit(1);
+
+        const [points] = await this.databaseService.db
+            .select()
+            .from(userPoints)
+            .where(eq(userPoints.userId, id))
+            .limit(1);
 
         const customerOrders = await this.databaseService.db
             .select({
@@ -564,9 +595,24 @@ export class AdminService {
             .where(eq(orders.customerId, id))
             .orderBy(desc(orders.createdAt));
 
+        const userEmail = user.email ? user.email.toLowerCase() : '';
+        const allCards = await this.databaseService.db
+            .select()
+            .from(giftCards)
+            .orderBy(desc(giftCards.createdAt));
+
+        const customerGiftCards = allCards.filter(c =>
+            (c.recipientEmail && c.recipientEmail.toLowerCase() === userEmail) ||
+            (c.senderEmail && c.senderEmail.toLowerCase() === userEmail) ||
+            c.redeemedByUserId === id
+        );
+
         return {
-            ...customer[0],
-            orders: customerOrders
+            ...user,
+            wallet: wallet || { balance: 0 },
+            points: points || { points: 0 },
+            orders: customerOrders,
+            giftCards: customerGiftCards
         };
     }
 

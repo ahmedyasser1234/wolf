@@ -118,8 +118,13 @@ export class GiftCardsService {
                 isActive: false
             });
 
+            const gateway = await this.paymentsService.getActiveCardGateway();
+            if (!gateway) {
+                throw new BadRequestException('لا توجد بوابة دفع متاحة حالياً لعمليات الفيزا/الماستر كارد');
+            }
+
             const session = await this.paymentsService.createGiftCardCheckoutSession(
-                'stripe',
+                gateway.name,
                 card.id,
                 amount,
                 user.email!

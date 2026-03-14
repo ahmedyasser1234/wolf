@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { products, categories, vendors, collections, productColors } from '../database/schema';
-import { eq, and, like, desc, or, SQL } from 'drizzle-orm';
+import { eq, and, like, desc, or, SQL, count } from 'drizzle-orm';
 import { CloudinaryService } from '../media/cloudinary.provider';
 
 @Injectable()
@@ -175,10 +175,20 @@ export class ProductsService {
             conditions.push(eq(products.collectionId, collectionId));
         }
 
+        const whereCondition = and(...conditions);
+
+        // Get total count
+        const [totalCountResult] = await this.databaseService.db
+            .select({ value: count() })
+            .from(products)
+            .where(whereCondition);
+
+        const total = totalCountResult?.value || 0;
+
         const foundProducts = await this.databaseService.db
             .select()
             .from(products)
-            .where(and(...conditions))
+            .where(whereCondition)
             .limit(limit)
             .offset(offset)
             .orderBy(desc(products.createdAt));
@@ -187,16 +197,7 @@ export class ProductsService {
         const productIds = foundProducts.map(p => p.id);
 
         if (productIds.length > 0) {
-            // Check if inArray is imported, if not use Promise.all or import it
-            // Assuming we can use db.query or select from productColors
             const colorsMap = new Map<number, any[]>();
-
-            // We need to import 'inArray' from drizzle-orm if not present.  
-            // Since I cannot easily add top-level imports in this tool block without risking context,
-            // I will use a loop if strict imports are an issue, BUT 'inArray' is standard. 
-            // Let's assume I need to handle imports separately or use a safe approach.
-            // Safer approach without risking missing 'inArray' import if not already there (it is NOT in line 4):
-            // I will fetch colors for each product or fetch all.
 
             const allColors = await this.databaseService.db
                 .select()
@@ -210,13 +211,15 @@ export class ProductsService {
                 colorsMap.get(c.productId)?.push(c);
             });
 
-            return foundProducts.map(p => ({
+            const data = foundProducts.map(p => ({
                 ...p,
                 colors: colorsMap.get(p.id) || []
             }));
+
+            return { data, total };
         }
 
-        return foundProducts;
+        return { data: foundProducts, total };
     }
 
     async findOne(id: number) {
@@ -288,6 +291,10 @@ export class ProductsService {
         const product = result.product;
 
         let imageUrls = product.images || [];
+        if (data.existingImages) {
+            imageUrls = typeof data.existingImages === 'string' ? JSON.parse(data.existingImages) : data.existingImages;
+        }
+
         const mainFiles = files?.filter(f => f.fieldname === 'images') || [];
         if (mainFiles.length > 0) {
             const uploadPromises = mainFiles.map(file => this.cloudinary.uploadFile(file));
@@ -296,7 +303,7 @@ export class ProductsService {
                 .filter(res => 'secure_url' in res)
                 .map(res => (res as any).secure_url);
 
-            imageUrls = newUrls;
+            imageUrls = [...imageUrls, ...newUrls];
         }
 
         // Upload AI-Ready Image if provided
