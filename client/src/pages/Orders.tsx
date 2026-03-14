@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { endpoints } from "@/lib/api";
 import api from "@/lib/api";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import {
   Package,
@@ -50,6 +50,7 @@ const ORDER_STATUSES: OrderStatus[] = [
 export default function Orders() {
   const { language, t, formatPrice } = useLanguage();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [page, setPage] = useState(1);
   const limit = 10;
@@ -78,6 +79,20 @@ export default function Orders() {
     onError: (err: any) => {
       toast.error(err?.response?.data?.message || (language === 'ar' ? 'حدث خطأ' : 'An error occurred'));
     }
+  });
+  
+  const cancelOrderMutation = useMutation({
+    mutationFn: async (orderId: number) => {
+      const res = await api.put(`/orders/${orderId}/status`, { status: "cancelled" });
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success(language === "ar" ? "تم إلغاء الطلب بنجاح" : "Order cancelled successfully");
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || (language === "ar" ? "فشل إلغاء الطلب" : "Failed to cancel order"));
+    },
   });
 
   const filteredOrders = orders;
@@ -340,6 +355,24 @@ export default function Orders() {
                                 {t('viewDetails')}
                               </Button>
                             </Link>
+
+                            {/* Cancel Order Button */}
+                            {order.status !== 'cancelled' && (
+                              <Button
+                                variant="destructive"
+                                onClick={() => {
+                                  if (window.confirm(language === 'ar' ? 'هل أنت متأكد من رغبتك في إلغاء هذا الطلب؟' : 'Are you sure you want to cancel this order?')) {
+                                    cancelOrderMutation.mutate(order.id);
+                                  }
+                                }}
+                                disabled={cancelOrderMutation.isPending}
+                                className="w-full rounded-xl h-12 font-bold gap-2"
+                              >
+                                {cancelOrderMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
+                                {language === 'ar' ? 'إلغاء الطلب' : 'Cancel Order'}
+                              </Button>
+                            )}
+
                             <Button onClick={() => downloadInvoice(order, language, t)} variant="outline" className="flex-1 lg:flex-none border-gray-300 text-gray-900 hover:bg-gray-100 rounded-xl h-12 font-bold gap-2">
                               <Download className="w-4 h-4" />
                               {language === 'ar' ? 'الفاتورة' : 'Invoice'}

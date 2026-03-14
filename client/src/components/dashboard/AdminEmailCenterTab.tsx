@@ -7,7 +7,6 @@ import {
     X,
     Loader2,
     Info,
-    ChevronRight,
     Languages
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { endpoints } from "@/lib/api";
+import api from "@/lib/api";
 import { useLanguage } from "@/lib/i18n";
 import { toast } from "sonner";
 
@@ -25,32 +24,40 @@ export default function AdminEmailCenterTab() {
     const [editingTemplate, setEditingTemplate] = useState<any>(null);
     const [formData, setFormData] = useState<any>({});
 
-    const { data: templates, isLoading } = useQuery({
+    const { data: templates, isLoading, error } = useQuery({
         queryKey: ['admin', 'email-templates'],
         queryFn: async () => {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/email-templates`);
-            if (!response.ok) throw new Error('Failed to fetch templates');
-            return response.json();
+            const response = await api.get('/admin/email-templates');
+            return response.data;
         },
     });
 
     const updateTemplate = useMutation({
         mutationFn: async (data: any) => {
-            const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/admin/email-templates/${data.type}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
-            });
-            if (!response.ok) throw new Error('Failed to update template');
-            return response.json();
+            const response = await api.put(`/admin/email-templates/${data.type}`, data);
+            return response.data;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin', 'email-templates'] });
             setEditingTemplate(null);
             toast.success(language === 'ar' ? 'تم تحديث القالب بنجاح' : 'Template updated successfully');
         },
+        onError: (err: any) => {
+            toast.error(err?.response?.data?.message || (language === 'ar' ? 'فشل تحديث القالب' : 'Failed to update template'));
+        }
+    });
+
+    const seedTemplates = useMutation({
+        mutationFn: async () => {
+            const res = await api.get('/admin/email-templates/seed');
+            return res.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin', 'email-templates'] });
+            toast.success(language === 'ar' ? 'تمت استعادة القوالب بنجاح' : 'Templates restored successfully');
+        },
         onError: () => {
-            toast.error(language === 'ar' ? 'فشل تحديث القالب' : 'Failed to update template');
+            toast.error(language === 'ar' ? 'فشل استعادة القوالب' : 'Failed to restore templates');
         }
     });
 
@@ -73,14 +80,41 @@ export default function AdminEmailCenterTab() {
 
     return (
         <div className="space-y-6">
-            <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-900/30 rounded-xl flex items-center justify-center">
-                    <Mail className="text-blue-400 w-6 h-6" />
-                </div>
-                {language === 'ar' ? 'مركز التحكم في الإيميلات' : 'Email Control Center'}
-            </h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-900/30 rounded-xl flex items-center justify-center">
+                        <Mail className="text-blue-400 w-6 h-6" />
+                    </div>
+                    {language === 'ar' ? 'مركز التحكم في الإيميلات' : 'Email Control Center'}
+                </h2>
+                <Button 
+                    variant="outline"
+                    onClick={() => seedTemplates.mutate()}
+                    disabled={seedTemplates.isPending}
+                    className="border-gray-800 bg-gray-900/50 text-gray-400 hover:text-white rounded-xl h-10 px-4 font-bold flex items-center gap-2"
+                >
+                    {seedTemplates.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    <span>{language === 'ar' ? 'استعادة القوالب الافتراضية' : 'Restore Default Templates'}</span>
+                </Button>
+            </div>
 
             <div className="grid gap-4">
+                {error && (
+                    <div className="p-12 text-center bg-red-900/10 border border-red-900/30 rounded-3xl">
+                        <X className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                        <h3 className="text-xl font-bold text-white mb-2">{language === 'ar' ? 'فشل تحميل القوالب' : 'Failed to load templates'}</h3>
+                        <p className="text-gray-400">{(error as any)?.message}</p>
+                    </div>
+                )}
+
+                {templates?.length === 0 && !error && (
+                    <div className="p-12 text-center bg-gray-900/50 border border-dashed border-gray-800 rounded-3xl">
+                        <Mail className="w-12 h-12 text-gray-700 mx-auto mb-4" />
+                        <h3 className="text-xl font-bold text-white mb-2">{language === 'ar' ? 'لا توجد قوالب حالياً' : 'No templates found'}</h3>
+                        <p className="text-gray-500 mb-6">{language === 'ar' ? 'يبدو أنه لم يتم إنشاء قوالب افتراضية بعد.' : 'It seems no default templates have been created yet.'}</p>
+                    </div>
+                )}
+
                 {templates?.map((template: any) => (
                     <Card key={template.id} className="border border-gray-800 bg-gray-900/50 hover:bg-gray-900 transition-colors rounded-2xl overflow-hidden group">
                         <CardContent className="p-5 flex items-center justify-between gap-4">

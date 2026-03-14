@@ -615,6 +615,17 @@ export class OrdersService {
                 }
             }
 
+            // --- Send Customer Confirmation Email ---
+            try {
+                const [customer] = await this.databaseService.db.select({ email: users.email }).from(users).where(eq(users.id, customerId)).limit(1);
+                if (customer?.email && createdOrders.length > 0) {
+                    // Send confirmation for the first order in the group as a summary
+                    await this.mailService.sendOrderConfirmation(customer.email, createdOrders[0].orderNumber);
+                }
+            } catch (err) {
+                this.logger.error(`❌ Non-blocking error sending order confirmation email: ${err.message}`);
+            }
+
             // Notify admins for ALL new orders
             for (const order of createdOrders) {
                 try {
@@ -741,11 +752,6 @@ export class OrdersService {
 
         const isInstallment = !!currentOrder.installmentPlanId;
 
-        // Prevent cancellation for installment orders (User requested: "ولو الطلب دا تقسيط تشيل منه الالغاء لانى لو هلغيه هرفضه من الاول")
-        if (newStatusNormalized === 'cancelled' && isInstallment) {
-            throw new BadRequestException('لا يمكن إلغاء طلبات التقسيط من هنا. يرجى استخدام الرفض في مراجعة الأوراق لضمان معالجة الإجراء بشكل صحيح.');
-        }
-
         // Feature: Refund deposit if installment order is cancelled
         // Feature 2: Refund full amount if regular PAID order is cancelled (User requested: "الغاء لطلب مدفوع كاش الفلوس ترجع ع المحفظه")
         if (newStatusNormalized === 'cancelled' && currentStatusNormalized !== 'cancelled') {
@@ -855,6 +861,7 @@ export class OrdersService {
                 }
             }
         }
+        return updatedOrder;
     }
 
     async refundOrderDeposit(orderId: number) {
@@ -888,6 +895,12 @@ export class OrdersService {
                 );
                 console.log(`💰 [OrdersService] Successfully refunded deposit of ${order.depositAmount} for order #${orderId}`);
             }
+
+            // Deactivate installment plan if it exists
+            await this.databaseService.db
+                .update(installments)
+                .set({ status: 'rejected', updatedAt: new Date() })
+                .where(eq(installments.orderId, orderId));
         }
     }
 

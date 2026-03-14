@@ -265,6 +265,22 @@ Generated at: ${new Date().toLocaleString()}
                                 <Download className="w-4 h-4" />
                                 <span className="text-xs">{language === 'ar' ? 'تنزيل الفاتورة' : 'Download Invoice'}</span>
                             </Button>
+                            {order.status !== 'cancelled' && (
+                                <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() => {
+                                        if (window.confirm(language === 'ar' ? 'هل أنت متأكد من رغبتك في إلغاء هذا الطلب؟' : 'Are you sure you want to cancel this order?')) {
+                                            updateStatusMutation.mutate('cancelled');
+                                        }
+                                    }}
+                                    disabled={updateStatusMutation.isPending}
+                                    className="h-8 px-3 font-bold gap-2"
+                                >
+                                    <XCircle className="w-4 h-4" />
+                                    <span className="text-xs">{language === 'ar' ? 'إلغاء الطلب' : 'Cancel Order'}</span>
+                                </Button>
+                            )}
                         </CardHeader>
                         <CardContent className="space-y-3 sm:space-y-4">
                             <div className="flex justify-between text-gray-600 text-sm sm:text-base">

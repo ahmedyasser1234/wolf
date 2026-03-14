@@ -10,6 +10,11 @@ export class EmailTemplatesController {
         return this.emailTemplatesService.findAll();
     }
 
+    @Get('seed')
+    async seed() {
+        return this.emailTemplatesService.seedTemplates();
+    }
+
     @Get(':type')
     async findOne(@Param('type') type: string) {
         return this.emailTemplatesService.findByType(type);

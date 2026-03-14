@@ -1740,7 +1740,7 @@ export default function AdminDashboard() {
                       <SelectItem value="delivered" disabled={['cancelled'].includes(selectedOrder?.status)}>
                         {language === 'ar' ? "تم التوصيل 📦" : "Delivered 📦"}
                       </SelectItem>
-                      <SelectItem value="cancelled" disabled={['delivered'].includes(selectedOrder?.status) || !!selectedOrder?.installmentPlanId}>
+                      <SelectItem value="cancelled">
                         {language === 'ar' ? "إلغاء ❌" : "Cancel ❌"}
                       </SelectItem>
                     </SelectGroup>

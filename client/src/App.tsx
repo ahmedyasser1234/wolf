@@ -569,10 +569,20 @@ function Footer() {
           </div>
           <div className="flex items-center gap-4">
             <div className="flex gap-3">
-              <a href="#" className="w-9 h-9 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center text-white hover:bg-primary transition-all duration-300">
+              <a 
+                href="https://www.instagram.com/wolftechno_com?igsh=MXBlM213a2poOWF1ag%3D%3D&utm_source=qr" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center text-white hover:bg-primary transition-all duration-300"
+              >
                 <Instagram size={17} />
               </a>
-              <a href="#" className="w-9 h-9 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center text-white hover:bg-primary transition-all duration-300">
+              <a 
+                href="https://www.facebook.com/share/1NxeZojFtL/?mibextid=wwXIfr" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center text-white hover:bg-primary transition-all duration-300"
+              >
                 <Facebook size={17} />
               </a>
             </div>

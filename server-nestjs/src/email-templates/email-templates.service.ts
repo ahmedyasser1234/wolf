@@ -41,7 +41,12 @@ export class EmailTemplatesService implements OnModuleInit {
         return result;
     }
 
-    private async seedDefaultTemplates() {
+    async seedTemplates() {
+        await this.seedDefaultTemplates();
+        return { success: true };
+    }
+
+    public async seedDefaultTemplates() {
         const defaults = [
             {
                 type: 'otp_registration',
