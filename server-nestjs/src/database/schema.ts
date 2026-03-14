@@ -751,3 +751,19 @@ export const otpVerifications = pgTable("otpVerifications", {
 
 export type OtpVerification = typeof otpVerifications.$inferSelect;
 export type InsertOtpVerification = typeof otpVerifications.$inferInsert;
+
+export const emailTemplates = pgTable("emailTemplates", {
+    id: serial("id").primaryKey(),
+    type: text("type").notNull().unique(), // e.g., 'otp_registration', 'order_confirmation', 'order_status_accepted', etc.
+    nameAr: text("nameAr").notNull(),
+    nameEn: text("nameEn").notNull(),
+    subjectAr: text("subjectAr").notNull(),
+    subjectEn: text("subjectEn").notNull(),
+    bodyAr: text("bodyAr").notNull(),
+    bodyEn: text("bodyEn").notNull(),
+    variables: jsonb("variables").$type<string[]>().notNull().default([]), // List of available placeholders like ['otpCode', 'orderNumber']
+    updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+
+export type EmailTemplate = typeof emailTemplates.$inferSelect;
+export type InsertEmailTemplate = typeof emailTemplates.$inferInsert;

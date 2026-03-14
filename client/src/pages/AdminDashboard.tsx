@@ -121,6 +121,7 @@ const AdminOrdersTab = lazy(() => import("@/components/dashboard/OrdersTab"));
 const AdminCustomersTab = lazy(() => import("@/components/dashboard/CustomersTab"));
 const MessagesTab = lazy(() => import("@/components/dashboard/MessagesTab"));
 const AdminInstallmentPaymentsTab = lazy(() => import("@/components/dashboard/AdminInstallmentPaymentsTab"));
+const AdminEmailCenterTab = lazy(() => import("@/components/dashboard/AdminEmailCenterTab"));
 
 
 interface CardHeaderProps {
@@ -327,7 +328,7 @@ export default function AdminDashboard() {
   const [detailsCustomerId, setDetailsCustomerId] = useState<number | null>(null);
   const [customerHistoryTab, setCustomerHistoryTab] = useState<'orders' | 'gift_cards' | 'wallet'>('orders');
 
-  const [activeTab, setActiveTabInternal] = useState<"overview" | "analytics" | "products" | "categories" | "collections" | "offers" | "coupons" | "giftcards" | "installments" | "installment-orders" | "payments" | "orders" | "customers" | "chat" | "content" | "settings" | "installment-payments">(() => {
+  const [activeTab, setActiveTabInternal] = useState<"overview" | "analytics" | "products" | "categories" | "collections" | "offers" | "coupons" | "giftcards" | "installments" | "installment-orders" | "payments" | "orders" | "customers" | "chat" | "content" | "settings" | "installment-payments" | "email-center">(() => {
     const params = new URLSearchParams(window.location.search);
     return (params.get("tab") as any) || "overview";
   });
@@ -435,6 +436,7 @@ export default function AdminDashboard() {
     { id: "installment-orders", label: language === 'ar' ? 'طلبات التقسيط' : 'Installment Orders', icon: ShoppingCart, badge: showInstallmentBadge ? (dashboardStats?.pendingKycReviews || true) : undefined, color: "from-amber-400 to-orange-500 shadow-amber-500/30" },
     { id: "installment-payments", label: language === 'ar' ? 'متابعة الأقساط' : 'Installment Tracking', icon: History, color: "from-indigo-400 to-blue-600 shadow-indigo-500/30" },
     { id: "payments", label: language === 'ar' ? 'بوابات الدفع' : 'Payment Gateways', icon: DollarSign, color: "from-emerald-400 to-teal-600 shadow-emerald-500/30" },
+    { id: "email-center", label: language === 'ar' ? 'مركز الإيميلات' : 'Email Center', icon: Mail, color: "from-blue-500 to-cyan-500 shadow-blue-500/30" },
     { id: "orders", label: t('orders'), icon: ShoppingCart, color: "from-orange-500 to-red-600 shadow-orange-500/30" },
     { id: "customers", label: t('customers'), icon: Users, color: "from-sky-500 to-blue-600 shadow-sky-500/30" },
     { id: "chat", label: t('chat'), icon: MessageSquare, badge: unreadCount, color: "from-pink-500 to-primary shadow-pink-500/30" },
@@ -899,6 +901,13 @@ export default function AdminDashboard() {
 
           {/* Settings Tab */}
           {activeTab === "settings" && <SettingsTab />}
+
+          {/* Email Center Tab */}
+          {activeTab === "email-center" && (
+            <Suspense fallback={<div className="p-8 text-center"><Loader2 className="animate-spin mx-auto w-8 h-8 text-purple-600" /></div>}>
+              <AdminEmailCenterTab />
+            </Suspense>
+          )}
 
           {/* Products Tab - Full featured with add/edit modals */}
           {
