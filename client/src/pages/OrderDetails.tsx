@@ -260,7 +260,7 @@ Generated at: ${new Date().toLocaleString()}
                                 variant="outline"
                                 size="sm"
                                 onClick={() => downloadInvoice(order, language, t)}
-                                className="h-8 px-3 text-gray-900 border-gray-300 hover:bg-gray-100 font-bold gap-2"
+                                className="h-8 px-3 text-white border-gray-300 hover:bg-white/10 font-bold gap-2"
                             >
                                 <Download className="w-4 h-4" />
                                 <span className="text-xs">{language === 'ar' ? 'تنزيل الفاتورة' : 'Download Invoice'}</span>

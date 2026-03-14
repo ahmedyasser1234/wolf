@@ -62,7 +62,7 @@ export default function AdminLogin() {
                     <div className="w-20 h-20 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-primary/10 ring-8 ring-primary/5 shadow-inner rotate-3 transition-transform hover:rotate-6 duration-500">
                         <ShieldCheck className="w-10 h-10 text-primary" />
                     </div>
-                    <CardTitle className="text-3xl font-black text-slate-900 tracking-tight">Fustan Admin</CardTitle>
+                    <CardTitle className="text-3xl font-black text-slate-900 tracking-tight">Wolf Techno Admin</CardTitle>
                     <CardDescription className="text-slate-500 font-medium text-base">Secure Gateway for Administrators</CardDescription>
                 </CardHeader>
                 <CardContent className="px-8 pb-10">
