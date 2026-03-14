@@ -52,6 +52,7 @@ import {
   UserCheck,
   UserPlus,
   Users,
+  Wallet,
   X,
   XCircle,
 } from "lucide-react";
