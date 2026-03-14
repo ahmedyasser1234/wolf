@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { emailTemplates } from '../database/schema';
 import { eq } from 'drizzle-orm';
@@ -7,8 +7,14 @@ import { eq } from 'drizzle-orm';
 export class EmailTemplatesService implements OnModuleInit {
     constructor(private databaseService: DatabaseService) { }
 
+    private readonly logger = new Logger(EmailTemplatesService.name);
+
     async onModuleInit() {
-        await this.seedDefaultTemplates();
+        try {
+            await this.seedDefaultTemplates();
+        } catch (error) {
+            this.logger.error('Failed to seed default email templates. This is likely because migrations haven\'t been run yet.', error.message);
+        }
     }
 
     async findAll() {

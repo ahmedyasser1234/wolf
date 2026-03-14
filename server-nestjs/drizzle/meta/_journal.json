@@ -8,6 +8,13 @@
       "when": 1772039284327,
       "tag": "0000_futuristic_captain_midlands",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1773521400000,
+      "tag": "0001_add_missing_tables",
+      "breakpoints": true
     }
   ]
 }
