@@ -20,11 +20,15 @@ export class MailService {
 
         if (host && user && pass) {
             this.logger.log(`📧 Initializing mail transport for ${host}:${port}`);
-            // Masked password debugging
-            const passDisplay = pass.length > 2 
-                ? `${pass[0]}...${pass[pass.length-1]} (${pass.length} chars)` 
-                : `${pass.length} chars`;
-            this.logger.debug(`📧 SMTP Config: Host=${host}, Port=${port}, User=${user}, Pass=${passDisplay}`);
+            // Very detailed masked debugging
+            const passLength = pass.length;
+            const firstChar = pass[0];
+            const lastChar = pass[pass.length - 1];
+            const firstCharCode = pass.charCodeAt(0);
+            const lastCharCode = pass.charCodeAt(pass.length - 1);
+            
+            this.logger.debug(`📧 SMTP Config Check: Host=${host}, User=${user}`);
+            this.logger.debug(`📧 SMTP Pass Debug: Length=${passLength}, FirstChar='${firstChar}'(${firstCharCode}), LastChar='${lastChar}'(${lastCharCode})`);
 
             this.transporter = nodemailer.createTransport({
                 host,
@@ -58,8 +62,8 @@ export class MailService {
 
     private cleanConfig(val: string | undefined): string | undefined {
         if (!val) return val;
-        // Trim whitespace and remove surrounding single/double quotes if they exist
         let cleaned = val.trim();
+        // Remove surrounding ' or " only if they balance out
         if ((cleaned.startsWith("'") && cleaned.endsWith("'")) || (cleaned.startsWith('"') && cleaned.endsWith('"'))) {
             cleaned = cleaned.substring(1, cleaned.length - 1);
         }
