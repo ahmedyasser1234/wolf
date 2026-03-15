@@ -20,21 +20,27 @@ export class MailService {
 
         if (host && user && pass) {
             this.logger.log(`📧 Initializing mail transport for ${host}:${port}`);
-            this.logger.debug(`📧 SMTP Config: Host=${host}, Port=${port}, User=${user}, PassLength=${pass.length}`);
+            // Masked password debugging
+            const passDisplay = pass.length > 2 
+                ? `${pass[0]}...${pass[pass.length-1]} (${pass.length} chars)` 
+                : `${pass.length} chars`;
+            this.logger.debug(`📧 SMTP Config: Host=${host}, Port=${port}, User=${user}, Pass=${passDisplay}`);
 
             this.transporter = nodemailer.createTransport({
                 host,
                 port: Number(port),
                 secure: Number(port) === 465,
                 pool: false, 
-                auth: { 
-                    user, 
-                    pass,
-                    authMethod: 'LOGIN' // Force LOGIN for Hostinger
+                name: 'wolftechno.com', // Ehlo name
+                auth: { user, pass },
+                authMethod: 'LOGIN', // Move to top level
+                tls: { 
+                    rejectUnauthorized: false, 
+                    minVersion: 'TLSv1.2',
+                    ciphers: 'SSLv3' // Sometimes needed for legacy-ish SMTP
                 },
-                tls: { rejectUnauthorized: false, minVersion: 'TLSv1.2' },
-                debug: true, // Enable debug
-                logger: true, // Enable logger to console
+                debug: true, 
+                logger: true,
                 connectionTimeout: 30000,
             } as any);
 
