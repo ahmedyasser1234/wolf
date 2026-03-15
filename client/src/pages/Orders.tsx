@@ -21,7 +21,8 @@ import {
   UserPlus,
   LogIn,
   Loader2,
-  CreditCard
+  CreditCard,
+  Info
 } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/lib/i18n";
@@ -43,6 +44,7 @@ const ORDER_STATUSES: OrderStatus[] = [
   { id: "processing", labelAr: "جاري التجهيز", labelEn: "Processing", icon: Clock },
   { id: "shipped", labelAr: "خرج للتوصيل", labelEn: "Shipped", icon: Truck },
   { id: "delivered", labelAr: "مكتمل", labelEn: "Delivered", icon: CheckCircle },
+  { id: "gift_cards", labelAr: "كروت الهدايا", labelEn: "Gift Cards", icon: Gift },
   { id: "cancelled", labelAr: "ملغية", labelEn: "Cancelled", icon: XCircle },
   { id: "returned", labelAr: "ملغية مني", labelEn: "Returned", icon: RefreshCcw },
 ];
@@ -57,7 +59,16 @@ export default function Orders() {
 
   const { data: ordersData, isLoading } = useQuery({
     queryKey: ['orders', page, selectedStatus],
-    queryFn: async () => await endpoints.orders.list({ page, limit, status: selectedStatus }),
+    queryFn: async () => {
+      if (selectedStatus === 'gift_cards') {
+        const data = await endpoints.giftCards.getMyCards();
+        return { 
+          data, 
+          meta: { total: data.length, page: 1, limit: 1000, lastPage: 1 } 
+        };
+      }
+      return await endpoints.orders.list({ page, limit, status: selectedStatus });
+    },
     enabled: !!user
   });
 
@@ -278,110 +289,172 @@ export default function Orders() {
             ) : (
               <>
                 <div className="grid grid-cols-1 gap-6">
-                  {filteredOrders.map((order: any) => (
-                    <Card key={order.id} className="border border-gray-100 shadow-sm hover:shadow-xl transition-all rounded-[2rem] overflow-hidden group">
-                      <CardContent className="p-0">
-                        <div className="flex flex-col lg:flex-row">
-                          <div className="p-8 flex-1 border-b lg:border-b-0 lg:border-e border-gray-900 bg-gray-950 group-hover:bg-gray-900 transition-colors">
-                            <div className="flex justify-between items-start mb-6">
-                              <div>
-                                <p className="text-xs font-black text-primary uppercase tracking-widest mb-1">{language === 'ar' ? 'رقم الطلب' : 'ORDER NO'}</p>
-                                <h3 className="text-2xl font-black text-white">#{order.orderNumber}</h3>
+                  {filteredOrders.map((item: any) => {
+                    if (selectedStatus === 'gift_cards') {
+                      return (
+                        <Card key={item.id} className="border-2 border-dashed border-emerald-900/30 shadow-xl hover:shadow-2xl transition-all rounded-[2rem] overflow-hidden group bg-gray-950">
+                          <CardContent className="p-0">
+                            <div className="flex flex-col lg:flex-row">
+                              <div className="p-8 flex-1 group-hover:bg-gray-900 transition-colors">
+                                <div className="flex justify-between items-start mb-6">
+                                  <div>
+                                    <p className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'كارت هدية' : 'GIFT CARD'}</p>
+                                    <h3 className="text-2xl font-black text-white font-mono tracking-wider">{item.code}</h3>
+                                  </div>
+                                  <div className="text-end">
+                                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'التاريخ' : 'DATE'}</p>
+                                    <p className="font-bold text-white">
+                                      {new Date(item.createdAt).toLocaleDateString(language === 'ar' ? "ar-SA" : "en-US")}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                  <div>
+                                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">{language === 'ar' ? 'المرسل إليه' : 'RECIPIENT'}</p>
+                                    <p className="text-white font-bold">{item.recipientName || (language === 'ar' ? 'غير محدد' : 'Unknown')}</p>
+                                    <p className="text-xs text-gray-500">{item.recipientEmail}</p>
+                                  </div>
+                                  <div className="text-end md:text-start">
+                                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">{language === 'ar' ? 'حالة الدفع' : 'PAYMENT STATUS'}</p>
+                                    <div className="flex items-center gap-2 justify-end md:justify-start">
+                                      <div className={`w-2 h-2 rounded-full ${item.paymentStatus === 'paid' ? 'bg-emerald-500' : 'bg-amber-500'}`}></div>
+                                      <p className={`text-sm font-black ${item.paymentStatus === 'paid' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                        {item.paymentStatus === 'paid' ? (language === 'ar' ? 'مدفوع' : 'Paid') : (language === 'ar' ? 'قيد الدفع' : 'Pending Payment')}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
-                              <div className="text-end">
-                                <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'التاريخ' : 'DATE'}</p>
-                                <p className="font-bold text-white">
-                                  {new Date(order.createdAt).toLocaleDateString(language === 'ar' ? "ar-SA" : "en-US")}
-                                </p>
+
+                              <div className="p-8 bg-black/40 flex flex-col gap-3 justify-center items-center lg:items-center w-full lg:w-64 border-t lg:border-t-0 lg:border-s border-gray-900">
+                                <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'القيمة' : 'VALUE'}</p>
+                                <p className="text-3xl font-black text-emerald-400 mb-4">{formatPrice(item.amount)}</p>
+                                {item.paymentStatus === 'pending' && item.checkoutUrl && (
+                                  <Button 
+                                    onClick={() => window.location.href = item.checkoutUrl}
+                                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl h-12 font-black shadow-lg shadow-emerald-900/20"
+                                  >
+                                    <CreditCard className="w-4 h-4 mr-2" />
+                                    {language === 'ar' ? 'دفع الآن' : 'Pay Now'}
+                                  </Button>
+                                )}
+                                <div className="flex items-center gap-2 text-xs font-bold text-gray-500 mt-2">
+                                  <Info className="w-4 h-4" />
+                                  <span>{item.isRedeemed ? (language === 'ar' ? 'تم استخدامه' : 'Redeemed') : (language === 'ar' ? 'جاهز للاستخدام' : 'Active')}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    }
+
+                    return (
+                      <Card key={item.id} className="border border-gray-100 shadow-sm hover:shadow-xl transition-all rounded-[2rem] overflow-hidden group">
+                        <CardContent className="p-0">
+                          <div className="flex flex-col lg:flex-row">
+                            <div className="p-8 flex-1 border-b lg:border-b-0 lg:border-e border-gray-900 bg-gray-950 group-hover:bg-gray-900 transition-colors">
+                              <div className="flex justify-between items-start mb-6">
+                                <div>
+                                  <p className="text-xs font-black text-primary uppercase tracking-widest mb-1">{language === 'ar' ? 'رقم الطلب' : 'ORDER NO'}</p>
+                                  <h3 className="text-2xl font-black text-white">#{item.orderNumber}</h3>
+                                </div>
+                                <div className="text-end">
+                                  <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'التاريخ' : 'DATE'}</p>
+                                  <p className="font-bold text-white">
+                                    {new Date(item.createdAt).toLocaleDateString(language === 'ar' ? "ar-SA" : "en-US")}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-6">
+                                <div className="flex-1">
+                                  <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">{language === 'ar' ? 'حالة الشحن' : 'SHIPPING STATUS'}</p>
+                                  <div className="h-2 bg-gray-800 rounded-full overflow-hidden mb-2">
+                                    <div
+                                      className="h-full bg-white"
+                                      style={{
+                                        width:
+                                          item.status === 'delivered' ? '100%' :
+                                            item.status === 'shipped' ? '70%' :
+                                              item.status === 'processing' ? '40%' : '15%'
+                                      }}
+                                    ></div>
+                                  </div>
+                                  <p className="text-sm font-black text-white">
+                                    {language === 'ar'
+                                      ? (ORDER_STATUSES.find(s => s.id === item.status)?.labelAr || item.status)
+                                      : (ORDER_STATUSES.find(s => s.id === item.status)?.labelEn || item.status)
+                                    }
+                                  </p>
+                                </div>
+                                <div className="text-end">
+                                  <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'الإجمالي' : 'TOTAL'}</p>
+                                  <p className="text-2xl font-black text-primary">{formatPrice(item.total)}</p>
+                                </div>
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-6">
-                              <div className="flex-1">
-                                <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">{language === 'ar' ? 'حالة الشحن' : 'SHIPPING STATUS'}</p>
-                                <div className="h-2 bg-gray-800 rounded-full overflow-hidden mb-2">
-                                  <div
-                                    className="h-full bg-white"
-                                    style={{
-                                      width:
-                                        order.status === 'delivered' ? '100%' :
-                                          order.status === 'shipped' ? '70%' :
-                                            order.status === 'processing' ? '40%' : '15%'
-                                    }}
-                                  ></div>
+                            <div className="p-8 bg-gray-50 flex flex-row lg:flex-col gap-3 justify-center items-center lg:items-stretch w-full lg:w-64">
+
+                              {/* KYC Review Status Banner */}
+                              {item.paymentStatus === 'pending_kyc_review' && (
+                                <div className="w-full bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center">
+                                  <div className="flex items-center gap-2 justify-center mb-1">
+                                    <Loader2 className="w-4 h-4 text-amber-600 animate-spin" />
+                                    <span className="text-sm font-black text-amber-700">{language === 'ar' ? 'قيد المراجعة' : 'Under Review'}</span>
+                                  </div>
+                                  <p className="text-xs text-amber-600 font-bold">{language === 'ar' ? 'سيتم إشعارك فور الموافقة' : 'You will be notified once approved'}</p>
                                 </div>
-                                <p className="text-sm font-black text-white">
-                                  {language === 'ar'
-                                    ? (ORDER_STATUSES.find(s => s.id === order.status)?.labelAr || order.status)
-                                    : (ORDER_STATUSES.find(s => s.id === order.status)?.labelEn || order.status)
-                                  }
-                                </p>
-                              </div>
-                              <div className="text-end">
-                                <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'الإجمالي' : 'TOTAL'}</p>
-                                <p className="text-2xl font-black text-primary">{formatPrice(order.total)}</p>
-                              </div>
+                              )}
+
+                              {/* Pay Down Payment Button */}
+                              {item.paymentStatus === 'pending_payment' && (
+                                <Button
+                                  onClick={() => payDownPaymentMutation.mutate(item.id)}
+                                  disabled={payDownPaymentMutation.isPending}
+                                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl h-14 font-black gap-2 text-sm shadow-lg shadow-emerald-200"
+                                >
+                                  {payDownPaymentMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+                                  {language === 'ar' ? 'دفع الدفعة الأولى' : 'Pay Down Payment'}
+                                </Button>
+                              )}
+
+                              <Link href={`/orders/${item.id}`} className="flex-1 lg:flex-none">
+                                <Button className="w-full bg-gray-900 text-white hover:bg-black rounded-xl h-12 font-bold gap-2">
+                                  <Eye className="w-4 h-4" />
+                                  {t('viewDetails')}
+                                </Button>
+                              </Link>
+
+                              {/* Cancel Order Button */}
+                              {item.status !== 'cancelled' && (
+                                <Button
+                                  variant="destructive"
+                                  onClick={() => {
+                                    if (window.confirm(language === 'ar' ? 'هل أنت متأكد من رغبتك في إلغاء هذا الطلب؟' : 'Are you sure you want to cancel this order?')) {
+                                      cancelOrderMutation.mutate(item.id);
+                                    }
+                                  }}
+                                  disabled={cancelOrderMutation.isPending}
+                                  className="w-full rounded-xl h-12 font-bold gap-2"
+                                >
+                                  {cancelOrderMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
+                                  {language === 'ar' ? 'إلغاء الطلب' : 'Cancel Order'}
+                                </Button>
+                              )}
+
+                              <Button onClick={() => downloadInvoice(item, language, t)} variant="outline" className="flex-1 lg:flex-none border-gray-300 text-gray-900 hover:bg-gray-100 rounded-xl h-12 font-bold gap-2">
+                                <Download className="w-4 h-4" />
+                                {language === 'ar' ? 'الفاتورة' : 'Invoice'}
+                              </Button>
                             </div>
                           </div>
-
-                          <div className="p-8 bg-gray-50 flex flex-row lg:flex-col gap-3 justify-center items-center lg:items-stretch w-full lg:w-64">
-
-                            {/* KYC Review Status Banner */}
-                            {order.paymentStatus === 'pending_kyc_review' && (
-                              <div className="w-full bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center">
-                                <div className="flex items-center gap-2 justify-center mb-1">
-                                  <Loader2 className="w-4 h-4 text-amber-600 animate-spin" />
-                                  <span className="text-sm font-black text-amber-700">{language === 'ar' ? 'قيد المراجعة' : 'Under Review'}</span>
-                                </div>
-                                <p className="text-xs text-amber-600 font-bold">{language === 'ar' ? 'سيتم إشعارك فور الموافقة' : 'You will be notified once approved'}</p>
-                              </div>
-                            )}
-
-                            {/* Pay Down Payment Button */}
-                            {order.paymentStatus === 'pending_payment' && (
-                              <Button
-                                onClick={() => payDownPaymentMutation.mutate(order.id)}
-                                disabled={payDownPaymentMutation.isPending}
-                                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl h-14 font-black gap-2 text-sm shadow-lg shadow-emerald-200"
-                              >
-                                {payDownPaymentMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-                                {language === 'ar' ? 'دفع الدفعة الأولى' : 'Pay Down Payment'}
-                              </Button>
-                            )}
-
-                            <Link href={`/orders/${order.id}`} className="flex-1 lg:flex-none">
-                              <Button className="w-full bg-gray-900 text-white hover:bg-black rounded-xl h-12 font-bold gap-2">
-                                <Eye className="w-4 h-4" />
-                                {t('viewDetails')}
-                              </Button>
-                            </Link>
-
-                            {/* Cancel Order Button */}
-                            {order.status !== 'cancelled' && (
-                              <Button
-                                variant="destructive"
-                                onClick={() => {
-                                  if (window.confirm(language === 'ar' ? 'هل أنت متأكد من رغبتك في إلغاء هذا الطلب؟' : 'Are you sure you want to cancel this order?')) {
-                                    cancelOrderMutation.mutate(order.id);
-                                  }
-                                }}
-                                disabled={cancelOrderMutation.isPending}
-                                className="w-full rounded-xl h-12 font-bold gap-2"
-                              >
-                                {cancelOrderMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
-                                {language === 'ar' ? 'إلغاء الطلب' : 'Cancel Order'}
-                              </Button>
-                            )}
-
-                            <Button onClick={() => downloadInvoice(order, language, t)} variant="outline" className="flex-1 lg:flex-none border-gray-300 text-gray-900 hover:bg-gray-100 rounded-xl h-12 font-bold gap-2">
-                              <Download className="w-4 h-4" />
-                              {language === 'ar' ? 'الفاتورة' : 'Invoice'}
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
 
                 {/* Pagination Controls */}
@@ -429,4 +502,3 @@ export default function Orders() {
     </div>
   );
 }
-

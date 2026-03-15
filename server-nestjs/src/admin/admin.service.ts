@@ -6,12 +6,14 @@ import { eq, and, desc, sql, ne, inArray } from 'drizzle-orm';
 import * as xlsx from 'xlsx';
 
 import { NotificationsService } from '../notifications/notifications.service';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AdminService {
     constructor(
         private databaseService: DatabaseService,
-        private notificationsService: NotificationsService
+        private notificationsService: NotificationsService,
+        private mailService: MailService
     ) { }
 
     // ... (rest of the file until updateVendorStatus)
@@ -647,26 +649,43 @@ export class AdminService {
             throw new NotFoundException('Customer not found');
         }
 
-        const activeOrders = await this.databaseService.db
-            .select({ id: orders.id })
-            .from(orders)
-            .where(and(
-                eq(orders.customerId, id),
-                ne(orders.status, 'cancelled'),
-                ne(orders.status, 'delivered'),
-            ));
-
-        if (activeOrders.length > 0) {
-            throw new BadRequestException('Cannot delete customer with active orders');
-        }
-
         return await this.databaseService.db.transaction(async (tx) => {
+            // 1. Delete Order Related Data
+            const customerOrders = await tx.select({ id: orders.id }).from(orders).where(eq(orders.customerId, id));
+            const orderIds = customerOrders.map(o => o.id);
+            
+            if (orderIds.length > 0) {
+                await tx.delete(orderItems).where(inArray(orderItems.orderId, orderIds));
+                await tx.delete(orders).where(eq(orders.customerId, id));
+            }
+
+            // 2. Delete Wallet & Points
+            const [wallet] = await tx.select({ id: customerWallets.id }).from(customerWallets).where(eq(customerWallets.userId, id)).limit(1);
+            if (wallet) {
+                await tx.delete(walletTransactions).where(eq(walletTransactions.walletId, wallet.id));
+                await tx.delete(customerWallets).where(eq(customerWallets.id, wallet.id));
+            }
+            await tx.delete(userPoints).where(eq(userPoints.userId, id));
+
+            // 3. Delete Conversations & Messages
+            const customerConversations = await tx.select({ id: conversations.id }).from(conversations).where(eq(conversations.customerId, id));
+            const conversationIds = customerConversations.map(c => c.id);
+            if (conversationIds.length > 0) {
+                await tx.delete(messages).where(inArray(messages.conversationId, conversationIds));
+                await tx.delete(conversations).where(eq(conversations.customerId, id));
+            }
+
+            // 4. Delete Logs & Social
+            await tx.delete(accountStatusLogs).where(eq(accountStatusLogs.customerId, id));
             await tx.delete(cartItems).where(eq(cartItems.customerId, id));
             await tx.delete(wishlist).where(eq(wishlist.customerId, id));
             await tx.delete(notifications).where(eq(notifications.userId, id));
+            await tx.delete(reviews).where(eq(reviews.userId, id));
+
+            // 5. Finally Delete User
             await tx.delete(users).where(eq(users.id, id));
 
-            return { success: true, message: 'Customer deleted successfully' };
+            return { success: true, message: 'Customer and all associated data deleted successfully' };
         });
     }
 
@@ -1229,6 +1248,20 @@ export class AdminService {
             success: true,
             message: message
         };
+    }
+
+    async sendTestEmail(to: string) {
+        const subject = 'رسالة تجريبية - WolfTechno 🐺';
+        const body = `
+            <div style="font-family: Tajawal, sans-serif; direction: rtl; padding: 20px;">
+                <h1 style="color: #10b981;">✅ اتصال ناجح!</h1>
+                <p>هذه رسالة تجريبية من لوحة تحكم <strong>WolfTechno</strong> للتأكد من ربط الإيميل بنجاح.</p>
+                <p>إذا كنت تقرأ هذه الرسالة، فهذا يعني أن إعدادات الـ SMTP تعمل بشكل ممتاز.</p>
+                <hr style="border: 1px solid #eee; margin: 20px 0;">
+                <p style="font-size: 12px; color: #666;">تم الإرسال بتاريخ: ${new Date().toLocaleString('ar-EG')}</p>
+            </div>
+        `;
+        return this.mailService.sendMail(to, subject, body, body);
     }
 
     async exportShipping() {

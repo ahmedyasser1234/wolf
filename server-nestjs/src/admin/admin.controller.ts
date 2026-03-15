@@ -253,4 +253,13 @@ export class AdminController {
     async forceSetup() {
         return this.adminService.forceSetup();
     }
+
+    @Get('test-email')
+    async testEmail(@Req() req: Request, @Query('to') to: string) {
+        await this.checkAdmin(req);
+        if (!to) throw new UnauthorizedException('Recipient email required (?to=...)');
+        
+        await this.adminService.sendTestEmail(to);
+        return { success: true, message: `Sample email sent to ${to}. Check the server logs for confirmation.` };
+    }
 }

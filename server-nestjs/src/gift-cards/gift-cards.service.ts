@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { giftCards, customerWallets, walletTransactions, users } from '../database/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, or } from 'drizzle-orm';
 import { WalletsService } from '../wallets/wallets.service';
 import { PaymentsService } from '../payments/payments.service';
 import { MailService } from '../mail/mail.service';
@@ -41,19 +41,18 @@ export class GiftCardsService {
         const [user] = await this.databaseService.db.select().from(users).where(eq(users.id, userId)).limit(1);
         if (!user) throw new NotFoundException('User not found');
 
-        // Allow fetching cards where the user is either the sender, recipient, or the one who redeemed it
         const userEmail = user.email || '';
 
-        // Use raw SQL with or() for complex matching. We haven't imported 'or' from drizzle-orm but we can fetch all and filter for now to avoid import issues if not present
-        const allCards = await this.databaseService.db
+        return await this.databaseService.db
             .select()
             .from(giftCards)
+            .where(
+                or(
+                    eq(giftCards.senderEmail, userEmail),
+                    eq(giftCards.redeemedByUserId, userId)
+                )
+            )
             .orderBy(desc(giftCards.createdAt));
-
-        return allCards.filter(c =>
-            (c.senderEmail && c.senderEmail.toLowerCase() === userEmail.toLowerCase()) ||
-            c.redeemedByUserId === userId
-        );
     }
 
     async createGiftCard(data: {

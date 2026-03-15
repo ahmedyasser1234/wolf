@@ -61,6 +61,19 @@ export default function AdminEmailCenterTab() {
         }
     });
 
+    const testEmail = useMutation({
+        mutationFn: async (to: string) => {
+            const res = await api.get(`/admin/test-email?to=${to}`);
+            return res.data;
+        },
+        onSuccess: (data) => {
+            toast.success(data.message);
+        },
+        onError: (err: any) => {
+            toast.error(err?.response?.data?.message || (language === 'ar' ? 'فشل إرسال الإيميل التجريبي' : 'Failed to send test email'));
+        }
+    });
+
     const handleEdit = (template: any) => {
         setEditingTemplate(template);
         setFormData({ ...template });
@@ -87,15 +100,29 @@ export default function AdminEmailCenterTab() {
                     </div>
                     {language === 'ar' ? 'مركز التحكم في الإيميلات' : 'Email Control Center'}
                 </h2>
-                <Button 
-                    variant="outline"
-                    onClick={() => seedTemplates.mutate()}
-                    disabled={seedTemplates.isPending}
-                    className="border-gray-800 bg-gray-900/50 text-gray-400 hover:text-white rounded-xl h-10 px-4 font-bold flex items-center gap-2"
-                >
-                    {seedTemplates.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    <span>{language === 'ar' ? 'استعادة القوالب الافتراضية' : 'Restore Default Templates'}</span>
-                </Button>
+                <div className="flex gap-2">
+                    <Button 
+                        variant="outline"
+                        onClick={() => {
+                            const email = prompt(language === 'ar' ? 'أدخل البريد الإلكتروني لاستقبال الرسالة التجريبية:' : 'Enter email to receive test message:', '');
+                            if (email) testEmail.mutate(email);
+                        }}
+                        disabled={testEmail.isPending}
+                        className="border-emerald-800 bg-emerald-900/20 text-emerald-400 hover:text-white hover:bg-emerald-800 rounded-xl h-10 px-4 font-bold flex items-center gap-2"
+                    >
+                        {testEmail.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                        <span>{language === 'ar' ? 'تجربة إرسال إيميل' : 'Test Send Email'}</span>
+                    </Button>
+                    <Button 
+                        variant="outline"
+                        onClick={() => seedTemplates.mutate()}
+                        disabled={seedTemplates.isPending}
+                        className="border-gray-800 bg-gray-900/50 text-gray-400 hover:text-white rounded-xl h-10 px-4 font-bold flex items-center gap-2"
+                    >
+                        {seedTemplates.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                        <span>{language === 'ar' ? 'استعادة الافتراضي' : 'Restore Defaults'}</span>
+                    </Button>
+                </div>
             </div>
 
             <div className="grid gap-4">

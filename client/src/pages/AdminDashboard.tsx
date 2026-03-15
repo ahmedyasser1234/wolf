@@ -1366,7 +1366,7 @@ export default function AdminDashboard() {
                                       <MessageSquare className="w-4 h-4" />
                                     </Button>
 
-                                    {user?.email === 'admin@fustan.com' && (
+                                    {user?.role === 'admin' && (
                                       <Button
                                         variant="ghost"
                                         size="icon"
@@ -1782,7 +1782,7 @@ export default function AdminDashboard() {
           <AlertDialogHeader>
             <AlertDialogTitle>{language === 'ar' ? 'هل أنت متأكد؟' : 'Are you sure?'}</AlertDialogTitle>
             <AlertDialogDescription>
-              {language === 'ar' ? 'سيؤدي هذا إلى حذف حساب العميل نهائيًا بما في ذلك جميع بياناته. لا يمكن التراجع عن هذا الإجراء.' : 'This will permanently delete the customer account including all their data. This action cannot be undone.'}
+              {language === 'ar' ? 'سيؤدي هذا إلى حذف حساب العميل نهائيًا بما في ذلك جميع الطلبات، رصيد المحفظة، النقاط، والمحادثات. لا يمكن التراجع عن هذا الإجراء.' : 'This will permanently delete the customer account including all orders, wallet balance, points, and conversations. This action cannot be undone.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

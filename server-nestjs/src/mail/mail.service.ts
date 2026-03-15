@@ -13,10 +13,10 @@ export class MailService {
         private configService: ConfigService,
         private emailTemplatesService: EmailTemplatesService
     ) {
-        const host = this.configService.get<string>('SMTP_HOST');
-        const port = this.configService.get<number>('SMTP_PORT');
-        const user = this.configService.get<string>('SMTP_USER');
-        const pass = this.configService.get<string>('SMTP_PASS');
+        const host = this.cleanConfig(this.configService.get<string>('SMTP_HOST'));
+        const port = this.configService.get<string>('SMTP_PORT');
+        const user = this.cleanConfig(this.configService.get<string>('SMTP_USER'));
+        const pass = this.cleanConfig(this.configService.get<string>('SMTP_PASS'));
 
         if (host && user && pass) {
             this.logger.log(`📧 Initializing mail transport for ${host}:${port}`);
@@ -25,25 +25,33 @@ export class MailService {
                 host,
                 port: Number(port),
                 secure: Number(port) === 465,
-                pool: true,
-                maxConnections: 5,
-                maxMessages: 100,
+                pool: false, // Disabling pool to be safe with Hostinger
                 auth: { user, pass },
                 tls: { rejectUnauthorized: false, minVersion: 'TLSv1.2' },
                 requireTLS: Number(port) === 587,
                 connectionTimeout: 30000,
-            });
+            } as any);
 
             this.transporter.verify((error) => {
                 if (error) {
-                    this.logger.error(`❌ Mail transport verification failed:`, error.message);
+                    this.logger.error(`❌ Mail transport verification failed for ${user}:`, error.message);
                 } else {
-                    this.logger.log('📧 Mail transport verified and ready');
+                    this.logger.log(`📧 Mail transport verified and ready for ${user}`);
                 }
             });
         } else {
             this.logger.warn('⚠️ SMTP configuration missing. MailService will log emails to console.');
         }
+    }
+
+    private cleanConfig(val: string | undefined): string | undefined {
+        if (!val) return val;
+        // Trim whitespace and remove surrounding single/double quotes if they exist
+        let cleaned = val.trim();
+        if ((cleaned.startsWith("'") && cleaned.endsWith("'")) || (cleaned.startsWith('"') && cleaned.endsWith('"'))) {
+            cleaned = cleaned.substring(1, cleaned.length - 1);
+        }
+        return cleaned;
     }
 
     async sendOTP(to: string, code: string, type: 'registration' | 'password_reset') {
@@ -53,7 +61,7 @@ export class MailService {
         if (template) {
             const subject = template.subjectAr; // Defaulting to Arabic for now as per project theme
             const body = this.emailTemplatesService.replacePlaceholders(template.bodyAr, { otpCode: code });
-            await this.sendMail(to, subject, body);
+            await this.sendMail(to, subject, body, body);
         } else {
             // Fallback
             const subject = type === 'registration' ? 'كود التحقق الخاص بك - WolfTechno 🐺' : 'استعادة كلمة المرور - WolfTechno 🐺';
@@ -69,7 +77,7 @@ export class MailService {
         if (template) {
             const subject = template.subjectAr;
             const body = this.emailTemplatesService.replacePlaceholders(template.bodyAr, { orderNumber });
-            await this.sendMail(to, subject, body);
+            await this.sendMail(to, subject, body, body);
         } else {
             const subject = 'تم استلام طلبك بنجاح - WolfTechno 🐺';
             const text = `تم استلام طلبك بنجاح رقم: ${orderNumber}`;
@@ -84,7 +92,7 @@ export class MailService {
         if (template) {
             const subject = template.subjectAr;
             const body = this.emailTemplatesService.replacePlaceholders(template.bodyAr, { orderNumber, reason: reason || '' });
-            await this.sendMail(to, subject, body);
+            await this.sendMail(to, subject, body, body);
         } else {
             // Fallback to original logic
             let subject = 'تحديث بخصوص طلبك - WolfTechno 🐺';
@@ -98,7 +106,7 @@ export class MailService {
         if (template) {
             const subject = template.subjectAr;
             const body = this.emailTemplatesService.replacePlaceholders(template.bodyAr, { senderName, amount, code });
-            await this.sendMail(to, subject, body);
+            await this.sendMail(to, subject, body, body);
         } else {
             const subject = 'وصلتك هدية! 🎁 - WolfTechno 🐺';
             const message = `لقد أرسل لك ${senderName} كارت هدية بقيمة ${amount} درهم. الكود: ${code}`;
@@ -115,7 +123,7 @@ export class MailService {
                 discount, 
                 code: code || '' 
             });
-            await this.sendMail(to, subject, body);
+            await this.sendMail(to, subject, body, body);
         } else {
             const subject = 'عرض جديد حصري لك! 🔥 - WolfTechno 🐺';
             const message = `لدينا عرض جديد: ${offerName} بخصم ${discount}%!`;
@@ -123,18 +131,25 @@ export class MailService {
         }
     }
 
-    async sendMail(to: string, subject: string, text: string) {
+    async sendMail(to: string, subject: string, text: string, html?: string) {
         const from = this.configService.get<string>('MAIL_FROM') || '"WolfTechno" <noreply@wolftechno.com>';
         if (this.transporter) {
             try {
-                await this.transporter.sendMail({ from, to, subject, text });
+                await this.transporter.sendMail({ from, to, subject, text, html });
                 this.logger.log(`✅ Email sent to ${to} | Subject: ${subject}`);
             } catch (error) {
-                this.logger.error(`❌ Failed to send email to ${to}:`, error);
+                this.logger.error(`❌ Failed to send email to ${to}:`, error.message);
+                if (error.stack) {
+                    this.logger.debug(error.stack);
+                }
             }
         } else {
-            this.logger.log(`📝 [Mail Log Preview] To: ${to} | Subject: ${subject}`);
-            this.logger.log(`📝 [Mail Log Preview] Content: ${text}`);
+            this.logger.warn(`📝 [Mail Simulation] SMTP not configured. Email to ${to} was NOT sent.`);
+            this.logger.log(`📝 [Mail simulation] Subject: ${subject}`);
+            this.logger.log(`📝 [Mail simulation] Content (Text): ${text}`);
+            if (html) {
+                this.logger.log(`📝 [Mail simulation] Content (HTML length): ${html.length} chars`);
+            }
         }
     }
 }

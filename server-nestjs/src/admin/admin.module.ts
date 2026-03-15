@@ -9,9 +9,10 @@ import { NotificationsService } from '../notifications/notifications.service';
 
 import { NotificationsModule } from '../notifications/notifications.module';
 import { MediaModule } from '../media/media.module';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
-    imports: [AuthModule, DatabaseModule, NotificationsModule, MediaModule],
+    imports: [AuthModule, DatabaseModule, NotificationsModule, MediaModule, MailModule],
     controllers: [AdminController],
     providers: [AdminService, AuthService, NotificationsService, AdminCronService],
 })
