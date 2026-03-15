@@ -1295,4 +1295,5 @@ export class AdminService {
             .leftJoin(products, eq(shipping.productId, products.id))
             .leftJoin(vendors, eq(shipping.vendorId, vendors.id));
     }
+
 }

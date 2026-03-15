@@ -20,15 +20,21 @@ export class MailService {
 
         if (host && user && pass) {
             this.logger.log(`📧 Initializing mail transport for ${host}:${port}`);
+            this.logger.debug(`📧 SMTP Config: Host=${host}, Port=${port}, User=${user}, PassLength=${pass.length}`);
 
             this.transporter = nodemailer.createTransport({
                 host,
                 port: Number(port),
                 secure: Number(port) === 465,
-                pool: false, // Disabling pool to be safe with Hostinger
-                auth: { user, pass },
+                pool: false, 
+                auth: { 
+                    user, 
+                    pass,
+                    authMethod: 'LOGIN' // Force LOGIN for Hostinger
+                },
                 tls: { rejectUnauthorized: false, minVersion: 'TLSv1.2' },
-                requireTLS: Number(port) === 587,
+                debug: true, // Enable debug
+                logger: true, // Enable logger to console
                 connectionTimeout: 30000,
             } as any);
 
