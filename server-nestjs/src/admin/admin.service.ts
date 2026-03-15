@@ -1,7 +1,7 @@
 import { scrypt, randomBytes } from 'node:crypto';
 import { Injectable, UnauthorizedException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
-import { vendors, users, orders, products, categories, conversations, messages, cartItems, wishlist, notifications, productColors, reviews, shipping, offerItems, collections, coupons, offers, vendorReviews, vendorPayouts, vendorWallets, paymentGateways, installmentPlans, orderItems, accountStatusLogs, customerWallets, userPoints, giftCards, walletTransactions } from '../database/schema';
+import { vendors, users, orders, products, categories, conversations, messages, cartItems, wishlist, notifications, productColors, reviews, storeReviews, shipping, offerItems, collections, coupons, offers, vendorReviews, vendorPayouts, vendorWallets, paymentGateways, installmentPlans, orderItems, accountStatusLogs, customerWallets, userPoints, giftCards, walletTransactions, pointsTransactions, wishlistSettings, installments, installmentPayments } from '../database/schema';
 import { eq, and, desc, sql, ne, inArray } from 'drizzle-orm';
 import * as xlsx from 'xlsx';
 
@@ -665,6 +665,7 @@ export class AdminService {
                 await tx.delete(walletTransactions).where(eq(walletTransactions.walletId, wallet.id));
                 await tx.delete(customerWallets).where(eq(customerWallets.id, wallet.id));
             }
+            await tx.delete(pointsTransactions).where(eq(pointsTransactions.userId, id));
             await tx.delete(userPoints).where(eq(userPoints.userId, id));
 
             // 3. Delete Conversations & Messages
@@ -675,14 +676,30 @@ export class AdminService {
                 await tx.delete(conversations).where(eq(conversations.customerId, id));
             }
 
-            // 4. Delete Logs & Social
+            // 4. Delete Logs, Social & Installments
             await tx.delete(accountStatusLogs).where(eq(accountStatusLogs.customerId, id));
             await tx.delete(cartItems).where(eq(cartItems.customerId, id));
             await tx.delete(wishlist).where(eq(wishlist.customerId, id));
+            await tx.delete(wishlistSettings).where(eq(wishlistSettings.userId, id));
             await tx.delete(notifications).where(eq(notifications.userId, id));
-            await tx.delete(reviews).where(eq(reviews.userId, id));
+            await tx.delete(reviews).where(eq(reviews.customerId, id));
+            await tx.delete(vendorReviews).where(eq(vendorReviews.customerId, id));
+            await tx.delete(storeReviews).where(eq(storeReviews.customerId, id));
+            
+            // Delete Installments
+            const customerInstallments = await tx.select({ id: installments.id }).from(installments).where(inArray(installments.orderId, orderIds.length > 0 ? orderIds : [-1]));
+            const installmentIds = customerInstallments.map(i => i.id);
+            if (installmentIds.length > 0) {
+                await tx.delete(installmentPayments).where(inArray(installmentPayments.installmentId, installmentIds));
+                await tx.delete(installments).where(inArray(installments.id, installmentIds));
+            }
+            // Also delete any orphan installment payments linked directly to customer
+            await tx.delete(installmentPayments).where(eq(installmentPayments.customerId, id));
 
-            // 5. Finally Delete User
+            // 5. Gift Cards
+            await tx.update(giftCards).set({ redeemedByUserId: null, isRedeemed: false, redeemedAt: null }).where(eq(giftCards.redeemedByUserId, id));
+
+            // 6. Finally Delete User
             await tx.delete(users).where(eq(users.id, id));
 
             return { success: true, message: 'Customer and all associated data deleted successfully' };
