@@ -27,8 +27,8 @@ export class MailService {
             const firstCharCode = pass.charCodeAt(0);
             const lastCharCode = pass.charCodeAt(pass.length - 1);
             
-            this.logger.debug(`📧 SMTP Config Check: Host=${host}, User=${user}`);
-            this.logger.debug(`📧 SMTP Pass Debug: Length=${passLength}, FirstChar='${firstChar}'(${firstCharCode}), LastChar='${lastChar}'(${lastCharCode})`);
+            this.logger.log(`📧 SMTP Config Check: Host=${host}, User=${user}`);
+            this.logger.log(`📧 SMTP Pass Debug: Length=${passLength}, FirstChar='${firstChar}'(${firstCharCode}), LastChar='${lastChar}'(${lastCharCode})`);
 
             this.transporter = nodemailer.createTransport({
                 host,
