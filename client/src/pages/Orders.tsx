@@ -354,21 +354,21 @@ export default function Orders() {
                       <Card key={item.id} className="border border-gray-100 shadow-sm hover:shadow-xl transition-all rounded-[2rem] overflow-hidden group">
                         <CardContent className="p-0">
                           <div className="flex flex-col lg:flex-row">
-                            <div className="p-8 flex-1 border-b lg:border-b-0 lg:border-e border-gray-900 bg-gray-950 group-hover:bg-gray-900 transition-colors">
-                              <div className="flex justify-between items-start mb-6">
+                            <div className="p-5 sm:p-8 flex-1 border-b lg:border-b-0 lg:border-e border-gray-900 bg-gray-950 group-hover:bg-gray-900 transition-colors">
+                              <div className="flex justify-between items-start mb-6 gap-2">
                                 <div>
-                                  <p className="text-xs font-black text-primary uppercase tracking-widest mb-1">{language === 'ar' ? 'رقم الطلب' : 'ORDER NO'}</p>
-                                  <h3 className="text-2xl font-black text-white">#{item.orderNumber}</h3>
+                                  <p className="text-[10px] sm:text-xs font-black text-primary uppercase tracking-widest mb-1">{language === 'ar' ? 'رقم الطلب' : 'ORDER NO'}</p>
+                                  <h3 className="text-xl sm:text-2xl font-black text-white shrink-0">#{item.orderNumber}</h3>
                                 </div>
                                 <div className="text-end">
-                                  <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'التاريخ' : 'DATE'}</p>
-                                  <p className="font-bold text-white">
+                                  <p className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'التاريخ' : 'DATE'}</p>
+                                  <p className="font-bold text-white text-sm sm:text-base">
                                     {new Date(item.createdAt).toLocaleDateString(language === 'ar' ? "ar-SA" : "en-US")}
                                   </p>
                                 </div>
                               </div>
 
-                              <div className="flex items-center gap-6">
+                              <div className="flex items-center gap-4 sm:gap-6">
                                 <div className="flex-1">
                                   <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">{language === 'ar' ? 'حالة الشحن' : 'SHIPPING STATUS'}</p>
                                   <div className="h-2 bg-gray-800 rounded-full overflow-hidden mb-2">
@@ -389,14 +389,14 @@ export default function Orders() {
                                     }
                                   </p>
                                 </div>
-                                <div className="text-end">
-                                  <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'الإجمالي' : 'TOTAL'}</p>
-                                  <p className="text-2xl font-black text-primary">{formatPrice(item.total)}</p>
+                                <div className="text-end min-w-fit">
+                                  <p className="text-[10px] sm:text-xs font-black text-gray-400 uppercase tracking-widest mb-1">{language === 'ar' ? 'الإجمالي' : 'TOTAL'}</p>
+                                  <p className="text-xl sm:text-2xl font-black text-primary">{formatPrice(item.total)}</p>
                                 </div>
                               </div>
                             </div>
 
-                            <div className="p-8 bg-gray-50 flex flex-row lg:flex-col gap-3 justify-center items-center lg:items-stretch w-full lg:w-64">
+                            <div className="p-5 sm:p-8 bg-gray-50 flex flex-col gap-3 justify-center items-stretch w-full lg:w-64">
 
                               {/* KYC Review Status Banner */}
                               {item.paymentStatus === 'pending_kyc_review' && (
