@@ -89,9 +89,9 @@ export default function OrderDetails() {
                 {/* Main Content */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* Order Tracker */}
-                    <Card className="border-0 shadow-sm overflow-hidden bg-white dark:bg-gray-900">
-                        <CardHeader className="border-b border-gray-100 dark:border-gray-800 py-6">
-                            <CardTitle className="text-xl font-black flex items-center gap-3 text-foreground">
+                    <Card className="border-0 shadow-2xl overflow-hidden bg-gray-950">
+                        <CardHeader className="border-b border-gray-900 py-6">
+                            <CardTitle className="text-xl font-black flex items-center gap-3 text-white">
                                 <Clock className="w-6 h-6 text-primary" />
                                 {language === 'ar' ? 'تتبع مسار الطلب' : 'Order Tracking'}
                             </CardTitle>
@@ -108,7 +108,7 @@ export default function OrderDetails() {
                             ) : (
                                 <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-10 md:gap-4 w-full">
                                     {/* Vertical/Horizontal Connector Line */}
-                                    <div className="absolute left-[20px] md:left-0 top-[40px] md:top-1/2 md:-translate-y-1/2 w-[2px] md:w-full h-[calc(100%-80px)] md:h-[2px] bg-gray-200 z-0" />
+                                    <div className={`absolute ${language === 'ar' ? 'right-[20px] md:right-auto md:left-0' : 'left-[20px] md:left-0'} top-[40px] md:top-1/2 md:-translate-y-1/2 w-[2px] md:w-full h-[calc(100%-80px)] md:h-[2px] bg-gray-800 z-0`} />
                                     
                                     {Object.entries(ORDER_STATUSES)
                                         .filter(([key]) => key !== 'cancelled')
@@ -119,16 +119,16 @@ export default function OrderDetails() {
                                             const Icon = status.icon;
 
                                             return (
-                                                <div key={key} className="flex md:flex-col items-center gap-6 md:gap-4 group relative w-full md:w-auto z-10">
+                                                <div key={key} className="flex md:flex-col items-center gap-6 md:gap-4 group relative z-10">
                                                     <div className={`
                                                                     w-10 h-10 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all duration-500
-                                                                    ${isActive ? 'bg-primary text-black shadow-xl shadow-primary/20 scale-110' : 'bg-white text-gray-500 border-2 border-gray-200'}
+                                                                    ${isActive ? 'bg-primary text-black shadow-xl shadow-primary/20 scale-110' : 'bg-gray-900 text-gray-500 border-2 border-gray-800'}
                                                                     ${isCurrent ? 'ring-4 ring-primary/20 animate-pulse' : ''}
                                                                 `}>
                                                         <Icon className="w-5 h-5 sm:w-8 sm:h-8" />
                                                     </div>
-                                                    <div className={`flex flex-col md:items-center ${language === 'ar' ? 'text-right md:text-center' : 'text-left md:text-center'} flex-1 md:flex-none`}>
-                                                        <span className={`text-sm sm:text-base font-black transition-colors duration-500 ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                                    <div className={`flex flex-col md:items-center ${language === 'ar' ? 'text-right md:text-center' : 'text-left md:text-center'}`}>
+                                                        <span className={`text-sm sm:text-base font-black transition-colors duration-500 ${isActive ? 'text-white' : 'text-gray-500'}`}>
                                                             {language === 'ar' ? status.labelAr : status.labelEn}
                                                         </span>
                                                         {isCurrent && (
@@ -146,17 +146,17 @@ export default function OrderDetails() {
                     </Card>
 
                     {/* Order Items */}
-                    <Card className="border-0 shadow-sm overflow-hidden bg-white dark:bg-gray-900">
-                        <CardHeader className="border-b border-gray-100 dark:border-gray-800 py-6">
-                            <CardTitle className="text-xl font-black flex items-center gap-3 text-foreground">
+                    <Card className="border-0 shadow-2xl overflow-hidden bg-gray-950">
+                        <CardHeader className="border-b border-gray-900 py-6">
+                            <CardTitle className="text-xl font-black flex items-center gap-3 text-white">
                                 <ShoppingBag className="w-6 h-6 text-primary" />
                                 {language === 'ar' ? 'المنتجات المطلوبة' : 'Order Items'}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-0">
-                            <div className="divide-y divide-gray-50">
+                            <div className="divide-y divide-gray-900">
                                 {order.items?.map((item: any) => (
-                                    <div key={item.id} className="p-6 sm:p-8 flex items-center gap-6 hover:bg-gray-50 transition-colors group">
+                                    <div key={item.id} className="p-6 sm:p-8 flex items-center gap-6 hover:bg-white/5 transition-colors group">
                                         <div className="relative shrink-0">
                                             <img
                                                 src={(item.product?.images && item.product.images[0]) || (item.product?.image) || "https://images.unsplash.com/photo-1594465919760-441fe5908ab0?w=200&h=200&fit=crop"}
@@ -168,10 +168,10 @@ export default function OrderDetails() {
                                             </div>
                                         </div>
                                         <div className="grow min-w-0">
-                                            <h4 className="text-lg sm:text-xl font-black text-foreground mb-1 truncate">
+                                            <h4 className="text-lg sm:text-xl font-black text-white mb-1 truncate">
                                                 {language === 'ar' ? item.product?.nameAr : item.product?.nameEn}
                                             </h4>
-                                            <p className="text-sm text-muted-foreground font-bold mb-3">
+                                            <p className="text-sm text-gray-400 font-bold mb-3">
                                                 {language === 'ar' ? item.vendor?.storeNameAr : item.vendor?.storeNameEn}
                                             </p>
                                             <div className="flex flex-wrap gap-2">
@@ -206,9 +206,9 @@ export default function OrderDetails() {
                 <div className="space-y-6">
 
                     {/* Invoice Summary */}
-                    <Card className="border-0 shadow-sm" ref={invoiceRef}>
-                        <CardHeader className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                            <CardTitle className="text-base sm:text-lg">{language === 'ar' ? 'ملخص الفاتورة' : 'Invoice Summary'}</CardTitle>
+                    <Card className="border-0 shadow-2xl bg-gray-950" ref={invoiceRef}>
+                        <CardHeader className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-900">
+                            <CardTitle className="text-base sm:text-lg text-white">{language === 'ar' ? 'ملخص الفاتورة' : 'Invoice Summary'}</CardTitle>
                             <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
                                 {user?.role === 'admin' && order.kycData && (
                                     <Button
@@ -267,35 +267,35 @@ KYC DATA EXPORT - ORDER #${order.orderNumber}
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-3 sm:space-y-4">
-                            <div className="flex justify-between text-gray-600 text-sm sm:text-base">
+                            <div className="flex justify-between text-gray-400 text-sm sm:text-base">
                                 <span>{language === 'ar' ? 'المجموع الفرعي' : 'Subtotal'}</span>
-                                <span className="font-bold">{formatPrice(order.subtotal)}</span>
+                                <span className="font-bold text-white">{formatPrice(order.subtotal)}</span>
                             </div>
-                            <div className="flex justify-between text-gray-600 text-sm sm:text-base">
+                            <div className="flex justify-between text-gray-400 text-sm sm:text-base">
                                 <span>{language === 'ar' ? 'تكلفة الشحن' : 'Shipping Cost'}</span>
-                                <span className="font-bold">{formatPrice(order.shippingCost)}</span>
+                                <span className="font-bold text-white">{formatPrice(order.shippingCost)}</span>
                             </div>
                             {Number(order.discount) > 0 && (
-                                <div className="flex justify-between text-primary bg-primary/5 p-2 rounded-lg text-sm sm:text-base">
+                                <div className="flex justify-between text-primary bg-primary/10 p-2 rounded-lg text-sm sm:text-base">
                                     <span>{language === 'ar' ? 'الخصم' : 'Discount'}</span>
                                     <span className="font-bold">- {formatPrice(order.discount)}</span>
                                 </div>
                             )}
                             {Number(order.tax) > 0 && (
-                                <div className="flex justify-between text-gray-600 text-sm sm:text-base">
+                                <div className="flex justify-between text-gray-400 text-sm sm:text-base">
                                     <span>{language === 'ar' ? 'الضريبة (15%)' : 'Tax (15%)'}</span>
-                                    <span className="font-bold">{formatPrice(order.tax)}</span>
+                                    <span className="font-bold text-white">{formatPrice(order.tax)}</span>
                                 </div>
                             )}
                             {Number(order.walletAmountUsed) > 0 && (
-                                <div className="flex justify-between text-emerald-600 font-bold bg-emerald-50 p-2 rounded-lg mt-2 text-sm sm:text-base">
+                                <div className="flex justify-between text-emerald-400 font-bold bg-emerald-500/10 p-2 rounded-lg mt-2 text-sm sm:text-base">
                                     <span>{language === 'ar' ? 'تم الدفع عبر المحفظة' : 'Paid via Wallet'}</span>
                                     <span>{formatPrice(order.walletAmountUsed)}</span>
                                 </div>
                             )}
-                            <div className="border-t border-dashed border-gray-200 dark:border-gray-700 my-4 pt-4">
+                            <div className="border-t border-dashed border-gray-800 my-4 pt-4">
                                 <div className="flex justify-between items-center">
-                                    <span className="font-bold text-base sm:text-lg text-foreground">{language === 'ar' ? 'الإجمالي النهائي' : 'Final Total'}</span>
+                                    <span className="font-bold text-base sm:text-lg text-white">{language === 'ar' ? 'الإجمالي النهائي' : 'Final Total'}</span>
                                     <span className="font-black text-lg sm:text-xl text-primary">
                                         {formatPrice(order.total)}
                                     </span>
@@ -305,44 +305,44 @@ KYC DATA EXPORT - ORDER #${order.orderNumber}
                     </Card>
 
                     {/* Shipping Address */}
-                    <Card className="border-0 shadow-sm">
-                        <CardHeader className="py-4">
-                            <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                    <Card className="border-0 shadow-2xl bg-gray-950">
+                        <CardHeader className="py-4 border-b border-gray-900">
+                            <CardTitle className="flex items-center gap-2 text-sm sm:text-base text-white">
                                 <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                                 {language === 'ar' ? 'عنوان التوصيل' : 'Shipping Address'}
                             </CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <div className={`text-xs sm:text-sm text-muted-foreground space-y-1 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
-                                <p className="font-bold text-foreground">{order.shippingAddress?.name}</p>
+                        <CardContent className="pt-4">
+                            <div className={`text-xs sm:text-sm text-gray-400 space-y-1 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
+                                <p className="font-bold text-white">{order.shippingAddress?.name}</p>
                                 <p>{order.shippingAddress?.address}</p>
                                 <p>{order.shippingAddress?.city}, {order.shippingAddress?.country}</p>
-                                <p className="font-mono text-foreground">{order.shippingAddress?.phone}</p>
+                                <p className="font-mono text-white">{order.shippingAddress?.phone}</p>
                             </div>
                         </CardContent>
                     </Card>
 
                     {/* Payment Info */}
-                    <Card className="border-0 shadow-sm">
-                        <CardHeader className="py-4">
-                            <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                    <Card className="border-0 shadow-2xl bg-gray-950">
+                        <CardHeader className="py-4 border-b border-gray-900">
+                            <CardTitle className="flex items-center gap-2 text-sm sm:text-base text-white">
                                 <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                                 {language === 'ar' ? 'طريقة الدفع' : 'Payment Method'}
                             </CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800/50 p-2 sm:p-3 rounded-lg">
+                        <CardContent className="pt-4">
+                            <div className="flex items-center gap-2 bg-white/5 p-2 sm:p-3 rounded-lg">
                                 {order.paymentMethod === 'cod' ? (
-                                    <span className="text-xs sm:text-sm font-bold text-foreground">{language === 'ar' ? 'الدفع عند الاستلام' : 'Cash on Delivery'}</span>
+                                    <span className="text-xs sm:text-sm font-bold text-white">{language === 'ar' ? 'الدفع عند الاستلام' : 'Cash on Delivery'}</span>
                                 ) : order.paymentMethod === 'installments' ? (
                                     <>
                                         <UserCheck className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
-                                        <span className="text-xs sm:text-sm font-bold text-foreground">{language === 'ar' ? 'نظام التقسيط' : 'Installment System'}</span>
+                                        <span className="text-xs sm:text-sm font-bold text-white">{language === 'ar' ? 'نظام التقسيط' : 'Installment System'}</span>
                                     </>
                                 ) : (
                                     <>
-                                        <CreditCard className="w-3 h-3 sm:w-4 sm:h-4 text-foreground" />
-                                        <span className="text-xs sm:text-sm font-bold text-foreground">{language === 'ar' ? 'بطاقة ائتمان' : 'Credit Card'}</span>
+                                        <CreditCard className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+                                        <span className="text-xs sm:text-sm font-bold text-white">{language === 'ar' ? 'بطاقة ائتمان' : 'Credit Card'}</span>
                                     </>
                                 )}
                             </div>
