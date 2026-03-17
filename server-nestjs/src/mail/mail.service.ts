@@ -75,9 +75,7 @@ export class MailService {
         const template = await this.emailTemplatesService.findByType(templateType);
 
         if (template) {
-            const subject = template.subjectAr; // Defaulting to Arabic for now as per project theme
-            const body = this.emailTemplatesService.replacePlaceholders(template.bodyAr, { otpCode: code });
-            await this.sendMail(to, subject, body, body);
+            await this.sendTemplateEmail(to, template, { otpCode: code });
         } else {
             // Fallback
             const subject = type === 'registration' ? 'كود التحقق الخاص بك - WolfTechno 🐺' : 'استعادة كلمة المرور - WolfTechno 🐺';
@@ -91,9 +89,7 @@ export class MailService {
     async sendOrderConfirmation(to: string, orderNumber: string) {
         const template = await this.emailTemplatesService.findByType('order_confirmation');
         if (template) {
-            const subject = template.subjectAr;
-            const body = this.emailTemplatesService.replacePlaceholders(template.bodyAr, { orderNumber });
-            await this.sendMail(to, subject, body, body);
+            await this.sendTemplateEmail(to, template, { orderNumber });
         } else {
             const subject = 'تم استلام طلبك بنجاح - WolfTechno 🐺';
             const text = `تم استلام طلبك بنجاح رقم: ${orderNumber}`;
@@ -106,11 +102,8 @@ export class MailService {
         const template = await this.emailTemplatesService.findByType(templateType);
 
         if (template) {
-            const subject = template.subjectAr;
-            const body = this.emailTemplatesService.replacePlaceholders(template.bodyAr, { orderNumber, reason: reason || '' });
-            await this.sendMail(to, subject, body, body);
+            await this.sendTemplateEmail(to, template, { orderNumber, reason: reason || '' });
         } else {
-            // Fallback to original logic
             let subject = 'تحديث بخصوص طلبك - WolfTechno 🐺';
             let message = `تحديث لطلبك رقم #${orderNumber}`;
             await this.sendMail(to, subject, message);
@@ -120,9 +113,7 @@ export class MailService {
     async sendGiftCardNotification(to: string, senderName: string, amount: number, code: string) {
         const template = await this.emailTemplatesService.findByType('gift_card_notification');
         if (template) {
-            const subject = template.subjectAr;
-            const body = this.emailTemplatesService.replacePlaceholders(template.bodyAr, { senderName, amount, code });
-            await this.sendMail(to, subject, body, body);
+            await this.sendTemplateEmail(to, template, { senderName, amount, code });
         } else {
             const subject = 'وصلتك هدية! 🎁 - WolfTechno 🐺';
             const message = `لقد أرسل لك ${senderName} كارت هدية بقيمة ${amount} درهم. الكود: ${code}`;
@@ -133,18 +124,36 @@ export class MailService {
     async sendNewOfferEmail(to: string, offerName: string, discount: string, code?: string) {
         const template = await this.emailTemplatesService.findByType('new_offer_notification');
         if (template) {
-            const subject = template.subjectAr;
-            const body = this.emailTemplatesService.replacePlaceholders(template.bodyAr, { 
+            await this.sendTemplateEmail(to, template, { 
                 offerName, 
                 discount, 
                 code: code || '' 
             });
-            await this.sendMail(to, subject, body, body);
         } else {
             const subject = 'عرض جديد حصري لك! 🔥 - WolfTechno 🐺';
             const message = `لدينا عرض جديد: ${offerName} بخصم ${discount}%!`;
             await this.sendMail(to, subject, message);
         }
+    }
+
+    private async sendTemplateEmail(to: string, template: any, variables: Record<string, string | number>) {
+        const subject = `${template.subjectAr} | ${template.subjectEn}`;
+        
+        const bodyAr = this.emailTemplatesService.replacePlaceholders(template.bodyAr, variables);
+        const bodyEn = this.emailTemplatesService.replacePlaceholders(template.bodyEn, variables);
+
+        const html = `
+            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; direction: rtl; text-align: right; border-bottom: 1px solid #eee; padding-bottom: 20px; margin-bottom: 20px;">
+                ${bodyAr.split('\n').map(line => `<p>${line}</p>`).join('')}
+            </div>
+            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; direction: ltr; text-align: left;">
+                ${bodyEn.split('\n').map(line => `<p>${line}</p>`).join('')}
+            </div>
+        `;
+        
+        const text = `${bodyAr}\n\n---\n\n${bodyEn}`;
+        
+        await this.sendMail(to, subject, text, html);
     }
 
     async sendMail(to: string, subject: string, text: string, html?: string) {
