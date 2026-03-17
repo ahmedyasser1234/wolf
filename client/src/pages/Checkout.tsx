@@ -152,7 +152,7 @@ export default function Checkout() {
     onError: (err: any) => {
       setAppliedCoupon(null);
       let message = err.response?.data?.message;
-      if (language === 'en' && message) {
+      if (language === 'en' && typeof message === 'string') {
         if (message.includes('الكود مستخدم من قبل')) message = 'This code has been used before';
         if (message.includes('الكود غير صالح')) message = 'Invalid coupon code';
         if (message.includes('تم تجاوز حد استخدام الكود')) message = 'Coupon usage limit exceeded';
