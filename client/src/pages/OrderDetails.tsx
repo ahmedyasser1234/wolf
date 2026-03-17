@@ -22,8 +22,13 @@ export default function OrderDetails() {
     const { id } = useParams();
     const { t, language, formatPrice } = useLanguage();
     const queryClient = useQueryClient();
-    const invoiceRef = useRef<HTMLDivElement>(null);
     const { user } = useAuth();
+    const invoiceRef = useRef<HTMLDivElement>(null);
+
+    // Force scroll to top on mount to fix "scroll to footer" issue
+    useEffect(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }, []);
 
     const { data: order, isLoading } = useQuery({
         queryKey: ['order', id],
@@ -80,10 +85,6 @@ export default function OrderDetails() {
     const currentStatus = ORDER_STATUSES[statusKey] || ORDER_STATUSES.pending;
     const isCancelled = order.status === 'cancelled';
 
-    // Force scroll to top on mount to fix "scroll to footer" issue
-    useEffect(() => {
-        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    }, []);
 
     return (
         <div className={`min-h-screen bg-black ${language === 'ar' ? 'text-right' : 'text-left'} pb-20 max-w-full overflow-x-hidden`} dir={language === 'ar' ? 'rtl' : 'ltr'}>
