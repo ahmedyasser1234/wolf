@@ -536,17 +536,6 @@ function Footer() {
                 <span>+971 58 880 8744</span>
               </a>
 
-              <div className="pt-2">
-                <a
-                  href="https://wa.me/971588808744"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#25D366]/10 text-[#25D366] rounded-xl text-xs font-black hover:bg-[#25D366]/20 transition-all border border-[#25D366]/20 shadow-sm"
-                >
-                  <MessageCircle size={14} fill="currentColor" />
-                  {isAr ? "تحدث معنا عبر واتساب" : "Chat with Us on WhatsApp"}
-                </a>
-              </div>
             </div>
 
             {/* Working Hours Box */}
@@ -569,6 +558,14 @@ function Footer() {
           </div>
           <div className="flex items-center gap-4">
             <div className="flex gap-3">
+              <a 
+                href="https://wa.me/971588808744"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center text-white hover:bg-primary transition-all duration-300"
+              >
+                <MessageCircle size={17} />
+              </a>
               <a 
                 href="https://www.instagram.com/wolftechno_com?igsh=MXBlM213a2poOWF1ag%3D%3D&utm_source=qr" 
                 target="_blank"
