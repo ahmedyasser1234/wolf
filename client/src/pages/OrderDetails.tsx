@@ -89,9 +89,9 @@ export default function OrderDetails() {
                 {/* Main Content */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* Order Tracker */}
-                    <Card className="border-0 shadow-sm overflow-hidden">
-                        <CardHeader className="bg-white border-b border-gray-50 py-6">
-                            <CardTitle className="text-xl font-black flex items-center gap-3 text-black">
+                    <Card className="border-0 shadow-sm overflow-hidden bg-white dark:bg-gray-900">
+                        <CardHeader className="border-b border-gray-100 dark:border-gray-800 py-6">
+                            <CardTitle className="text-xl font-black flex items-center gap-3 text-foreground">
                                 <Clock className="w-6 h-6 text-primary" />
                                 {language === 'ar' ? 'تتبع مسار الطلب' : 'Order Tracking'}
                             </CardTitle>
@@ -106,7 +106,10 @@ export default function OrderDetails() {
                                     <p className="text-sm sm:text-base text-gray-500 font-bold">{language === 'ar' ? 'عذراً، هذا الطلب ملغى ولا يمكن تتبعه.' : 'Sorry, this order is cancelled and cannot be tracked.'}</p>
                                 </div>
                             ) : (
-                                <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-8 md:gap-4">
+                                <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-10 md:gap-4 w-full">
+                                    {/* Vertical/Horizontal Connector Line */}
+                                    <div className="absolute left-[20px] md:left-0 top-[40px] md:top-1/2 md:-translate-y-1/2 w-[2px] md:w-full h-[calc(100%-80px)] md:h-[2px] bg-gray-200 z-0" />
+                                    
                                     {Object.entries(ORDER_STATUSES)
                                         .filter(([key]) => key !== 'cancelled')
                                         .sort((a, b) => a[1].step - b[1].step)
@@ -116,16 +119,16 @@ export default function OrderDetails() {
                                             const Icon = status.icon;
 
                                             return (
-                                                <div key={key} className="flex md:flex-col items-center gap-4 md:gap-4 group relative w-full md:w-auto">
+                                                <div key={key} className="flex md:flex-col items-center gap-6 md:gap-4 group relative w-full md:w-auto z-10">
                                                     <div className={`
-                                                                    w-10 h-10 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all duration-500 z-10
+                                                                    w-10 h-10 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all duration-500
                                                                     ${isActive ? 'bg-primary text-black shadow-xl shadow-primary/20 scale-110' : 'bg-white text-gray-500 border-2 border-gray-200'}
                                                                     ${isCurrent ? 'ring-4 ring-primary/20 animate-pulse' : ''}
                                                                 `}>
                                                         <Icon className="w-5 h-5 sm:w-8 sm:h-8" />
                                                     </div>
                                                     <div className={`flex flex-col md:items-center ${language === 'ar' ? 'text-right md:text-center' : 'text-left md:text-center'} flex-1 md:flex-none`}>
-                                                        <span className={`text-xs sm:text-base font-black transition-colors duration-500 ${isActive ? 'text-gray-900' : 'text-gray-400'}`}>
+                                                        <span className={`text-sm sm:text-base font-black transition-colors duration-500 ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
                                                             {language === 'ar' ? status.labelAr : status.labelEn}
                                                         </span>
                                                         {isCurrent && (
@@ -143,9 +146,9 @@ export default function OrderDetails() {
                     </Card>
 
                     {/* Order Items */}
-                    <Card className="border-0 shadow-sm overflow-hidden">
-                        <CardHeader className="bg-white border-b border-gray-50 py-6">
-                            <CardTitle className="text-xl font-black flex items-center gap-3 text-black">
+                    <Card className="border-0 shadow-sm overflow-hidden bg-white dark:bg-gray-900">
+                        <CardHeader className="border-b border-gray-100 dark:border-gray-800 py-6">
+                            <CardTitle className="text-xl font-black flex items-center gap-3 text-foreground">
                                 <ShoppingBag className="w-6 h-6 text-primary" />
                                 {language === 'ar' ? 'المنتجات المطلوبة' : 'Order Items'}
                             </CardTitle>
@@ -165,10 +168,10 @@ export default function OrderDetails() {
                                             </div>
                                         </div>
                                         <div className="grow min-w-0">
-                                            <h4 className="text-lg sm:text-xl font-black text-gray-900 mb-1 truncate">
+                                            <h4 className="text-lg sm:text-xl font-black text-foreground mb-1 truncate">
                                                 {language === 'ar' ? item.product?.nameAr : item.product?.nameEn}
                                             </h4>
-                                            <p className="text-sm text-gray-400 font-bold mb-3">
+                                            <p className="text-sm text-muted-foreground font-bold mb-3">
                                                 {language === 'ar' ? item.vendor?.storeNameAr : item.vendor?.storeNameEn}
                                             </p>
                                             <div className="flex flex-wrap gap-2">
@@ -240,7 +243,7 @@ KYC DATA EXPORT - ORDER #${order.orderNumber}
                                     variant="outline"
                                     size="sm"
                                     onClick={() => downloadInvoice(order, language, t)}
-                                    className="h-8 px-3 text-white border-gray-300 hover:bg-white/10 font-bold gap-2 flex-1 sm:flex-none"
+                                    className="h-8 px-3 text-foreground border-gray-300 dark:border-gray-700 hover:bg-white/10 dark:hover:bg-gray-800 font-bold gap-2 flex-1 sm:flex-none"
                                 >
                                     <Download className="w-4 h-4" />
                                     <span className="text-xs">{language === 'ar' ? 'الفاتورة' : 'Invoice'}</span>
@@ -290,9 +293,9 @@ KYC DATA EXPORT - ORDER #${order.orderNumber}
                                     <span>{formatPrice(order.walletAmountUsed)}</span>
                                 </div>
                             )}
-                            <div className="border-t border-dashed border-gray-200 my-4 pt-4">
+                            <div className="border-t border-dashed border-gray-200 dark:border-gray-700 my-4 pt-4">
                                 <div className="flex justify-between items-center">
-                                    <span className="font-bold text-base sm:text-lg text-gray-900">{language === 'ar' ? 'الإجمالي النهائي' : 'Final Total'}</span>
+                                    <span className="font-bold text-base sm:text-lg text-foreground">{language === 'ar' ? 'الإجمالي النهائي' : 'Final Total'}</span>
                                     <span className="font-black text-lg sm:text-xl text-primary">
                                         {formatPrice(order.total)}
                                     </span>
@@ -310,11 +313,11 @@ KYC DATA EXPORT - ORDER #${order.orderNumber}
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className={`text-xs sm:text-sm text-gray-600 space-y-1 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
-                                <p className="font-bold text-gray-900">{order.shippingAddress?.name}</p>
+                            <div className={`text-xs sm:text-sm text-muted-foreground space-y-1 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
+                                <p className="font-bold text-foreground">{order.shippingAddress?.name}</p>
                                 <p>{order.shippingAddress?.address}</p>
                                 <p>{order.shippingAddress?.city}, {order.shippingAddress?.country}</p>
-                                <p className="font-mono">{order.shippingAddress?.phone}</p>
+                                <p className="font-mono text-foreground">{order.shippingAddress?.phone}</p>
                             </div>
                         </CardContent>
                     </Card>
@@ -328,18 +331,18 @@ KYC DATA EXPORT - ORDER #${order.orderNumber}
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="flex items-center gap-2 bg-gray-50 p-2 sm:p-3 rounded-lg">
+                            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800/50 p-2 sm:p-3 rounded-lg">
                                 {order.paymentMethod === 'cod' ? (
-                                    <span className="text-xs sm:text-sm font-bold text-gray-900">{language === 'ar' ? 'الدفع عند الاستلام' : 'Cash on Delivery'}</span>
+                                    <span className="text-xs sm:text-sm font-bold text-foreground">{language === 'ar' ? 'الدفع عند الاستلام' : 'Cash on Delivery'}</span>
                                 ) : order.paymentMethod === 'installments' ? (
                                     <>
                                         <UserCheck className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
-                                        <span className="text-xs sm:text-sm font-bold text-gray-900">{language === 'ar' ? 'نظام التقسيط' : 'Installment System'}</span>
+                                        <span className="text-xs sm:text-sm font-bold text-foreground">{language === 'ar' ? 'نظام التقسيط' : 'Installment System'}</span>
                                     </>
                                 ) : (
                                     <>
-                                        <CreditCard className="w-3 h-3 sm:w-4 sm:h-4 text-gray-900" />
-                                        <span className="text-xs sm:text-sm font-bold text-gray-900">{language === 'ar' ? 'بطاقة ائتمان' : 'Credit Card'}</span>
+                                        <CreditCard className="w-3 h-3 sm:w-4 sm:h-4 text-foreground" />
+                                        <span className="text-xs sm:text-sm font-bold text-foreground">{language === 'ar' ? 'بطاقة ائتمان' : 'Credit Card'}</span>
                                     </>
                                 )}
                             </div>
