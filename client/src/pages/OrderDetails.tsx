@@ -81,32 +81,30 @@ export default function OrderDetails() {
     const isCancelled = order.status === 'cancelled';
 
     return (
-        <div className={`min-h-screen bg-gray-50 ${language === 'ar' ? 'text-right' : 'text-left'} pb-20 overflow-x-hidden`} dir={language === 'ar' ? 'rtl' : 'ltr'}>
+        <div className={`min-h-screen bg-gray-50 ${language === 'ar' ? 'text-right' : 'text-left'} pb-20 max-w-full overflow-x-hidden`} dir={language === 'ar' ? 'rtl' : 'ltr'}>
             {/* ... header ... */}
 
-            <div className="container mx-auto px-4 py-6 sm:py-8 grid lg:grid-cols-3 gap-6 sm:gap-8">
+            <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-6 sm:py-8 grid lg:grid-cols-3 gap-6 sm:gap-8 w-full overflow-hidden">
 
                 {/* Main Content */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* Order Tracker */}
-                    <Card className="border-0 shadow-2xl overflow-hidden bg-gray-950">
-                        <CardHeader className="border-b border-gray-900 py-6">
-                            <CardTitle className="text-xl font-black flex items-center gap-3 text-white">
-                                <Clock className="w-6 h-6 text-primary" />
-                                {language === 'ar' ? 'تتبع مسار الطلب' : 'Order Tracking'}
+                    <Card className="border-0 shadow-2xl overflow-hidden bg-gray-950 w-full mx-auto sm:mx-0 ring-1 ring-gray-900">
+                        <CardHeader className="border-b border-gray-900 py-6 px-4 sm:px-6">
+                            <CardTitle className="text-lg sm:text-xl font-black flex items-center gap-3 text-white overflow-hidden uppercase">
+                                <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-primary shrink-0" />
+                                <span className="truncate">{language === 'ar' ? 'تتبع مسار الطلب' : 'Order Tracking'}</span>
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="p-4 sm:p-8 md:p-12">
+                        <CardContent className="p-3 sm:p-8 md:p-12 overflow-hidden">
                             {isCancelled ? (
-                                <div className="flex flex-col items-center justify-center py-6 sm:py-10 text-center">
-                                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-red-50 rounded-full flex items-center justify-center text-red-500 mb-4">
-                                        <XCircle className="w-8 h-8 sm:w-10 sm:h-10" />
-                                    </div>
-                                    <h3 className="text-xl sm:text-2xl font-black text-red-600 mb-2">{language === 'ar' ? 'تم إلغاء الطلب' : 'Order Cancelled'}</h3>
-                                    <p className="text-sm sm:text-base text-gray-500 font-bold">{language === 'ar' ? 'عذراً، هذا الطلب ملغى ولا يمكن تتبعه.' : 'Sorry, this order is cancelled and cannot be tracked.'}</p>
+                                <div className="flex flex-col items-center justify-center py-10 text-center">
+                                    <XCircle className="w-16 h-16 text-red-500 mb-4" />
+                                    <h3 className="text-xl font-black text-white">{language === 'ar' ? 'تم إلغاء الطلب' : 'Order Cancelled'}</h3>
+                                    <p className="text-gray-400 mt-2">{language === 'ar' ? 'نعتذر، ولكن تم إلغاء هذا الطلب.' : 'We apologize, but this order has been cancelled.'}</p>
                                 </div>
                             ) : (
-                                <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-10 md:gap-4 w-full">
+                                <div className="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-6 md:gap-4">
                                     {/* Vertical/Horizontal Connector Line */}
                                     <div className={`absolute ${language === 'ar' ? 'right-[20px] md:right-auto md:left-0' : 'left-[20px] md:left-0'} top-[40px] md:top-1/2 md:-translate-y-1/2 w-[2px] md:w-full h-[calc(100%-80px)] md:h-[2px] bg-gray-800 z-0`} />
                                     
@@ -127,7 +125,7 @@ export default function OrderDetails() {
                                                                 `}>
                                                         <Icon className="w-5 h-5 sm:w-8 sm:h-8" />
                                                     </div>
-                                                    <div className={`flex flex-col md:items-center ${language === 'ar' ? 'text-right md:text-center' : 'text-left md:text-center'}`}>
+                                                    <div className={`flex flex-col md:items-center ${language === 'ar' ? 'text-right md:text-center' : 'text-left md:text-center'} min-w-0 flex-1`}>
                                                         <span className={`text-sm sm:text-base font-black transition-colors duration-500 ${isActive ? 'text-white' : 'text-gray-500'}`}>
                                                             {language === 'ar' ? status.labelAr : status.labelEn}
                                                         </span>
@@ -146,7 +144,7 @@ export default function OrderDetails() {
                     </Card>
 
                     {/* Order Items */}
-                    <Card className="border-0 shadow-2xl overflow-hidden bg-gray-950">
+                    <Card className="border-0 shadow-2xl overflow-hidden bg-gray-950 w-full mx-auto sm:mx-0 ring-1 ring-gray-900">
                         <CardHeader className="border-b border-gray-900 py-6">
                             <CardTitle className="text-xl font-black flex items-center gap-3 text-white">
                                 <ShoppingBag className="w-6 h-6 text-primary" />
@@ -206,7 +204,7 @@ export default function OrderDetails() {
                 <div className="space-y-6">
 
                     {/* Invoice Summary */}
-                    <Card className="border-0 shadow-2xl bg-gray-950" ref={invoiceRef}>
+                    <Card className="border-0 shadow-2xl bg-gray-950 ring-1 ring-gray-900" ref={invoiceRef}>
                         <CardHeader className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-900">
                             <CardTitle className="text-base sm:text-lg text-white">{language === 'ar' ? 'ملخص الفاتورة' : 'Invoice Summary'}</CardTitle>
                             <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
@@ -305,7 +303,7 @@ KYC DATA EXPORT - ORDER #${order.orderNumber}
                     </Card>
 
                     {/* Shipping Address */}
-                    <Card className="border-0 shadow-2xl bg-gray-950">
+                    <Card className="border-0 shadow-2xl bg-gray-950 ring-1 ring-gray-900">
                         <CardHeader className="py-4 border-b border-gray-900">
                             <CardTitle className="flex items-center gap-2 text-sm sm:text-base text-white">
                                 <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
@@ -323,7 +321,7 @@ KYC DATA EXPORT - ORDER #${order.orderNumber}
                     </Card>
 
                     {/* Payment Info */}
-                    <Card className="border-0 shadow-2xl bg-gray-950">
+                    <Card className="border-0 shadow-2xl bg-gray-950 ring-1 ring-gray-900">
                         <CardHeader className="py-4 border-b border-gray-900">
                             <CardTitle className="flex items-center gap-2 text-sm sm:text-base text-white">
                                 <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
