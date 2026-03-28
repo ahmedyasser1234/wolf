@@ -732,7 +732,7 @@ function AppContent() {
         unreadCount={unreadCount}
         systemUnreadCount={systemUnreadCount}
       />
-      <main className={`flex-1 page-content w-full max-w-full overflow-x-hidden ${!HERO_PAGES.includes(location) ? (location.startsWith('/checkout') ? 'pt-0' : 'pt-24 md:pt-28') : ''}`}>
+      <main className={`flex-1 page-content w-full max-w-full overflow-x-hidden ${!HERO_PAGES.includes(location) ? (location.startsWith('/checkout') ? 'pt-20 md:pt-24' : 'pt-24 md:pt-28') : ''}`}>
         <Router />
       </main>
       <Footer />
