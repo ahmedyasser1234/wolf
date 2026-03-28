@@ -609,7 +609,7 @@ export default function ProductDetail() {
                     </div>
 
                     {/* Clickable Plan Cards */}
-                    <div className="grid grid-cols-3 gap-2 mb-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-4">
                       {(installmentPlans as any[])
                         .filter((p: any) => p.isActive && product.price >= (p.minAmount || 0))
                         .map((plan: any) => {

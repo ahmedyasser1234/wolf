@@ -697,7 +697,7 @@ export default function AdminDashboard() {
       {/* Navigation Tabs */}
       <div className="bg-background border-b border-gray-800 sticky top-20 z-30 shadow-md">
         <div className="container mx-auto px-4 py-4 md:py-6">
-          <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-2 px-2 lg:flex-wrap lg:overflow-visible lg:pb-0">
+          <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] -mx-2 px-2 lg:flex-wrap lg:overflow-visible lg:pb-0">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -1055,13 +1055,13 @@ export default function AdminDashboard() {
                               <td className="py-4 px-6 font-black text-white text-center">{Number(order.total).toFixed(2)} {t('currency')}</td>
                               <td className="py-4 px-6 text-center">
                                 <div className="flex flex-col items-center gap-1">
-                                  <span className="whitespace-nowrap px-3 py-1 bg-gray-800 text-gray-300 rounded-full text-[10px] font-black uppercase tracking-wider border border-gray-700">
+                                  <div className="inline-flex items-center justify-center whitespace-nowrap px-3 py-1 bg-gray-800 text-gray-300 rounded-full text-[10px] font-black uppercase tracking-wider border border-gray-700">
                                     {order.paymentMethod === 'cash' || order.paymentMethod === 'cod' || order.paymentMethod === 'cashOnDelivery' ? (language === 'ar' ? 'دفع عند الاستلام' : 'COD') :
                                       order.paymentMethod === 'wallet' ? (language === 'ar' ? 'محفظة' : 'Wallet') :
                                         order.paymentMethod === 'gift_card' ? (language === 'ar' ? 'بطاقة هدية' : 'Gift Card') :
                                           order.paymentMethod === 'installments' ? (language === 'ar' ? 'تقسيط' : 'Installments') :
                                             (language === 'ar' ? 'بطاقة بنكية' : 'Bank Card')}
-                                  </span>
+                                  </div>
                                   {order.paymentMethod === 'installments' && (
                                     <span className="whitespace-nowrap px-2 py-0.5 bg-violet-900/40 text-violet-400 rounded-full text-[9px] font-black border border-violet-800/50">
                                       {({
@@ -1075,9 +1075,9 @@ export default function AdminDashboard() {
                                 </div>
                               </td>
                               <td className="py-4 px-6 text-center">
-                                <span className={`whitespace-nowrap px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${order.installmentPlanId ? 'bg-purple-900/40 text-purple-400 border-purple-800/50' : 'bg-blue-900/40 text-blue-400 border-blue-800/50'}`}>
+                                <div className={`inline-flex items-center justify-center whitespace-nowrap px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${order.installmentPlanId ? 'bg-purple-900/40 text-purple-400 border-purple-800/50' : 'bg-blue-900/40 text-blue-400 border-blue-800/50'}`}>
                                   {order.installmentPlanId ? (language === 'ar' ? 'تقسيط' : 'Installment') : (language === 'ar' ? 'كاش' : 'Cash')}
-                                </span>
+                                </div>
                                 <div className="mt-1">
                                   <span className={`whitespace-nowrap text-[9px] font-bold ${order.paymentStatus === 'paid' ? 'text-emerald-500' :
                                     order.paymentStatus === 'failed' ? 'text-red-500' :
@@ -1093,7 +1093,7 @@ export default function AdminDashboard() {
                               </td>
                               <td className="py-4 px-6 text-center">
                                 <div className="flex justify-center">
-                                  <span className={`whitespace-nowrap px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${order.status === 'delivered' ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800/50' :
+                                  <div className={`inline-flex items-center justify-center whitespace-nowrap px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${order.status === 'delivered' ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800/50' :
                                     order.status === 'cancelled' ? 'bg-red-900/40 text-red-400 border-red-800/50' :
                                       order.status === 'preparing_shipment' ? 'bg-fuchsia-900/40 text-fuchsia-400 border-fuchsia-800/50' :
                                         'bg-blue-900/40 text-blue-400 border-blue-800/50'
@@ -1102,7 +1102,7 @@ export default function AdminDashboard() {
                                     order.status === 'cancelled' ? (language === 'ar' ? 'ملغى' : 'Cancelled') :
                                       order.status === 'preparing_shipment' ? (language === 'ar' ? 'تجهيز الشحن' : 'Preparing') :
                                         t('processing')}
-                                  </span>
+                                  </div>
                                 </div>
                               </td>
                               <td className="py-4 px-6 text-end">

@@ -234,8 +234,8 @@ export default function OverviewTab({ dashboard, onCategoryClick, onProductClick
                                                     {order.items?.length || 0} {language === 'ar' ? "قطع" : "Items"}
                                                 </td>
                                                 <td className="py-6 px-8 text-center">
-                                                    <span className={cn(
-                                                        "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest",
+                                                    <div className={cn(
+                                                        "inline-flex items-center justify-center whitespace-nowrap px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest",
                                                         order.status === 'delivered' ? "bg-emerald-900/30 text-emerald-400" :
                                                             order.status === 'cancelled' ? "bg-red-900/30 text-red-400" :
                                                                 order.status === 'shipped' ? "bg-blue-900/30 text-blue-400" :
@@ -243,7 +243,7 @@ export default function OverviewTab({ dashboard, onCategoryClick, onProductClick
                                                                         "bg-amber-900/30 text-amber-400"
                                                     )}>
                                                         {getStatusLabel(order.status)}
-                                                    </span>
+                                                    </div>
                                                 </td>
                                                 <td className={`py-6 px-10 ${language === 'ar' ? 'text-left' : 'text-right'}`}>
                                                     <span className="font-black text-white">{order.total} <span className="text-[10px]">{t('currency')}</span></span>
