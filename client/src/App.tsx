@@ -416,30 +416,31 @@ function Footer() {
       {/* Top Features Bar */}
       <div className="bg-white py-3.5 border-b border-gray-200">
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-5 text-[14px] font-black text-gray-900">
-          <div className="flex items-center gap-8 md:gap-12">
-            <div className={`flex items-center gap-2.5 ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
-              <ShoppingBag size={21} className="text-gray-900" />
-              <span>{isAr ? "توصيل مجاني" : "Free Delivery"}</span>
+          <div className="flex flex-wrap justify-center gap-4 md:gap-8 lg:gap-12 w-full max-w-2xl mx-auto md:max-w-none">
+            <div className={`flex items-center gap-x-2 gap-y-1 justify-center sm:whitespace-nowrap ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
+              <ShoppingBag size={20} className="text-gray-900 shrink-0" />
+              <span className="text-center sm:text-start leading-tight">{isAr ? "توصيل مجاني" : "Free Delivery"}</span>
             </div>
-            <div className={`flex items-center gap-2.5 ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
-              <RefreshCw size={21} className="text-gray-900" />
-              <span>{isAr ? "14 أيام للاسترجاع" : "14 Days To Return"}</span>
+            <div className={`flex items-center gap-x-2 gap-y-1 justify-center sm:whitespace-nowrap ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
+              <RefreshCw size={20} className="text-gray-900 shrink-0" />
+              <span className="text-center sm:text-start leading-tight">{isAr ? "14 أيام للاسترجاع" : "14 Days To Return"}</span>
             </div>
-            <div className={`flex items-center gap-2.5 ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
-              <Heart size={21} className="text-gray-900" />
-              <span>{isAr ? "12 شهر ضمان" : "12 Months Warranty"}</span>
+            <div className={`flex items-center gap-x-2 gap-y-1 justify-center sm:whitespace-nowrap ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
+              <Heart size={20} className="text-gray-900 shrink-0" />
+              <span className="text-center sm:text-start leading-tight">{isAr ? "12 شهر ضمان" : "12 Months Warranty"}</span>
             </div>
           </div>
-          <div className={`flex items-center gap-4 ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full border border-primary/20 shadow-sm">
-              <CreditCard size={14} className="text-primary animate-pulse" />
+          
+          <div className={`flex flex-wrap items-center justify-center gap-3 md:gap-4 w-full ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
+            <div className={`flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full border border-primary/20 shadow-sm whitespace-nowrap ${isAr ? 'flex-row-reverse' : 'flex-row'}`}>
+              <CreditCard size={14} className="text-primary animate-pulse shrink-0" />
               <span className="text-primary font-black tracking-tight">{isAr ? "اشتري الآن وادفع لاحقاً" : "Buy Now, Pay Later"}</span>
             </div>
-            <div className="flex gap-2">
-              <div className="bg-black text-[12px] px-3.5 py-1.5 rounded-lg text-white font-black uppercase tracking-tighter flex items-center gap-1 shadow-sm">G Pay</div>
-              <div className="bg-black text-[12px] px-3.5 py-1.5 rounded-lg text-white font-black uppercase tracking-tighter flex items-center gap-1 shadow-sm"> Pay</div>
-              <div className="bg-[#0070d1] text-[12px] px-3.5 py-1.5 rounded-lg text-white font-black uppercase tracking-tighter flex items-center gap-1 shadow-sm">AMEX</div>
-              <div className="bg-red-600 text-[12px] px-3.5 py-1.5 rounded-lg text-white font-black uppercase tracking-tighter flex items-center gap-1 shadow-sm whitespace-nowrap">UnionPay</div>
+            <div className="flex flex-wrap justify-center gap-2 shrink-0">
+              <div className="bg-black text-[12px] px-3.5 py-1.5 rounded-lg text-white font-black uppercase tracking-tighter flex items-center justify-center gap-1 shadow-sm shrink-0">G Pay</div>
+              <div className="bg-black text-[12px] px-3.5 py-1.5 rounded-lg text-white font-black uppercase tracking-tighter flex items-center justify-center gap-1 shadow-sm shrink-0"> Pay</div>
+              <div className="bg-[#0070d1] text-[12px] px-3.5 py-1.5 rounded-lg text-white font-black uppercase tracking-tighter flex items-center justify-center gap-1 shadow-sm shrink-0">AMEX</div>
+              <div className="bg-red-600 text-[12px] px-3.5 py-1.5 rounded-lg text-white font-black uppercase tracking-tighter flex items-center justify-center gap-1 shadow-sm whitespace-nowrap shrink-0">UnionPay</div>
             </div>
           </div>
         </div>

@@ -697,7 +697,7 @@ export default function AdminDashboard() {
       {/* Navigation Tabs */}
       <div className="bg-background border-b border-gray-800 sticky top-20 z-30 shadow-md">
         <div className="container mx-auto px-4 py-4 md:py-6">
-          <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] -mx-2 px-2 lg:flex-wrap lg:overflow-visible lg:pb-0">
+          <div className="flex gap-3 md:gap-4 overflow-x-auto pb-3 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-800 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-600 -mx-2 px-2 lg:flex-wrap lg:overflow-visible lg:pb-0">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
