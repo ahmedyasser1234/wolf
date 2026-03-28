@@ -102,6 +102,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useChatNotifications } from "@/hooks/useChatNotifications";
+import { useOrderNotifications } from "@/hooks/useOrderNotifications";
 import { useLanguage } from "@/lib/i18n";
 import AdminSearchModal from "@/components/admin/AdminSearchModal";
 
@@ -317,6 +318,7 @@ export default function AdminDashboard() {
   const { user, loading } = useAuth();
   const { language, t } = useLanguage();
   const { unreadCount } = useChatNotifications();
+  const { unreadOrdersCount, unreadInstallmentOrdersCount, resetOrdersCount, resetInstallmentOrdersCount } = useOrderNotifications();
   const queryClient = useQueryClient();
   const [location, setLocation] = useLocation();
 
@@ -433,15 +435,15 @@ export default function AdminDashboard() {
     { id: "coupons", label: language === 'ar' ? 'الكوبونات' : 'Coupons', icon: Ticket, color: "from-amber-400 to-orange-600 shadow-amber-500/30" },
     { id: "giftcards", label: language === 'ar' ? 'الجيفت كارد' : 'Gift Cards', icon: Gift, color: "from-emerald-400 to-teal-600 shadow-emerald-500/30" },
     { id: "installments", label: language === 'ar' ? 'التقسيط' : 'Installments', icon: CreditCard, color: "from-violet-400 to-purple-600 shadow-violet-500/30" },
-    { id: "installment-orders", label: language === 'ar' ? 'طلبات التقسيط' : 'Installment Orders', icon: ShoppingCart, badge: showInstallmentBadge ? (dashboardStats?.pendingKycReviews || true) : undefined, color: "from-amber-400 to-orange-500 shadow-amber-500/30" },
+    { id: "installment-orders", label: language === 'ar' ? 'طلبات التقسيط' : 'Installment Orders', icon: ShoppingCart, badge: (unreadInstallmentOrdersCount > 0 ? unreadInstallmentOrdersCount : (showInstallmentBadge ? (dashboardStats?.pendingKycReviews || true) : undefined)), color: "from-amber-400 to-orange-500 shadow-amber-500/30" },
     { id: "installment-payments", label: language === 'ar' ? 'متابعة الأقساط' : 'Installment Tracking', icon: History, color: "from-indigo-400 to-blue-600 shadow-indigo-500/30" },
     { id: "payments", label: language === 'ar' ? 'بوابات الدفع' : 'Payment Gateways', icon: DollarSign, color: "from-emerald-400 to-teal-600 shadow-emerald-500/30" },
     { id: "email-center", label: language === 'ar' ? 'مركز الإيميلات' : 'Email Center', icon: Mail, color: "from-blue-500 to-cyan-500 shadow-blue-500/30" },
-    { id: "orders", label: t('orders'), icon: ShoppingCart, color: "from-orange-500 to-red-600 shadow-orange-500/30" },
+    { id: "orders", label: t('orders'), icon: ShoppingCart, badge: unreadOrdersCount > 0 ? unreadOrdersCount : undefined, color: "from-orange-500 to-red-600 shadow-orange-500/30" },
     { id: "customers", label: t('customers'), icon: Users, color: "from-sky-500 to-blue-600 shadow-sky-500/30" },
     { id: "chat", label: t('chat'), icon: MessageSquare, badge: unreadCount, color: "from-pink-500 to-primary shadow-pink-500/30" },
     { id: "settings", label: t('settings'), icon: Settings, color: "from-slate-700 to-slate-900 shadow-slate-500/30" },
-  ], [t, unreadCount, language, dashboardStats, showInstallmentBadge]);
+  ], [t, unreadCount, language, dashboardStats, showInstallmentBadge, unreadOrdersCount, unreadInstallmentOrdersCount]);
 
   const setActiveTab = (tab: typeof activeTab) => {
     setActiveTabInternal(tab);
@@ -451,12 +453,28 @@ export default function AdminDashboard() {
       const now = Date.now();
       localStorage.setItem('lastSeenInstallmentOrdersAt', now.toString());
       setLastSeenKycAt(now);
+      resetInstallmentOrdersCount();
+    }
+
+    // Clear orders badge if clicking orders tab
+    if (tab === 'orders') {
+      resetOrdersCount();
     }
 
     const params = new URLSearchParams(window.location.search);
     params.set("tab", tab);
     setLocation(window.location.pathname + "?" + params.toString());
   };
+
+  // Listen for tab navigation events (triggered by toast action buttons)
+  useEffect(() => {
+    const handleAdminNavigate = (e: CustomEvent) => {
+      const tab = e.detail?.tab as typeof activeTab;
+      if (tab) setActiveTab(tab);
+    };
+    window.addEventListener('admin-navigate-tab', handleAdminNavigate as EventListener);
+    return () => window.removeEventListener('admin-navigate-tab', handleAdminNavigate as EventListener);
+  }, []);
 
   const [autoOpenAddCategory, setAutoOpenAddCategory] = useState(false);
 
