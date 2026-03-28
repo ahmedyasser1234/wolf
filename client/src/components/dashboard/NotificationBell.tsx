@@ -14,7 +14,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { endpoints } from "@/lib/api";
 import { useLanguage } from "@/lib/i18n";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { io, Socket } from "socket.io-client";
+import { useChat } from "@/contexts/ChatContext";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
 import { toast } from "sonner";
@@ -23,42 +23,31 @@ import { cn } from "@/lib/utils";
 export default function NotificationBell() {
     const { language } = useLanguage();
     const { user } = useAuth();
+    const { socket } = useChat();
     const queryClient = useQueryClient();
-    const [socket, setSocket] = useState<Socket | null>(null);
     const [isOpen, setIsOpen] = useState(false);
 
     // Socket Connection for Real-time Notifications
     useEffect(() => {
-        if (!user) return;
+        if (!user || !socket) return;
 
-        // Use environment variable for socket URL
-        const isProd = import.meta.env.PROD;
-        const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || (isProd ? '' : 'http://localhost:3001');
-        const newSocket = io(SOCKET_URL, {
-            withCredentials: true,
-            transports: ['websocket', 'polling'],
-        });
-
-        newSocket.on('connect', () => {
-            console.log('Notification Socket Connected');
-            newSocket.emit('join', user.id);
-        });
-
-        newSocket.on('notification', (data: any) => {
-            console.log('Notification received:', data);
+        const handleNotification = (data: any) => {
+            console.log('Notification received in Bell:', data);
 
             // Play sound
-            const audio = new Audio('/notification.mp3'); // Ensure this file exists or remove
+            const audio = new Audio('/notification.mp3'); 
             audio.play().catch(e => console.log('Audio play failed', e));
 
-            // Show Toast
-            toast.message(language === 'ar' ? data.title : data.title, {
-                description: language === 'ar' ? data.message : data.message,
-                action: {
-                    label: language === 'ar' ? "عرض" : "View",
-                    onClick: () => setIsOpen(true)
-                }
-            });
+            // Show Toast (exclude new_order since useOrderNotifications handles it with specific navigation)
+            if (data.type !== 'new_order') {
+                toast.message(language === 'ar' ? data.title : data.title, {
+                    description: language === 'ar' ? data.message : data.message,
+                    action: {
+                        label: language === 'ar' ? "عرض" : "View",
+                        onClick: () => setIsOpen(true)
+                    }
+                });
+            }
 
             // Invalidate Queries
             queryClient.invalidateQueries({ queryKey: ['notifications'] });
@@ -69,14 +58,14 @@ export default function NotificationBell() {
                 queryClient.invalidateQueries({ queryKey: ['vendor', 'orders'] });
                 queryClient.invalidateQueries({ queryKey: ['vendor', 'dashboard'] });
             }
-        });
+        };
 
-        setSocket(newSocket);
+        socket.on('notification', handleNotification);
 
         return () => {
-            newSocket.disconnect();
+            socket.off('notification', handleNotification);
         };
-    }, [user, queryClient, language]);
+    }, [user, socket, queryClient, language]);
 
     // Fetch Notifications
     const { data: notificationsData } = useQuery({

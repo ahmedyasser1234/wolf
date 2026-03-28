@@ -9,6 +9,7 @@ import { Server, Socket } from 'socket.io';
 import { Injectable } from '@nestjs/common';
 
 @WebSocketGateway({
+    namespace: '/chat',
     cors: {
         origin: '*',
         credentials: true

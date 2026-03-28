@@ -1055,7 +1055,7 @@ export default function AdminDashboard() {
                               <td className="py-4 px-6 font-black text-white text-center">{Number(order.total).toFixed(2)} {t('currency')}</td>
                               <td className="py-4 px-6 text-center">
                                 <div className="flex flex-col items-center gap-1">
-                                  <span className="px-3 py-1 bg-gray-800 text-gray-300 rounded-full text-[10px] font-black uppercase tracking-wider border border-gray-700">
+                                  <span className="whitespace-nowrap px-3 py-1 bg-gray-800 text-gray-300 rounded-full text-[10px] font-black uppercase tracking-wider border border-gray-700">
                                     {order.paymentMethod === 'cash' || order.paymentMethod === 'cod' || order.paymentMethod === 'cashOnDelivery' ? (language === 'ar' ? 'دفع عند الاستلام' : 'COD') :
                                       order.paymentMethod === 'wallet' ? (language === 'ar' ? 'محفظة' : 'Wallet') :
                                         order.paymentMethod === 'gift_card' ? (language === 'ar' ? 'بطاقة هدية' : 'Gift Card') :
@@ -1063,7 +1063,7 @@ export default function AdminDashboard() {
                                             (language === 'ar' ? 'بطاقة بنكية' : 'Bank Card')}
                                   </span>
                                   {order.paymentMethod === 'installments' && (
-                                    <span className="px-2 py-0.5 bg-violet-900/40 text-violet-400 rounded-full text-[9px] font-black border border-violet-800/50">
+                                    <span className="whitespace-nowrap px-2 py-0.5 bg-violet-900/40 text-violet-400 rounded-full text-[9px] font-black border border-violet-800/50">
                                       {({
                                         'card': language === 'ar' ? 'بطاقة' : 'Card',
                                         'wallet': language === 'ar' ? 'محفظة' : 'Wallet',
@@ -1075,11 +1075,11 @@ export default function AdminDashboard() {
                                 </div>
                               </td>
                               <td className="py-4 px-6 text-center">
-                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${order.installmentPlanId ? 'bg-purple-900/40 text-purple-400 border-purple-800/50' : 'bg-blue-900/40 text-blue-400 border-blue-800/50'}`}>
+                                <span className={`whitespace-nowrap px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${order.installmentPlanId ? 'bg-purple-900/40 text-purple-400 border-purple-800/50' : 'bg-blue-900/40 text-blue-400 border-blue-800/50'}`}>
                                   {order.installmentPlanId ? (language === 'ar' ? 'تقسيط' : 'Installment') : (language === 'ar' ? 'كاش' : 'Cash')}
                                 </span>
                                 <div className="mt-1">
-                                  <span className={`text-[9px] font-bold ${order.paymentStatus === 'paid' ? 'text-emerald-500' :
+                                  <span className={`whitespace-nowrap text-[9px] font-bold ${order.paymentStatus === 'paid' ? 'text-emerald-500' :
                                     order.paymentStatus === 'failed' ? 'text-red-500' :
                                       (order.paymentStatus === 'pending_kyc_review' || order.paymentStatus === 'pending_payment') ? 'text-amber-500' :
                                         'text-blue-400'
@@ -1092,16 +1092,18 @@ export default function AdminDashboard() {
                                 </div>
                               </td>
                               <td className="py-4 px-6 text-center">
-                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${order.status === 'delivered' ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800/50' :
-                                  order.status === 'cancelled' ? 'bg-red-900/40 text-red-400 border-red-800/50' :
-                                    order.status === 'preparing_shipment' ? 'bg-fuchsia-900/40 text-fuchsia-400 border-fuchsia-800/50' :
-                                      'bg-blue-900/40 text-blue-400 border-blue-800/50'
-                                  }`}>
-                                  {order.status === 'delivered' ? t('delivered') :
+                                <div className="flex justify-center">
+                                  <span className={`whitespace-nowrap px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${order.status === 'delivered' ? 'bg-emerald-900/40 text-emerald-400 border-emerald-800/50' :
+                                    order.status === 'cancelled' ? 'bg-red-900/40 text-red-400 border-red-800/50' :
+                                      order.status === 'preparing_shipment' ? 'bg-fuchsia-900/40 text-fuchsia-400 border-fuchsia-800/50' :
+                                        'bg-blue-900/40 text-blue-400 border-blue-800/50'
+                                    }`}>
+                                    {order.status === 'delivered' ? t('delivered') :
                                     order.status === 'cancelled' ? (language === 'ar' ? 'ملغى' : 'Cancelled') :
                                       order.status === 'preparing_shipment' ? (language === 'ar' ? 'تجهيز الشحن' : 'Preparing') :
                                         t('processing')}
-                                </span>
+                                  </span>
+                                </div>
                               </td>
                               <td className="py-4 px-6 text-end">
                                 <Button

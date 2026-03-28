@@ -178,14 +178,14 @@ export class ChatService {
                         console.log("ChatService: Creating Fustan Support vendor...");
                         [supportVendor] = await this.databaseService.db.insert(vendors).values({
                             userId: senderId, // Bind to the admin sending the message
-                            storeNameAr: 'دعم فستان',
-                            storeNameEn: 'Fustan Support',
-                            storeSlug: 'fustan-support',
-                            email: 'support@fustan.com',
+                            storeNameAr: 'دعم ولف',
+                            storeNameEn: 'Wolf Support',
+                            storeSlug: 'wolf-support',
+                            email: 'support@wolftechno.com',
                             phone: '0000000000',
                             descriptionAr: 'System Support',
                             descriptionEn: 'System Support',
-                            logo: 'https://placehold.co/400x400/e91e63/ffffff?text=FS',
+                            logo: 'https://placehold.co/400x400/D4AF37/000000?text=W',
                             isActive: true,
                             createdAt: new Date(),
                             updatedAt: new Date()
