@@ -323,13 +323,14 @@ body {
     justify-content: center;
     width: 100%;
     gap: 4px;
-    overflow: hidden;
-    padding: 12px 8px;
+    padding: 8px 4px;
+    flex-wrap: nowrap;
   }
 
   .step-label {
-    font-size: clamp(0.7rem, 2.5vw, 0.9rem);
+    font-size: clamp(0.65rem, 2.2vw, 0.9rem);
     white-space: nowrap;
+    overflow: visible;
   }
 
   .step-number {

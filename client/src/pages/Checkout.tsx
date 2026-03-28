@@ -310,7 +310,7 @@ export default function Checkout() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-32 w-full page-container mx-auto">
+    <div className="min-h-screen bg-gray-50 pb-32 w-full">
       {/* Header */}
       <div className="bg-white border-b border-gray-100 relative z-40 pt-2 pb-4 md:py-6 w-full">
         <div className="container mx-auto px-4 max-w-7xl">
@@ -342,7 +342,7 @@ export default function Checkout() {
         </div>
       </div>
 
-      <div className="container mx-auto px-2 md:px-4 max-w-7xl mt-4 md:mt-8 w-full overflow-x-hidden">
+      <div className="container mx-auto max-w-7xl mt-4 md:mt-8 w-full">
         <div className="grid lg:grid-cols-12 gap-6 md:gap-12">
           <div className="lg:col-span-8">
             <AnimatePresence mode="wait">
@@ -616,7 +616,7 @@ export default function Checkout() {
                   <div key={item.id} className="flex items-center gap-4">
                     <img src={item.product?.images?.[0]} alt="" className="w-16 h-16 rounded-2xl object-cover shadow-sm shrink-0" />
                     <div className="grow min-w-0">
-                      <p className="font-bold text-gray-900 truncate w-full" dir="auto">{language === 'ar' ? item.product?.nameAr : item.product?.nameEn}</p>
+                      <p className="font-bold text-gray-900 break-words line-clamp-2 leading-snug" dir="auto">{language === 'ar' ? item.product?.nameAr : item.product?.nameEn}</p>
                       <p className="text-sm text-gray-400">{language === 'ar' ? 'الكمية:' : 'Qty:'} {item.quantity}</p>
                     </div>
                   </div>
