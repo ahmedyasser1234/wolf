@@ -248,7 +248,7 @@ function Navigation({ isChatHistoryOpen, setIsChatHistoryOpen, unreadCount, syst
                       >
                         <div className="flex items-center gap-3 p-2 mb-3 border-b border-white/10 pb-4">
                           <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-lg font-bold text-primary">
-                            {user.name.charAt(0).toUpperCase()}
+                            {user.name?.charAt(0)?.toUpperCase() ?? '?'}
                           </div>
                           <div className="overflow-hidden">
                             <p className="font-bold text-white text-sm truncate">{user.name}</p>
