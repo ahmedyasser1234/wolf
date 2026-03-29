@@ -381,12 +381,24 @@ export class AdminService {
     }
 
     async createAdminAccount(email: string, password: string, name: string) {
+        const normalizedEmail = email.toLowerCase().trim();
+
+        const existingUser = await this.databaseService.db
+            .select()
+            .from(users)
+            .where(sql`lower(${users.email}) = ${normalizedEmail}`)
+            .limit(1);
+
+        if (existingUser.length > 0) {
+            throw new BadRequestException('Email already exists');
+        }
+
         const hashedPassword = await this.hashPassword(password);
         const openId = `admin_${Date.now()}`;
 
         const [admin] = await this.databaseService.db.insert(users).values({
             openId,
-            email,
+            email: normalizedEmail,
             name,
             password: hashedPassword,
             role: 'admin',

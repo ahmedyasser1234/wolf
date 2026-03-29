@@ -32,7 +32,9 @@ export const users = pgTable("users", {
     lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
     isDuplicate: boolean("isDuplicate").default(false).notNull(), // Feature 5
     isVerified: boolean("isVerified").default(false).notNull(),
-});
+}, (table) => ({
+    emailUniqueIdx: uniqueIndex("users_email_unique_idx").on(table.email),
+}));
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;

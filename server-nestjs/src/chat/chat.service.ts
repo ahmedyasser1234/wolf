@@ -24,13 +24,28 @@ export class ChatService {
         if (role === 'admin') {
             // Admin logic:
             // 1. Can act as "Customer" (talking to vendors) -> conversations.customerId = userId
-            // 2. Can act as "Fustan Support" (talking to customers) -> conversations.vendorId = supportVendor.id
+            // 2. Can act as "Wolf Techno Support" (talking to customers) -> conversations.vendorId = supportVendor.id
 
-            const [supportVendor] = await this.databaseService.db
+            let supportVendor = await this.databaseService.db
                 .select()
                 .from(vendors)
                 .where(eq(vendors.userId, userId))
-                .limit(1);
+                .limit(1)
+                .then(res => res[0]);
+
+            if (supportVendor && (supportVendor.storeNameAr !== 'دعم ولف تيكنو' || supportVendor.storeNameEn !== 'Wolf Techno Support')) {
+                // Self-healing: Update existing vendor if it has old branding
+                const [updated] = await this.databaseService.db.update(vendors)
+                    .set({
+                        storeNameAr: 'دعم ولف تيكنو',
+                        storeNameEn: 'Wolf Techno Support',
+                        email: 'support@wolftechno.com',
+                        updatedAt: new Date()
+                    })
+                    .where(eq(vendors.id, supportVendor.id))
+                    .returning();
+                supportVendor = updated as any;
+            }
 
             const supportId = supportVendor?.id;
 
@@ -167,7 +182,7 @@ export class ChatService {
                 } else if (recipientId) {
                     console.log("ChatService: Admin -> Customer path");
                     // Admin chatting with customer
-                    // Find or create "Fustan Support" vendor
+                    // Find or create "Wolf Techno Support" vendor
                     let [supportVendor] = await this.databaseService.db
                         .select()
                         .from(vendors)
@@ -175,11 +190,11 @@ export class ChatService {
                         .limit(1);
 
                     if (!supportVendor) {
-                        console.log("ChatService: Creating Fustan Support vendor...");
+                        console.log("ChatService: Creating Wolf Techno Support vendor...");
                         [supportVendor] = await this.databaseService.db.insert(vendors).values({
                             userId: senderId, // Bind to the admin sending the message
-                            storeNameAr: 'دعم ولف',
-                            storeNameEn: 'Wolf Support',
+                            storeNameAr: 'دعم ولف تيكنو',
+                            storeNameEn: 'Wolf Techno Support',
                             storeSlug: 'wolf-support',
                             email: 'support@wolftechno.com',
                             phone: '0000000000',
@@ -190,6 +205,18 @@ export class ChatService {
                             createdAt: new Date(),
                             updatedAt: new Date()
                         }).returning();
+                    } else if (supportVendor.storeNameAr !== 'دعم ولف تيكنو' || supportVendor.storeNameEn !== 'Wolf Techno Support') {
+                        // Self-healing: Update existing vendor if it has old branding
+                        const [updated] = await this.databaseService.db.update(vendors)
+                            .set({
+                                storeNameAr: 'دعم ولف تيكنو',
+                                storeNameEn: 'Wolf Techno Support',
+                                email: 'support@wolftechno.com',
+                                updatedAt: new Date()
+                            })
+                            .where(eq(vendors.id, supportVendor.id))
+                            .returning();
+                        supportVendor = updated;
                     }
 
                     console.log(`ChatService: Using Support Vendor ${supportVendor.id}`);
